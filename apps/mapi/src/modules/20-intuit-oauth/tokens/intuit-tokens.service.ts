@@ -55,6 +55,19 @@ export class IntuitTokensService {
     return this.refresh(clientId, stored)
   }
 
+  /**
+   * Forzar refresh aunque access_token siga vigente. Útil cuando el proxy
+   * V3 recibe 401 (token revocado server-side antes de expirar).
+   */
+  async forceRefresh(clientId: string): Promise<DecryptedIntuitToken> {
+    const stored = await this.repo.findByClientId(clientId)
+    if (!stored) throw new IntuitTokensNotFoundError(clientId)
+    if (stored.refreshTokenExpiresAt.getTime() < Date.now()) {
+      throw new IntuitRefreshTokenExpiredError(clientId)
+    }
+    return this.refresh(clientId, stored)
+  }
+
   async deleteTokens(clientId: string, actorUserId: string | null): Promise<void> {
     await this.repo.deleteByClientId(clientId)
     await this.events.log(
