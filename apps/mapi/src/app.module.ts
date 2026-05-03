@@ -12,6 +12,7 @@ import { AuthCoreModule } from './core/auth/auth-core.module'
 import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './core/auth/guards/roles.guard'
 import { AuthModule } from './modules/10-core-auth/auth.module'
+import { EncryptionModule } from './core/encryption/encryption.module'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AuthModule } from './modules/10-core-auth/auth.module'
     DbModule,
     MetricsModule,
     AuthCoreModule,
+    EncryptionModule,
     EventLogModule,
     AuthModule,
     HealthModule,
