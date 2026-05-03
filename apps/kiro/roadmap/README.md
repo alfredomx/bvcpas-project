@@ -16,7 +16,9 @@ Plan y estado de cada módulo y versión del plugin `kiro` dentro de `bvcpas-pro
 ## Estado actual
 
 **Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con scaffold mínimo).
-**Siguiente:** sin definir. El plugin es ejecutor (corre en QBO) — depende de mapi para tener WebSocket gateway o endpoints HTTP del bridge listos.
+**Siguiente:** `10-bridge-client/` (P2 — WebSocket client + auth con mapi). Depende de que `apps/mapi/roadmap/20-intuit/02-bridge/` tenga gateway listo.
+
+> **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
 ---
 
@@ -24,17 +26,18 @@ Plan y estado de cada módulo y versión del plugin `kiro` dentro de `bvcpas-pro
 
 ```
 apps/kiro/roadmap/
-├── README.md                  ← este archivo (índice + reglas + tabla de decisiones)
-├── BACKLOG.md                 ← items diferidos por trigger
-├── 00-foundation/             ← bootstrap del plugin
-│   ├── README.md              ← TDD vivo del módulo
-│   └── v0.1.0.md              ← bitácora de la versión que cerró el módulo
-├── 1x-bridge-client/          ← (futuro, cuando mapi tenga /v1/bridge)
+├── README.md                       ← este archivo (índice + reglas + decisiones)
+├── BACKLOG.md                      ← items diferidos por trigger
+├── 00-foundation/                  ← bootstrap ✅ v0.1.0
 │   ├── README.md
-│   └── v0.X.Y.md
-├── 2x-content-scripts/        ← (futuro, detección y queries QBO)
-│   └── ...
-└── ...
+│   └── v0.1.0.md
+├── 10-bridge-client/               ← P2 — WebSocket client + auth con mapi
+│   └── README.md
+├── 20-qbo-scripts/                 ← content scripts QBO (Mx que requieren plugin)
+│   ├── README.md                   ← TDD del bloque
+│   └── m2-uncats-write/            ← M2 — escribe notas/memo en QBO
+├── 30-banks/                       ← (M4 futuro: scraping bank statements, si entra)
+└── 40-receipts/                    ← (M5 futuro: upload directo de recibos, si entra)
 ```
 
 ### Numeración por dominio
@@ -199,9 +202,11 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
 ## Índice de módulos
 
-| Carpeta       | Status | TDD                                  | Versiones                         |
-| ------------- | ------ | ------------------------------------ | --------------------------------- |
-| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+| Carpeta                        | Status | Mx  | TDD                                                   | Versiones                         |
+| ------------------------------ | ------ | --- | ----------------------------------------------------- | --------------------------------- |
+| 00-foundation                  | ✅     | P0  | [README.md](00-foundation/README.md)                  | [v0.1.0](00-foundation/v0.1.0.md) |
+| 10-bridge-client               | 📅     | P2  | [README.md](10-bridge-client/README.md)               | —                                 |
+| 20-qbo-scripts/m2-uncats-write | 📅     | M2  | [README.md](20-qbo-scripts/m2-uncats-write/README.md) | —                                 |
 
 ---
 
