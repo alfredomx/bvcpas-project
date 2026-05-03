@@ -15,10 +15,9 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** `20-intuit-oauth` 🔬 (TDD escrito, esperando aprobación).
+**Módulo activo:** `20-intuit-oauth` 🚧 (v0.3.0 cerrada, v0.3.1 pendiente).
 **Próximas versiones planeadas:**
 
-- `mapi-v0.3.0` — schema clients + intuit_tokens + endpoints OAuth + proxy V3.
 - `mapi-v0.3.1` — migración 77 clientes desde mapi v0.x prod + local.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
@@ -238,30 +237,31 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                            |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------ |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)    |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)     |
-| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | (cubierto en 20-intuit-oauth v0.3.0) |
-| 20-intuit-oauth                 | 🔬     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 (planeadas)          |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                    |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                    |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                    |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                    |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                    |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                    |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                    |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                    |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                    |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                          |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | -------------------------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                  |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                   |
+| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | (cubierto en 20-intuit-oauth v0.3.0)               |
+| 20-intuit-oauth                 | 🚧     | P1      | [README.md](20-intuit-oauth/README.md)                 | [v0.3.0](20-intuit-oauth/v0.3.0.md) ✅ + v0.3.1 📅 |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                  |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                  |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                  |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                  |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                  |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                  |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                  |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                  |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                  |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo        | Estado | Tema                                                                  | Tag         | Archivo                                            |
-| ------- | ------------- | ------ | --------------------------------------------------------------------- | ----------- | -------------------------------------------------- |
-| 0.1.0   | 00-foundation | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
-| 0.2.0   | 10-core-auth  | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                 | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
+| Versión | Módulo          | Estado | Tema                                                                          | Tag         | Archivo                                                |
+| ------- | --------------- | ------ | ----------------------------------------------------------------------------- | ----------- | ------------------------------------------------------ |
+| 0.1.0   | 00-foundation   | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify         | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)     |
+| 0.2.0   | 10-core-auth    | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                         | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)       |
+| 0.3.0   | 20-intuit-oauth | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas | mapi-v0.3.0 | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md) |
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "mapi",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "BV CPAs - backend NestJS",
   "private": true,
   "license": "UNLICENSED",
