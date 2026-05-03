@@ -45,7 +45,9 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
     '/v1/docs',
     apiReference({
       content: document,
+      layout: 'modern',
       theme: 'default',
+      hideModels: true,
       hideClientButton: false,
       defaultOpenAllTags: false,
       authentication: { preferredSecurityScheme: 'bearer' },
