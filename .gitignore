@@ -23,6 +23,7 @@ out/
 apps/*/dist/
 apps/*/build/
 apps/*/.next/
+apps/*/next-env.d.ts
 
 # =====================================================================
 # Tests
