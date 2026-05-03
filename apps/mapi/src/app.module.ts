@@ -8,9 +8,18 @@ import { CorrelationIdMiddleware } from './common/correlation/correlation-id.mid
 import { DomainErrorFilter } from './common/errors/domain-error.filter'
 import { HealthModule } from './modules/health/health.module'
 import { EventLogModule } from './modules/event-log/event-log.module'
+import { AuthCoreModule } from './core/auth/auth-core.module'
 
 @Module({
-  imports: [AppConfigModule, LoggerModule, DbModule, MetricsModule, EventLogModule, HealthModule],
+  imports: [
+    AppConfigModule,
+    LoggerModule,
+    DbModule,
+    MetricsModule,
+    AuthCoreModule,
+    EventLogModule,
+    HealthModule,
+  ],
   providers: [
     {
       provide: APP_FILTER,
