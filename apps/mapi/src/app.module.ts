@@ -1,5 +1,5 @@
 import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
-import { APP_FILTER } from '@nestjs/core'
+import { APP_FILTER, APP_GUARD } from '@nestjs/core'
 import { AppConfigModule } from './core/config/config.module'
 import { LoggerModule } from './core/logger/logger.module'
 import { DbModule } from './core/db/db.module'
@@ -9,6 +9,8 @@ import { DomainErrorFilter } from './common/errors/domain-error.filter'
 import { HealthModule } from './modules/health/health.module'
 import { EventLogModule } from './modules/event-log/event-log.module'
 import { AuthCoreModule } from './core/auth/auth-core.module'
+import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
+import { RolesGuard } from './core/auth/guards/roles.guard'
 
 @Module({
   imports: [
@@ -24,6 +26,14 @@ import { AuthCoreModule } from './core/auth/auth-core.module'
     {
       provide: APP_FILTER,
       useClass: DomainErrorFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
   ],
 })
