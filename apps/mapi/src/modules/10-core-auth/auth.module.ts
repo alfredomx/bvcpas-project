@@ -5,6 +5,8 @@ import { AuthService } from './auth.service'
 import { AdminUsersController } from './admin-users/admin-users.controller'
 import { AdminUsersSessionsController } from './admin-users/admin-users-sessions.controller'
 import { AdminUsersService } from './admin-users/admin-users.service'
+import { AdminSessionsController } from './admin-sessions/admin-sessions.controller'
+import { AdminSessionsService } from './admin-sessions/admin-sessions.service'
 
 @Module({
   imports: [
@@ -16,7 +18,12 @@ import { AdminUsersService } from './admin-users/admin-users.service'
       },
     ]),
   ],
-  controllers: [AuthController, AdminUsersController, AdminUsersSessionsController],
-  providers: [AuthService, AdminUsersService],
+  controllers: [
+    AuthController,
+    AdminUsersController,
+    AdminUsersSessionsController,
+    AdminSessionsController,
+  ],
+  providers: [AuthService, AdminUsersService, AdminSessionsService],
 })
 export class AuthModule {}
