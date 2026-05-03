@@ -1,9 +1,22 @@
 # 11-clients — CRUD base de clientes + configuración por cliente
 
 **App:** mapi
-**Status:** 📅 Pendiente
-**Versiones que lo construyen:** —
+**Status:** 📅 (schema cubierto por 20-intuit-oauth v0.3.0)
+**Versiones que lo construyen:** ver [20-intuit-oauth/v0.3.0.md](../20-intuit-oauth/v0.3.0.md)
 **Última revisión:** 2026-05-03
+
+---
+
+## ⚠️ Nota importante
+
+El **schema `clients` viene dentro de [`20-intuit-oauth` v0.3.0](../20-intuit-oauth/README.md)**, no en una versión separada. Esto se decidió porque:
+
+1. La tabla `clients` no tiene sentido sin tokens Intuit (un cliente bookkeeper SIEMPRE tiene su QBO autorizado).
+2. La migración de los 77 clientes (v0.3.1) trae clients + intuit_tokens en un solo script.
+
+**Cuándo se reabre este módulo:** cuando M1 (Dashboard Administrator) requiera **extender** clients con columnas de configuración operativa (sync_start_date, sync_enabled, email_drafts_enabled, filter, contact, cc_email, etc.). Esa extensión sí amerita su propia versión bajo `11-clients/v0.X.Y.md`.
+
+Hasta entonces, el schema base de `clients` vive bajo el TDD de `20-intuit-oauth`.
 
 ---
 
@@ -11,7 +24,7 @@
 
 Toda la operación del bookkeeper gira alrededor del concepto de "cliente" (una empresa con QuickBooks Online a la que el operador da servicio de bookkeeping). Sin esta tabla, no hay con qué relacionar tokens Intuit, syncs, dashboards, ni nada de Etapa 1.
 
-Reusa el diseño de mapi v0.x con renames donde el naming no era consumible. Los 77 clientes existentes en mapi v0.x se migran cuando entre P1 (`20-intuit/01-oauth/`).
+Reusa el diseño de mapi v0.x con renames donde el naming no era consumible. Los 77 clientes existentes en mapi v0.x se migran cuando entre P1 (`20-intuit-oauth` v0.3.1).
 
 ---
 

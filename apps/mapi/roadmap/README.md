@@ -15,8 +15,11 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** ninguno (10-core-auth cerrado en v0.2.0 el 2026-05-03).
-**Siguiente:** `20-intuit/01-oauth` (P1 — Intuit Core, OAuth + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod).
+**Módulo activo:** `20-intuit-oauth` 🔬 (TDD escrito, esperando aprobación).
+**Próximas versiones planeadas:**
+
+- `mapi-v0.3.0` — schema clients + intuit_tokens + endpoints OAuth + proxy V3.
+- `mapi-v0.3.1` — migración 77 clientes desde mapi v0.x prod + local.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -34,13 +37,12 @@ apps/mapi/roadmap/
 ├── 10-core-auth/                   ← (futuro: cuando un módulo lo pida)
 ├── 11-clients/                     ← CRUD base + config por cliente (M1 lo extiende)
 │   └── README.md
-├── 20-intuit/                      ← integración Intuit (P1 + P2)
-│   ├── README.md                   ← TDD del bloque
-│   ├── 01-oauth/                   ← P1 — OAuth + tokens + refresh + migración
-│   │   └── README.md
-│   ├── 02-bridge/                  ← P2 — WebSocket gateway con plugin
-│   │   └── README.md
-│   └── 03-connectors/              ← (cuando un Mx lo pida)
+├── 20-intuit-oauth/                ← P1 — OAuth + tokens + refresh + proxy V3
+│   ├── README.md                   ← TDD vivo
+│   ├── v0.3.0.md                   ← schema + endpoints
+│   └── v0.3.1.md                   ← migración 77 clientes
+├── 21-intuit-bridge/               ← P2 — WebSocket gateway con plugin (futuro)
+├── 22-connectors/                  ← qbo-dev + qbo-internal (cuando un Mx lo pida)
 ├── 25-dropbox-watcher/             ← M4 + M5 — connector Dropbox (cuando entren)
 ├── 30-staging/                     ← (cuando un módulo concreto lo pida)
 ├── 40-classification/              ← M2 opcional + futuros — categorización ML
@@ -236,20 +238,21 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                         |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------- |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md) |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)  |
-| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | —                                 |
-| 20-intuit/01-oauth              | 📅     | P1      | [README.md](20-intuit/01-oauth/README.md)              | —                                 |
-| 20-intuit/02-bridge             | 📅     | P2      | [README.md](20-intuit/02-bridge/README.md)             | —                                 |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                 |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                 |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                 |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                 |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                 |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                 |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                 |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                            |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------ |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)    |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)     |
+| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | (cubierto en 20-intuit-oauth v0.3.0) |
+| 20-intuit-oauth                 | 🔬     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 (planeadas)          |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                    |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                    |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                    |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                    |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                    |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                    |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                    |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                    |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                    |
 
 ---
 
