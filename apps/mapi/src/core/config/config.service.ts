@@ -44,4 +44,20 @@ export class AppConfigService {
   get isTest(): boolean {
     return this.cfg.NODE_ENV === 'test'
   }
+
+  get jwtSecret(): string {
+    return this.cfg.JWT_SECRET
+  }
+
+  get jwtExpiresIn(): string {
+    return this.cfg.JWT_EXPIRES_IN
+  }
+
+  get bcryptCost(): number {
+    return this.cfg.BCRYPT_COST
+  }
+
+  get redisUrl(): string {
+    return this.cfg.REDIS_URL
+  }
 }

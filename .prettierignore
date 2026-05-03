@@ -1,0 +1,24 @@
+# Build output
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+apps/*/node_modules/
+apps/*/dist/
+apps/*/build/
+apps/*/.next/
+apps/*/coverage/
+apps/*/next-env.d.ts
+
+# Drizzle metadata (autogenerado, no formatear manual)
+apps/*/drizzle/migrations/meta/
+apps/*/drizzle/meta/
+
+# Lockfiles
+package-lock.json
+apps/*/package-lock.json
+
+# Logs
+*.log

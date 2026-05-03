@@ -23,6 +23,16 @@ export const configSchema = z.object({
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   LOKI_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   DATABASE_URL: z.string().url(),
+
+  // 10-core-auth (v0.2.0): JWT + sesiones + cache Redis
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
+  JWT_EXPIRES_IN: z.string().default('7d'),
+  BCRYPT_COST: z.coerce.number().int().min(10).max(14).default(12),
+  REDIS_URL: z.string().url(),
+
+  // Solo en seed inicial. NO se validan en cada arranque (el seed los lee directo).
+  INITIAL_ADMIN_EMAIL: z.preprocess(emptyToUndefined, z.string().email().optional()),
+  INITIAL_ADMIN_FULL_NAME: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
 })
 
 export type AppConfig = z.infer<typeof configSchema>
