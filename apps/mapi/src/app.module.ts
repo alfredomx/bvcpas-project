@@ -2,11 +2,13 @@ import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common
 import { APP_FILTER } from '@nestjs/core'
 import { AppConfigModule } from './core/config/config.module'
 import { LoggerModule } from './core/logger/logger.module'
+import { DbModule } from './core/db/db.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 import { DomainErrorFilter } from './common/errors/domain-error.filter'
+import { HealthModule } from './modules/health/health.module'
 
 @Module({
-  imports: [AppConfigModule, LoggerModule],
+  imports: [AppConfigModule, LoggerModule, DbModule, HealthModule],
   providers: [
     {
       provide: APP_FILTER,
