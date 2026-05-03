@@ -36,10 +36,14 @@ export default async function globalSetup(): Promise<void> {
     // Drop completo de tablas + drizzle metadata antes de aplicar migrations.
     // Garantiza estado limpio entre runs (importante: mapi_test es compartida).
     await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS intuit_tokens CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS clients CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_sessions CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS event_log CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`)
     await db.execute(sql`DROP FUNCTION IF EXISTS users_set_updated_at CASCADE`)
+    await db.execute(sql`DROP FUNCTION IF EXISTS clients_set_updated_at CASCADE`)
+    await db.execute(sql`DROP FUNCTION IF EXISTS intuit_tokens_set_updated_at CASCADE`)
 
     await migrate(db, { migrationsFolder: './drizzle/migrations' })
     console.log('[e2e-setup] Migrations OK.')

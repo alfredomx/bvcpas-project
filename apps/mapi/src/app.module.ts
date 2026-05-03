@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './core/auth/guards/roles.guard'
 import { AuthModule } from './modules/10-core-auth/auth.module'
 import { EncryptionModule } from './core/encryption/encryption.module'
+import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module'
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { EncryptionModule } from './core/encryption/encryption.module'
     EncryptionModule,
     EventLogModule,
     AuthModule,
+    IntuitOauthModule,
     HealthModule,
   ],
   providers: [
