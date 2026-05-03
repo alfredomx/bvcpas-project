@@ -1,8 +1,8 @@
 # 10-core-auth — Auth (users + JWT + sesiones revocables)
 
 **App:** mapi
-**Status:** 🔬 En discusión
-**Versiones que lo construyen:** —
+**Status:** ✅ Completo
+**Versiones que lo construyen:** [v0.2.0](v0.2.0.md)
 **Última revisión:** 2026-05-03
 
 ---

@@ -15,9 +15,8 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** `10-core-auth` 🔬 (TDD en discusión, esperando aprobación del operador).
-**Siguiente versión:** `mapi-v0.2.0` (cuando se apruebe el TDD).
-**Por qué primero auth:** los dashboards M1-M7 se comparten con varios usuarios del equipo; sin users reales no se puede asignar Owner ni auditar quién hizo qué. P1 Intuit Core viene después porque sus tokens deben vincularse al user que autorizó.
+**Módulo activo:** ninguno (10-core-auth cerrado en v0.2.0 el 2026-05-03).
+**Siguiente:** `20-intuit/01-oauth` (P1 — Intuit Core, OAuth + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod).
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -240,7 +239,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | Carpeta                         | Status | Mx      | TDD                                                    | Versiones                         |
 | ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------- |
 | 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md) |
-| 10-core-auth                    | 🔬     | base    | [README.md](10-core-auth/README.md)                    | —                                 |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)  |
 | 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | —                                 |
 | 20-intuit/01-oauth              | 📅     | P1      | [README.md](20-intuit/01-oauth/README.md)              | —                                 |
 | 20-intuit/02-bridge             | 📅     | P2      | [README.md](20-intuit/02-bridge/README.md)             | —                                 |
@@ -259,6 +258,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | Versión | Módulo        | Estado | Tema                                                                  | Tag         | Archivo                                            |
 | ------- | ------------- | ------ | --------------------------------------------------------------------- | ----------- | -------------------------------------------------- |
 | 0.1.0   | 00-foundation | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
+| 0.2.0   | 10-core-auth  | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                 | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
 
 ---
 
@@ -274,6 +274,8 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s     | 0.1.0   | No          |
 | D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición) | 0.1.0   | No          |
 | D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)      | —       | No          |
+| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)            | 0.2.0   | No          |
+| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.  | 0.2.0   | No          |
 
 ---
 
