@@ -22,15 +22,15 @@
   "lint-staged": {
     "apps/mapi/**/*.{ts,tsx,js,mjs}": [
       "prettier --check --config apps/mapi/.prettierrc",
-      "eslint --max-warnings=0 --config apps/mapi/eslint.config.mjs"
+      "node scripts/run-eslint.mjs apps/mapi"
     ],
     "apps/web/**/*.{ts,tsx,js,mjs}": [
       "prettier --check --config apps/web/.prettierrc",
-      "eslint --max-warnings=0 --config apps/web/eslint.config.mjs"
+      "node scripts/run-eslint.mjs apps/web"
     ],
     "apps/kiro/**/*.{ts,tsx,js,mjs}": [
       "prettier --check --config apps/kiro/.prettierrc",
-      "eslint --max-warnings=0 --config apps/kiro/eslint.config.mjs"
+      "node scripts/run-eslint.mjs apps/kiro"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --check"
