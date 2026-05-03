@@ -317,6 +317,135 @@ Cuando se corre la primera migration con tablas `users`/`user_sessions` vacías,
 
 ---
 
+## Estrategia de tests
+
+No todos los tests valen lo mismo. En este proyecto hay 2 tipos con costos y valor distintos.
+
+### Tipo A — Lógica pura con fixtures JSON (mayoría)
+
+La mayor parte de los CR (CR-auth-001 a CR-auth-051) se cubren con tests **unit que NO tocan DB**. Los services reciben mocks de los repositorios; los repositorios reciben fixtures JSON capturados de queries reales.
+
+**Costo:** milisegundos por test. Permiten ciclo TDD-first real (escribir test rojo → operador valida → implementar verde → siguiente CR) sin esperar setup de Postgres.
+
+**Cubren:** lógica de services, transformaciones, decisiones de negocio, validaciones, mapeo de errores de dominio.
+
+**NO cubren:** que la query SQL devuelve lo correcto, que constraints UNIQUE disparen, que triggers se ejecuten, race conditions reales.
+
+**Ubicación:**
+
+- Tests: `apps/mapi/test/unit/<area>/<archivo>.spec.ts`.
+- Fixtures: `apps/mapi/test/fixtures/<area>/<caso>.json`.
+
+**Cómo se captura un fixture JSON:**
+
+1. Levantar DB local con datos representativos del caso.
+2. Correr la query exacta del service desde Drizzle Studio o psql.
+3. Copiar el JSON resultante a `test/fixtures/<area>/<caso>.json`.
+4. Importarlo en el test como mock del retorno del repo.
+5. Si la query cambia: regenerar el JSON, los tests siguen rápidos.
+
+### Tipo B — Smoke tests con DB real (pocos)
+
+Solo 3-5 tests por módulo. Cubren los flujos end-to-end completos: HTTP request → controller → service → repo → DB → response. Postgres real (`mapi_test`), migrations aplicadas, seed mínimo.
+
+**Costo:** segundos por test (setup + teardown). Suite completa puede tomar minutos. Por eso son pocos.
+
+**Cubren:** que las queries SQL funcionan en runtime, que constraints disparan, que triggers se ejecutan, que cascade deletes operan, que el JOIN entre `users` y `user_sessions` retorna lo esperado.
+
+**NO cubren ni duplican:** lo que Tipo A ya validó (lógica pura, mappers, validaciones). Si rompes lógica pura, los Tipo A te avisan en milisegundos. Los Tipo B existen para garantizar que la integración con DB no se rompió.
+
+**Ubicación:** `apps/mapi/test/e2e/<area>.e2e-spec.ts`.
+
+### Reglas duras
+
+1. **Cada CR del listado de "Tests críticos" tiene un test real.** Si no es testeable, el CR está mal escrito.
+2. **Cero tests decorativos** (D-mapi-005 heredado). Si rompes la lógica y el test no falla, el test no sirve. Se borra.
+3. **Tipo A primero, Tipo B solo para smoke.** No duplicar la misma validación en ambos tipos.
+4. **Fixture nunca se inventa.** Siempre se captura de query real, aunque sea una vez.
+5. **El JSON del fixture es válido.** Si la API de Drizzle cambia y el shape ya no es válido, regenerar el fixture.
+
+---
+
+## Tests críticos
+
+Comportamientos que el módulo DEBE garantizar siempre. Cada uno es un test real (Tipo A o B). Cuando se abra `v0.2.0.md`, los TODOs de tests apuntan a estos códigos.
+
+### Login (Tipo A)
+
+- **CR-auth-001:** Login con email no existente → 401 INVALID_CREDENTIALS. No revela si el email existe (mismo error que password incorrecto).
+- **CR-auth-002:** Login con password incorrecto → 401 INVALID_CREDENTIALS.
+- **CR-auth-003:** Login con user `disabled` → 401 USER_DISABLED. No INVALID_CREDENTIALS (admin necesita saber si el bloqueo es por password o por status para soporte).
+- **CR-auth-004:** Login exitoso devuelve JWT firmado con claim `jti` válido y crea row en `user_sessions` con ese `jti`.
+- **CR-auth-005:** Login exitoso actualiza `users.last_login_at = now()`.
+- **CR-auth-006:** Login dispara evento `auth.login.success` con `actor_user_id`, `ip`, `user_agent`.
+- **CR-auth-007:** Login fallido dispara evento `auth.login.failed` con email + razón, SIN `actor_user_id` (no hay user autenticado).
+
+### Sesión (Tipo A + B)
+
+- **CR-auth-010:** JWT con firma inválida → 401. Protege contra forgery. _(Tipo A)_
+- **CR-auth-011:** JWT válido pero `jti` no existe en `user_sessions` → 401 SESSION*NOT_FOUND. *(Tipo A)\_
+- **CR-auth-012:** JWT válido + `revoked_at` poblado → 401 SESSION*REVOKED. *(Tipo A)\_
+- **CR-auth-013:** JWT válido + `expires_at < now()` → 401 SESSION*EXPIRED. *(Tipo A)\_
+- **CR-auth-014:** Revocar sesión + invalidar cache Redis → próxima request falla inmediato (no espera 30s). _(Tipo A con mock Redis)_
+- **CR-auth-015:** Revocar sesión sin invalidar cache → falla en máximo 30s (TTL del cache). _(Tipo A con clock manipulado + mock Redis)_
+- **CR-auth-016:** `last_seen_at` se actualiza con debounce 5min, no en cada request. _(Tipo A con clock)_
+
+### Roles y guards (Tipo A)
+
+- **CR-auth-020:** viewer hace request a endpoint admin → 403 INSUFFICIENT_PERMISSIONS.
+- **CR-auth-021:** admin hace request a endpoint admin → pasa.
+- **CR-auth-022:** Endpoint marcado `@Public()` no requiere JWT (login es el caso de uso real).
+
+### Password (Tipo A)
+
+- **CR-auth-030:** Cambio de password con `old_password` incorrecto → 400 WRONG_OLD_PASSWORD.
+- **CR-auth-031:** Cambio de password OK → revoca todas las otras sesiones del user (excepto la actual).
+- **CR-auth-032:** Reset admin → genera password aleatoria, revoca TODAS las sesiones del user (incluida la del admin si fuera el mismo user — caso degenerado pero válido).
+- **CR-auth-033:** Password < 8 chars → 400 WEAK_PASSWORD.
+- **CR-auth-034:** Hash bcrypt no es reversible: `compare(plain, hash)` retorna boolean, nunca el plain.
+
+### Auditoría event_log (Tipo A)
+
+- **CR-auth-040:** Cada login exitoso dispara `auth.login.success` con `actor_user_id` correcto. _(ya cubierto en CR-auth-006, listado aquí para reforzar dominio "auditoría".)_
+- **CR-auth-041:** Revocar sesión por admin dispara `auth.session.revoked_by_admin` con `revoked_by_user_id` = id del admin que revocó.
+- **CR-auth-042:** Disable user dispara `auth.user.disabled` con `disabled_by_user_id`.
+- **CR-auth-043:** Si `EventLogService.log()` falla internamente, NO rompe la operación principal (login completa OK aunque event_log falle — D-052 mapi v0.x).
+
+### Concurrencia y constraints (Tipo B)
+
+- **CR-auth-050:** Crear user con email duplicado en race condition → solo uno gana, el otro recibe 409 EMAIL_ALREADY_EXISTS (constraint UNIQUE de DB cubre, no try/catch en service).
+- **CR-auth-051:** Login simultáneo del mismo user en 2 dispositivos → crea 2 sesiones distintas con `jti` distintos. Ambas funcionan independientes.
+
+### Smoke tests (Tipo B)
+
+- **SMK-auth-001:** Flujo completo despido — admin crea user → user loguea → admin revoca todas + disable → user no puede entrar (ni con JWT viejo ni con nuevo login).
+- **SMK-auth-002:** Cache Redis 30s — revoco sin invalidar cache, request en t<30s pasa, request en t>30s falla. Validar que el TTL realmente funciona en runtime.
+- **SMK-auth-003:** UNIQUE constraint email — 2 inserts simultáneos vía endpoint, uno gana, otro recibe 409. (Complementa CR-auth-050 con HTTP real.)
+- **SMK-auth-004:** Cascade delete — DELETE user borra sus `user_sessions` automáticamente sin error.
+- **SMK-auth-005:** Migration end-to-end — corre `npm run db:migrate` en DB vacía, seed crea admin con `INITIAL_ADMIN_*`, login con esas credenciales funciona.
+
+---
+
+## Cómo se trabaja el módulo (TDD-first)
+
+Cada CR del listado es el orden del trabajo en `v0.2.0.md` (no anexo posthoc).
+
+Por cada CR:
+
+1. **Escribo el test** (Tipo A o B según el área) — corre y queda **rojo** (la implementación todavía no existe).
+2. **Operador ve el rojo**, valida que el test esté bien diseñado (cubre lo correcto, no es decorativo, no testea implementación interna).
+3. **Implemento mínimo para pasar a verde.** Sin agregar features no pedidas ("ya que estamos" prohibido).
+4. **Operador ve el verde**, valida.
+5. **Siguiente CR.**
+
+Operador tiene `npm run test:watch` corriendo. Los Tipo A re-corren en milisegundos. Los Tipo B se corren bajo demanda con `npm run test:e2e` (o al cierre de un grupo de CRs relacionados).
+
+**Si durante la implementación aparece una decisión no prevista en el TDD:**
+
+Paro y pregunto. No improviso. Las decisiones nuevas se documentan como `D-mapi-NNN` en `v0.2.0.md` antes de avanzar.
+
+---
+
 ## Tareas
 
 Cada bullet es una tarea o sub-tarea. Granularidad: lo más pequeño que tiene sentido revisar solo.
@@ -383,10 +512,18 @@ Cada bullet es una tarea o sub-tarea. Granularidad: lo más pequeño que tiene s
 
 ### Tests
 
-- [ ] Test integration: login OK, login fallido (4 escenarios), JWT inválido, sesión expirada, sesión revocada.
-- [ ] Test unit: `PasswordService.hash/compare`.
-- [ ] Test unit: `SessionsService` con mock Redis.
-- [ ] Test e2e: flujo completo (admin crea user → user loguea → admin revoca sesión → user falla).
+> El detalle de qué archivos de tests escribir vive en `v0.2.0.md` (cuando se abra). Aquí solo el mapeo conceptual.
+>
+> **Tipo A (lógica pura con fixtures JSON):** cubre CR-auth-001 a CR-auth-049. La mayoría.
+>
+> **Tipo B (smoke con DB real):** cubre CR-auth-050, CR-auth-051 y SMK-auth-001 a SMK-auth-005. Solo flujos end-to-end.
+
+- [ ] Setup `apps/mapi/test/fixtures/auth/` con fixtures iniciales (user-active, user-disabled, session-active, session-revoked).
+- [ ] Setup `apps/mapi/test/unit/auth/` para tests Tipo A.
+- [ ] Setup `apps/mapi/test/e2e/auth.e2e-spec.ts` para tests Tipo B.
+- [ ] Tests Tipo A para CR-auth-001 a CR-auth-049 (orden TDD-first, cada CR es 1 commit potencial).
+- [ ] Tests Tipo B para CR-auth-050, CR-auth-051 y SMK-auth-001 a SMK-auth-005.
+- [ ] CI/local: `npm run test:watch` corre todos los Tipo A en <2s. `npm run test:e2e` corre Tipo B en <30s.
 
 ### Documentación
 
