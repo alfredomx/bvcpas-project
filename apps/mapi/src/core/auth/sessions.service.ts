@@ -15,7 +15,7 @@ import {
   SessionNotFoundError,
   SessionRevokedError,
   UserDisabledError,
-} from '../../modules/auth/errors'
+} from '../../modules/10-core-auth/errors'
 
 /**
  * Información mínima cacheada en Redis. Se invalida al revocar.

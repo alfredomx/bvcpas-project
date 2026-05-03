@@ -1,4 +1,4 @@
-import { EventLogService } from '../../../src/modules/event-log/event-log.service'
+import { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import type { DrizzleDb } from '../../../src/core/db/db.module'
 
 /**

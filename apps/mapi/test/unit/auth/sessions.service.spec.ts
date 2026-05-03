@@ -8,7 +8,7 @@ import {
   SessionNotFoundError,
   SessionRevokedError,
   UserDisabledError,
-} from '../../../src/modules/auth/errors'
+} from '../../../src/modules/10-core-auth/errors'
 
 /**
  * Tests Tipo A para SessionsService.

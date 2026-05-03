@@ -1,6 +1,6 @@
 import { PasswordService } from '../../../src/core/auth/password.service'
 import type { AppConfigService } from '../../../src/core/config/config.service'
-import { WeakPasswordError } from '../../../src/modules/auth/errors'
+import { WeakPasswordError } from '../../../src/modules/10-core-auth/errors'
 
 /**
  * Tests Tipo A para PasswordService. No tocan DB ni red.

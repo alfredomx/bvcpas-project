@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { hash, compare } from 'bcrypt'
 import { randomBytes } from 'node:crypto'
 import { AppConfigService } from '../config/config.service'
-import { WeakPasswordError } from '../../modules/auth/errors'
+import { WeakPasswordError } from '../../modules/10-core-auth/errors'
 
 /**
  * Servicio de hashing y validación de contraseñas.

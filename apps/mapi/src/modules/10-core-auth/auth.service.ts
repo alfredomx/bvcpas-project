@@ -4,7 +4,7 @@ import { DB, type DrizzleDb } from '../../core/db/db.module'
 import { users, type User, type UserRole, type UserStatus } from '../../db/schema/users'
 import { PasswordService } from '../../core/auth/password.service'
 import { SessionsService } from '../../core/auth/sessions.service'
-import { EventLogService } from '../event-log/event-log.service'
+import { EventLogService } from '../95-event-log/event-log.service'
 import {
   InvalidCredentialsError,
   UserDisabledError,

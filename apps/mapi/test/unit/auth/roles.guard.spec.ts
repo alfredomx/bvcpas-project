@@ -3,7 +3,7 @@ import type { Reflector } from '@nestjs/core'
 import { RolesGuard } from '../../../src/core/auth/guards/roles.guard'
 import type { SessionContext } from '../../../src/core/auth/sessions.service'
 import type { UserRole } from '../../../src/db/schema/users'
-import { InsufficientPermissionsError } from '../../../src/modules/auth/errors'
+import { InsufficientPermissionsError } from '../../../src/modules/10-core-auth/errors'
 
 /**
  * Tests Tipo A para RolesGuard.

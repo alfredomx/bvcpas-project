@@ -7,11 +7,11 @@ import { MetricsModule } from './core/metrics/metrics.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 import { DomainErrorFilter } from './common/errors/domain-error.filter'
 import { HealthModule } from './modules/health/health.module'
-import { EventLogModule } from './modules/event-log/event-log.module'
+import { EventLogModule } from './modules/95-event-log/event-log.module'
 import { AuthCoreModule } from './core/auth/auth-core.module'
 import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './core/auth/guards/roles.guard'
-import { AuthModule } from './modules/auth/auth.module'
+import { AuthModule } from './modules/10-core-auth/auth.module'
 
 @Module({
   imports: [

@@ -1,14 +1,14 @@
-import { AuthService } from '../../../src/modules/auth/auth.service'
+import { AuthService } from '../../../src/modules/10-core-auth/auth.service'
 import { PasswordService } from '../../../src/core/auth/password.service'
 import type { SessionsService } from '../../../src/core/auth/sessions.service'
-import type { EventLogService } from '../../../src/modules/event-log/event-log.service'
+import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import type { DrizzleDb } from '../../../src/core/db/db.module'
 import type { AppConfigService } from '../../../src/core/config/config.service'
 import {
   InvalidCredentialsError,
   UserDisabledError,
   WrongOldPasswordError,
-} from '../../../src/modules/auth/errors'
+} from '../../../src/modules/10-core-auth/errors'
 import userActive from '../../fixtures/auth/user-active.json'
 import userDisabled from '../../fixtures/auth/user-disabled.json'
 

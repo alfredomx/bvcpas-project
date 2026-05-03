@@ -4,7 +4,7 @@ import type { Request } from 'express'
 import { ROLES_KEY } from '../decorators/roles.decorator'
 import type { UserRole } from '../../../db/schema/users'
 import type { SessionContext } from '../sessions.service'
-import { InsufficientPermissionsError } from '../../../modules/auth/errors'
+import { InsufficientPermissionsError } from '../../../modules/10-core-auth/errors'
 
 /**
  * Guard que valida que el user autenticado tenga uno de los roles
