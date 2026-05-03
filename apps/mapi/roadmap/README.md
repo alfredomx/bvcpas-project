@@ -16,7 +16,9 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 ## Estado actual
 
 **Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con deploy a `mapi.kodapp.com.mx`).
-**Siguiente:** `20-intuit-oauth` (clients + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod) → planeado para `v0.2.0`.
+**Siguiente:** `20-intuit/01-oauth` (P1 — Intuit Core, OAuth + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod) → planeado para `v0.2.0`.
+
+> **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
 ---
 
@@ -24,18 +26,36 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ```
 apps/mapi/roadmap/
-├── README.md                  ← este archivo (índice + reglas + tabla de decisiones)
-├── BACKLOG.md                 ← items diferidos por trigger
-├── 00-foundation/             ← bootstrap/infra (sin contraparte en src/modules/)
-│   ├── README.md              ← TDD vivo del módulo
-│   └── v0.1.0.md              ← bitácora de la versión que cerró el módulo
-├── 10-core-auth/              ← (futuro)
+├── README.md                       ← este archivo (índice + reglas + tabla decisiones)
+├── BACKLOG.md                      ← items diferidos por trigger
+├── 00-foundation/                  ← bootstrap/infra ✅ v0.1.0
 │   ├── README.md
-│   └── v0.X.Y.md
-├── 20-intuit-oauth/           ← (siguiente)
-│   ├── README.md
-│   └── v0.2.0.md
-└── ...
+│   └── v0.1.0.md
+├── 10-core-auth/                   ← (futuro: cuando un módulo lo pida)
+├── 11-clients/                     ← CRUD base + config por cliente (M1 lo extiende)
+│   └── README.md
+├── 20-intuit/                      ← integración Intuit (P1 + P2)
+│   ├── README.md                   ← TDD del bloque
+│   ├── 01-oauth/                   ← P1 — OAuth + tokens + refresh + migración
+│   │   └── README.md
+│   ├── 02-bridge/                  ← P2 — WebSocket gateway con plugin
+│   │   └── README.md
+│   └── 03-connectors/              ← (cuando un Mx lo pida)
+├── 25-dropbox-watcher/             ← M4 + M5 — connector Dropbox (cuando entren)
+├── 30-staging/                     ← (cuando un módulo concreto lo pida)
+├── 40-classification/              ← M2 opcional + futuros — categorización ML
+├── 50-features/                    ← Etapa 1 — features cross-cutting de los GS
+│   ├── README.md                   ← TDD del bloque
+│   ├── m1-admin/                   ← M1
+│   ├── m2-uncats/                  ← M2
+│   ├── m3-customer-support/        ← M3
+│   ├── m4-stmts-recon/             ← M4
+│   ├── m5-receipts/                ← M5
+│   ├── m6-form-1099/               ← M6
+│   └── m7-w9/                      ← M7
+├── 60-posting-qbo/                 ← M2 backend (escritura QBO via plugin)
+├── 95-event-log/                   ← (cuando entre auditoría real)
+└── 96-admin-jobs/                  ← (cuando entre BullMQ dashboard)
 ```
 
 ### Numeración 1:1 con `src/modules/`
@@ -216,9 +236,19 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta       | Status | TDD                                  | Versiones                         |
-| ------------- | ------ | ------------------------------------ | --------------------------------- |
-| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                         |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md) |
+| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | —                                 |
+| 20-intuit/01-oauth              | 📅     | P1      | [README.md](20-intuit/01-oauth/README.md)              | —                                 |
+| 20-intuit/02-bridge             | 📅     | P2      | [README.md](20-intuit/02-bridge/README.md)             | —                                 |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                 |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                 |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                 |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                 |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                 |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                 |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                 |
 
 ---
 
