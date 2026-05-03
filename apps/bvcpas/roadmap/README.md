@@ -15,22 +15,18 @@ Esta carpeta contiene el plan y estado de cada versión del frontend `bvcpas` de
 
 ## Estado actual
 
-**Versión activa:** ninguna (v0.1.0 cerrada el 2026-05-03 con scaffold mínimo).
-**Siguiente:** sin definir. Probables candidatos cuando llegue su trigger: stack visual (Tailwind + shadcn), página login + AuthClient contra mapi, primer dashboard operativo (probablemente M1 - Dashboard Administrator).
+**Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con scaffold mínimo).
+**Siguiente:** `10-core-ui/` cuando llegue el primer Mx que requiera UI (probablemente M1).
+
+> **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
 ## Próximas versiones (orden tentativo)
 
-> Notas pre-decididas. Al frontend lo dispara la necesidad de un módulo concreto, no se construye en abstracto.
+El frontend lo dispara la necesidad de un módulo concreto. El orden depende 100% de qué Mx el operador prioriza.
 
-### v0.2.0 (?) — Stack visual + auth client
-
-Cuando el primer módulo de la Etapa 1 (M1-M7) requiera UI: Tailwind, shadcn/ui, AuthClient (login form contra mapi), Layout base con navegación.
-
-### v0.3.0+ — Dashboards operativos
-
-Un dashboard por módulo M1-M7. Probablemente 1-2 versiones por dashboard.
-
-El orden depende 100% de qué módulo Mx el operador prioriza.
+- **`10-core-ui/`** — stack visual decidido + AuthClient + layout base. Pre-requisito para cualquier Mx.
+- **`20-dashboards-clientes/m1-admin/`** — primer dashboard funcional (control central del operador).
+- M2-M7 — orden depende de presión operativa.
 
 ---
 
@@ -38,10 +34,23 @@ El orden depende 100% de qué módulo Mx el operador prioriza.
 
 ```
 apps/bvcpas/roadmap/
-├── README.md      ← este archivo (índice + reglas del proceso)
-├── BACKLOG.md     ← items diferidos del TDD, agrupados por trigger
-├── v0.1.0.md      ← cada versión es un archivo independiente
-└── v0.X.Y.md      ← solo uno puede tener estado "🚧 En progreso" a la vez
+├── README.md                       ← este archivo (índice + reglas + decisiones)
+├── BACKLOG.md                      ← items diferidos por trigger
+├── 00-foundation/                  ← bootstrap ✅ v0.1.0
+│   ├── README.md
+│   └── v0.1.0.md
+├── 10-core-ui/                     ← stack visual + auth + layout (futuro)
+│   └── README.md
+├── 20-dashboards-clientes/         ← dashboards Etapa 1 (M1-M7)
+│   ├── README.md                   ← TDD del bloque
+│   ├── m1-admin/
+│   ├── m2-uncats/
+│   ├── m3-customer-support/
+│   ├── m4-stmts-recon/
+│   ├── m5-receipts/
+│   ├── m6-form-1099/
+│   └── m7-w9/
+└── 30-settings/                    ← (Etapa 2+: settings, perfil, admin general)
 ```
 
 Las versiones siguen [SemVer](https://semver.org/lang/es/):
@@ -176,11 +185,27 @@ Numeradas globales **por app**: `D-bvcpas-001`, `D-bvcpas-002`, etc. Anotadas en
 
 ---
 
-## Versiones
+## Índice de módulos
 
-| Versión | Estado | Tema                                                 | Archivo                |
-| ------- | ------ | ---------------------------------------------------- | ---------------------- |
-| 0.1.0   | ✅     | Scaffold Next.js 15 + React 19 mínimo (Hello bvcpas) | [v0.1.0.md](v0.1.0.md) |
+| Carpeta                                    | Status | Mx  | TDD                                                               | Versiones                         |
+| ------------------------------------------ | ------ | --- | ----------------------------------------------------------------- | --------------------------------- |
+| 00-foundation                              | ✅     | P0  | [README.md](00-foundation/README.md)                              | [v0.1.0](00-foundation/v0.1.0.md) |
+| 10-core-ui                                 | 📅     | —   | [README.md](10-core-ui/README.md)                                 | —                                 |
+| 20-dashboards-clientes/m1-admin            | 📅     | M1  | [README.md](20-dashboards-clientes/m1-admin/README.md)            | —                                 |
+| 20-dashboards-clientes/m2-uncats           | 📅     | M2  | [README.md](20-dashboards-clientes/m2-uncats/README.md)           | —                                 |
+| 20-dashboards-clientes/m3-customer-support | 📅     | M3  | [README.md](20-dashboards-clientes/m3-customer-support/README.md) | —                                 |
+| 20-dashboards-clientes/m4-stmts-recon      | 📅     | M4  | [README.md](20-dashboards-clientes/m4-stmts-recon/README.md)      | —                                 |
+| 20-dashboards-clientes/m5-receipts         | 📅     | M5  | [README.md](20-dashboards-clientes/m5-receipts/README.md)         | —                                 |
+| 20-dashboards-clientes/m6-form-1099        | 📅     | M6  | [README.md](20-dashboards-clientes/m6-form-1099/README.md)        | —                                 |
+| 20-dashboards-clientes/m7-w9               | 📅     | M7  | [README.md](20-dashboards-clientes/m7-w9/README.md)               | —                                 |
+
+---
+
+## Versiones (orden cronológico)
+
+| Versión | Módulo        | Estado | Tema                                                 | Tag           | Archivo                                            |
+| ------- | ------------- | ------ | ---------------------------------------------------- | ------------- | -------------------------------------------------- |
+| 0.1.0   | 00-foundation | ✅     | Scaffold Next.js 15 + React 19 mínimo (Hello bvcpas) | bvcpas-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 
 ---
 
