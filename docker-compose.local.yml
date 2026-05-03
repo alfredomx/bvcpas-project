@@ -1,0 +1,66 @@
+# docker-compose.local.yml — entorno LOCAL.
+#
+# Levanta solo Postgres + Redis. El backend mapi corre nativo en la PC del
+# operador con `npm run start:dev` para tener hot reload + debugger + stacktraces
+# clicables.
+#
+# Containers y volúmenes con sufijo `-local` para distinguir de producción
+# (sin sufijo). Esto permite tener producción corriendo (cuando se prueba
+# `docker-compose.yaml` localmente en P0.10) sin chocar con el stack local.
+#
+# Cómo levantar:
+#   docker compose -f docker-compose.local.yml up -d
+#
+# Cómo apagar:
+#   docker compose -f docker-compose.local.yml down
+#
+# Cómo apagar Y borrar volúmenes (resetea DB local):
+#   docker compose -f docker-compose.local.yml down -v
+#
+# Puertos expuestos al host:
+#   postgres → 5433 (matching con DATABASE_URL en .env.example)
+#   redis    → 6379
+#
+# DBs:
+#   mapi_local → creada al levantar (POSTGRES_DB env var)
+#   mapi_test  → crear MANUAL después de levantar:
+#     docker compose -f docker-compose.local.yml exec postgres \
+#       psql -U mapi -d mapi_local -c "CREATE DATABASE mapi_test"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: bvcpas-postgres-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mapi
+      POSTGRES_PASSWORD: mapi_local_password
+      POSTGRES_DB: mapi_local
+    ports:
+      - '5433:5432'
+    volumes:
+      - bvcpas-postgres-local:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U mapi -d mapi_local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bvcpas-redis-local
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '6379:6379'
+    volumes:
+      - bvcpas-redis-local:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  bvcpas-postgres-local:
+  bvcpas-redis-local:
