@@ -9,14 +9,21 @@ import type { Response } from 'express'
 import { DomainError } from './domain.error'
 
 /**
- * Mapa código de dominio → HTTP status. Vacío en Fundación. Cada módulo
- * agrega sus códigos cuando entran.
- *
- * Ejemplo futuro:
- *   CLIENT_NOT_FOUND: 404
- *   INTUIT_TOKEN_EXPIRED: 401
+ * Mapa código de dominio → HTTP status. Cada módulo agrega sus códigos.
  */
-const STATUS_BY_CODE: Record<string, number> = {}
+const STATUS_BY_CODE: Record<string, number> = {
+  // 10-core-auth (v0.2.0)
+  USER_NOT_FOUND: 404,
+  EMAIL_ALREADY_EXISTS: 409,
+  INVALID_CREDENTIALS: 401,
+  USER_DISABLED: 401,
+  SESSION_REVOKED: 401,
+  SESSION_EXPIRED: 401,
+  SESSION_NOT_FOUND: 404,
+  INSUFFICIENT_PERMISSIONS: 403,
+  WEAK_PASSWORD: 400,
+  WRONG_OLD_PASSWORD: 400,
+}
 
 interface ErrorBody {
   statusCode: number

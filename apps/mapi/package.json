@@ -9,7 +9,7 @@
   },
   "scripts": {
     "clean": "node -e \"const{rmSync}=require('node:fs');['dist','tsconfig.tsbuildinfo','tsconfig.build.tsbuildinfo'].forEach(p=>rmSync(p,{recursive:true,force:true}))\"",
-    "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json && tsc -p tsconfig.scripts.json && tsc-alias -p tsconfig.scripts.json",
+    "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
     "start": "node dist/main.js",
     "start:dev": "npm run clean && nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -18,7 +18,7 @@
     "lint:fix": "eslint \"{src,test,scripts}/**/*.ts\" --fix",
     "format": "prettier --write --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.ts\"",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
     "test": "jest --config ./test/_setup/jest.config.ts",
     "test:watch": "jest --config ./test/_setup/jest.config.ts --watch",
     "test:cov": "jest --config ./test/_setup/jest.config.ts --coverage",

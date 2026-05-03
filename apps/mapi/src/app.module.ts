@@ -7,9 +7,10 @@ import { MetricsModule } from './core/metrics/metrics.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 import { DomainErrorFilter } from './common/errors/domain-error.filter'
 import { HealthModule } from './modules/health/health.module'
+import { EventLogModule } from './modules/event-log/event-log.module'
 
 @Module({
-  imports: [AppConfigModule, LoggerModule, DbModule, MetricsModule, HealthModule],
+  imports: [AppConfigModule, LoggerModule, DbModule, MetricsModule, EventLogModule, HealthModule],
   providers: [
     {
       provide: APP_FILTER,
