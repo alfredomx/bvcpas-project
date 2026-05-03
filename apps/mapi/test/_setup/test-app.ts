@@ -53,7 +53,9 @@ export async function truncateTables(): Promise<void> {
   const client = postgres(databaseUrl, { max: 1 })
   const db = drizzle(client)
   try {
-    await db.execute(sql`TRUNCATE TABLE user_sessions, event_log, users RESTART IDENTITY CASCADE`)
+    await db.execute(
+      sql`TRUNCATE TABLE intuit_tokens, clients, user_sessions, event_log, users RESTART IDENTITY CASCADE`,
+    )
   } finally {
     await client.end()
   }
