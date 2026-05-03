@@ -15,8 +15,9 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con deploy a `mapi.kodapp.com.mx`).
-**Siguiente:** `20-intuit/01-oauth` (P1 — Intuit Core, OAuth + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod) → planeado para `v0.2.0`.
+**Módulo activo:** `10-core-auth` 🔬 (TDD en discusión, esperando aprobación del operador).
+**Siguiente versión:** `mapi-v0.2.0` (cuando se apruebe el TDD).
+**Por qué primero auth:** los dashboards M1-M7 se comparten con varios usuarios del equipo; sin users reales no se puede asignar Owner ni auditar quién hizo qué. P1 Intuit Core viene después porque sus tokens deben vincularse al user que autorizó.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -239,6 +240,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | Carpeta                         | Status | Mx      | TDD                                                    | Versiones                         |
 | ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------- |
 | 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md) |
+| 10-core-auth                    | 🔬     | base    | [README.md](10-core-auth/README.md)                    | —                                 |
 | 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | —                                 |
 | 20-intuit/01-oauth              | 📅     | P1      | [README.md](20-intuit/01-oauth/README.md)              | —                                 |
 | 20-intuit/02-bridge             | 📅     | P2      | [README.md](20-intuit/02-bridge/README.md)             | —                                 |
