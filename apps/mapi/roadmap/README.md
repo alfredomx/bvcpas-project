@@ -1,10 +1,10 @@
 # Roadmap — `mapi` (backend NestJS)
 
-Esta carpeta contiene el plan y estado de cada versión del backend `mapi` dentro de `bvcpas-project`. Un archivo por versión, todos siguen el mismo formato. Es la **fuente de verdad** para saber qué se hizo, qué se está haciendo y qué falta en este app.
+Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. Estructura: una **carpeta por módulo** (numerada `NN-nombre`) con su `README.md` (TDD vivo del módulo) + uno o varios archivos `vX.Y.Z.md` (bitácora de cada versión que lo construyó). Es la **fuente de verdad** para qué se hizo, qué se está haciendo y qué falta.
 
-> **Si eres un modelo (Claude u otro) iniciando sesión nueva sobre el backend**: lee este README + el archivo con estado `🚧` (si hay) + `CHANGELOG.md` raíz del repo + el TDD del módulo correspondiente en `docs/modulos/`.
+> **Si eres un modelo (Claude u otro) iniciando sesión nueva sobre el backend**: lee este README + el TDD del módulo en estado `🚧` (si hay) + el `vX.Y.Z.md` activo + `README.md` raíz del repo.
 
-> **Items diferidos del TDD del backend**: ver [`BACKLOG.md`](BACKLOG.md). Es la fuente única donde están las cosas que `mapi` ha pospuesto, agrupadas por trigger de retomar.
+> **Items diferidos**: ver [`BACKLOG.md`](BACKLOG.md). Es la fuente única donde están las cosas pospuestas, agrupadas por trigger de retomar.
 
 > **Roadmap de los otros apps**: cada app de `bvcpas-project` versiona independiente.
 >
@@ -15,65 +15,84 @@ Esta carpeta contiene el plan y estado de cada versión del backend `mapi` dentr
 
 ## Estado actual
 
-**Versión activa:** ninguna (v0.1.0 cerrada el 2026-05-03 con deploy a `mapi.kodapp.com.mx`).
-**Siguiente:** v0.2.0 — Intuit Core (clients + tokens encriptados + refresh + migración de los 77 clientes desde mapi v0.x prod).
-
-## Próximas versiones (orden tentativo)
-
-> Notas pre-decididas para no olvidar el contexto cuando lleguemos. NO son archivos `vX.Y.Z.md` completos (esos se crean al abrir la versión). Cuando algo cambie en la realidad, actualizar aquí.
-
-### v0.2.0 — Intuit Core
-
-Schema `clients` + `intuit_tokens` (AES-256-GCM) + endpoints OAuth (callback, refresh) + migración 77 clientes existentes desde mapi v0.x prod.
-
-### v0.3.0+ — Sync engine
-
-A partir de aquí depende del plugin `kiro` para datos QBO interno y del sync periódico Intuit Dev API. Orden tentativo: staging base → connector qbo-dev (BullMQ) → bridge plugin via HTTP/WS → mappers entidad por entidad.
-
-El orden puede cambiar si llega un fix urgente, si un BACKLOG item se vuelve crítico, o si el usuario reprioriza.
+**Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con deploy a `mapi.kodapp.com.mx`).
+**Siguiente:** `20-intuit-oauth` (clients + tokens encriptados + refresh + migración 77 clientes desde mapi v0.x prod) → planeado para `v0.2.0`.
 
 ---
 
-## Cómo leer esta carpeta
+## Estructura de la carpeta
 
 ```
 apps/mapi/roadmap/
-├── README.md      ← este archivo (índice + reglas del proceso)
-├── BACKLOG.md     ← items diferidos del TDD, agrupados por trigger
-├── v0.1.0.md      ← cada versión es un archivo independiente
-├── v0.2.0.md
-└── v0.X.Y.md      ← solo uno puede tener estado "🚧 En progreso" a la vez
+├── README.md                  ← este archivo (índice + reglas + tabla de decisiones)
+├── BACKLOG.md                 ← items diferidos por trigger
+├── 00-foundation/             ← bootstrap/infra (sin contraparte en src/modules/)
+│   ├── README.md              ← TDD vivo del módulo
+│   └── v0.1.0.md              ← bitácora de la versión que cerró el módulo
+├── 10-core-auth/              ← (futuro)
+│   ├── README.md
+│   └── v0.X.Y.md
+├── 20-intuit-oauth/           ← (siguiente)
+│   ├── README.md
+│   └── v0.2.0.md
+└── ...
 ```
 
-Las versiones siguen [SemVer](https://semver.org/lang/es/):
+### Numeración 1:1 con `src/modules/`
+
+Cada carpeta `NN-nombre` aquí tiene contraparte `apps/mapi/src/modules/NN-nombre/` (excepto `00-foundation` que es infra cross-cutting). Numeración heredada de mapi v0.x (D-mapi-008):
+
+| Decena | Dominio                                                                         |
+| ------ | ------------------------------------------------------------------------------- |
+| 0x     | Infra/bootstrap (`00-foundation`)                                               |
+| 1x     | Core (`10-core-auth`, `11-clients`)                                             |
+| 2x     | Integraciones externas (`20-intuit-oauth`, `21-intuit-bridge`, `22-connectors`) |
+| 3x     | Datos (`30-staging`)                                                            |
+| 4x     | Libre (probable: classification / ML)                                           |
+| 5x     | Libre                                                                           |
+| 6x     | Libre (probable: posting)                                                       |
+| 7x     | Libre (probable: closing / reporting)                                           |
+| 9x     | Transversales (`95-event-log`, `96-admin-jobs`)                                 |
+
+**Unidades dejan hueco** para insertar módulos relacionados sin renombrar (ej. `12-permissions` entre `11-clients` y `20-intuit-oauth`).
+
+---
+
+## Versionado SemVer
+
+Versiones siguen [SemVer](https://semver.org/lang/es/):
 
 - `MAJOR.MINOR.PATCH` — `0.2.0`, `1.2.5`, etc.
 - **MAJOR** — cambios incompatibles. No hay v1.0.0 todavía.
 - **MINOR** — feature nueva, módulo nuevo, refactor grande.
 - **PATCH** — fix bloqueante o ajuste pequeño que no agrega features.
 
+**Las versiones son por app, no por módulo.** Cada `vX.Y.Z` solo existe **una vez** en todo el roadmap del app, dentro de la carpeta del módulo principal de esa versión. La tabla cronológica de abajo confirma qué archivo vive en qué carpeta para evitar duplicados.
+
 ---
 
 ## Estados posibles
 
-| Emoji | Estado      | Significado                                                   |
-| ----- | ----------- | ------------------------------------------------------------- |
-| ✅    | Completado  | Versión cerrada, en main, taggeada en git                     |
-| 🚧    | En progreso | Trabajo activo, **solo una versión a la vez** puede estar así |
-| 📅    | Planeado    | Existe el archivo pero el trabajo no ha empezado              |
-| ⏸️    | Pausado     | Empezó pero se detuvo (rara vez se usa, requiere nota)        |
+| Emoji | Estado       | Significado                                                        |
+| ----- | ------------ | ------------------------------------------------------------------ |
+| ✅    | Completado   | Módulo o versión cerrada, en main, taggeada en git                 |
+| 🚧    | En progreso  | Trabajo activo. **Solo una versión `🚧` a la vez en todo el app.** |
+| 🔬    | En discusión | TDD del módulo en revisión, sin abrir versión todavía              |
+| 📅    | Planeado     | Existe el archivo pero el trabajo no ha empezado                   |
+| ⏸️    | Pausado      | Empezó pero se detuvo (rara vez se usa, requiere nota)             |
 
 ---
 
-## Cómo planear una nueva versión
+## Cómo planear una versión nueva
 
-1. **Decide el número:** ¿es feature/módulo nuevo (MINOR) o fix (PATCH)?
-2. **Crea el archivo** `apps/mapi/roadmap/vX.Y.Z.md` usando la plantilla de abajo.
-3. **NO bumpees `apps/mapi/package.json` todavía.** Eso pasa al cerrar la versión.
-4. **Marca como `🚧 En progreso`** y agrega entrada al índice de este README.
-5. **Cierra primero la versión que estaba `🚧`** (commitea, taggea, marca ✅) antes de empezar otra. Solo una versión activa a la vez en este app.
+1. **Identifica el módulo principal** de la versión. Si no existe, créalo (`apps/mapi/roadmap/NN-nombre/README.md` con el TDD).
+2. **Decide el número de versión** consultando la tabla cronológica de abajo. El siguiente número libre.
+3. **Crea el archivo** `apps/mapi/roadmap/NN-nombre/vX.Y.Z.md` usando la plantilla.
+4. **NO bumpees `apps/mapi/package.json` todavía.** Eso pasa al cerrar la versión.
+5. **Marca como `🚧 En progreso`** y agrega entrada al índice de este README + a la tabla del TDD del módulo.
+6. **Cierra primero la versión que estaba `🚧`** (commitea, taggea, marca ✅) antes de empezar otra.
 
-### Plantilla de versión
+### Plantilla de versión (`vX.Y.Z.md`)
 
 ```markdown
 # vX.Y.Z — [Título corto descriptivo]
@@ -81,17 +100,18 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 **Estado**: 🚧 En progreso
 **Inicio**: YYYY-MM-DD
 **Cierre estimado**: YYYY-MM-DD
-**TDD ref**: [link al doc del TDD si aplica, p.ej. `docs/modulos/MX-nombre/README.md`]
+**Módulo**: NN-nombre
+**TDD ref**: [README.md](README.md)
 
 ## Alcance
 
 ### Sí entra
 
-- Feature/módulo concreto que esta versión va a entregar.
+- Subset concreto de las tareas del TDD del módulo que esta versión va a cerrar.
 
 ### NO entra (fuera de alcance)
 
-- Cosas relacionadas que se difieren a versiones futuras (con cuál).
+- Tareas del TDD que se difieren a versiones posteriores.
 
 ## Eventos a agregar (event_log)
 
@@ -114,9 +134,8 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 
 ## TODOs
 
-- [ ] Tarea 1 (granularidad: lo más pequeño que tiene sentido revisar solo)
+- [ ] Tarea 1 (la más pequeña que tiene sentido revisar sola)
 - [ ] Tarea 2
-- [ ] ...
 - [ ] Bumpear `apps/mapi/package.json` a vX.Y.Z
 - [ ] Commit + push + tag `mapi-vX.Y.Z`
 
@@ -127,40 +146,34 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
   - Razón:
   - Consecuencia:
 
-## Fixes durante desarrollo (no son hotfixes urgentes)
+## Fixes durante desarrollo
 
-- [ ] Fix cosmético encontrado mientras se trabajaba en el feature.
+- [ ] Fix cosmético encontrado mientras se trabajaba.
 
-## Notas operativas (recordatorios sin tarea concreta)
+## Notas operativas
 
-- Algo que hay que recordar pero no tiene fecha ni dueño.
+- Algo que recordar pero sin tarea concreta.
 ```
 
 ---
 
 ## Cómo manejar fixes
 
-Regla en una pregunta: **¿este bug bloquea a alguien (usuarios, deploy, yo)?**
-
-| Respuesta                                | Tipo                                   | Dónde va                                                 |
-| ---------------------------------------- | -------------------------------------- | -------------------------------------------------------- |
-| Sí, bloquea ahora                        | **Hotfix urgente** → patch (`0.X.Y+1`) | Archivo nuevo `vX.Y+1.md`                                |
-| No, puede esperar                        | **Fix menor**                          | Sección `## Fixes durante desarrollo` del archivo activo |
-| Lo descubrí mientras escribía el feature | **Trabajo del feature**                | No se documenta como "fix", es parte de los TODOs        |
+Regla: **¿este bug bloquea?** → patch (`vX.Y.Z+1`). **¿Puede esperar?** → sección `## Fixes durante desarrollo` del archivo activo. **¿Lo descubrí mientras hacía el feature?** → es trabajo del feature, no fix.
 
 **Hotfix urgente — proceso completo:**
 
-1. Si tienes una versión `🚧` activa, **pausa**: agrega nota en su archivo "pausado por hotfix vX.Y.Z".
-2. Crea `vX.Y.Z+1.md` (patch). Solo un TODO o dos: el fix.
+1. Si tienes una versión `🚧` activa, **pausa**: agrega nota en su archivo "pausado por hotfix vX.Y.Z+1".
+2. Crea `vX.Y.Z+1.md` (patch) en la carpeta del módulo donde nació el bug. Solo un TODO o dos.
 3. Aplica fix, prueba, commitea, push, tag.
 4. Cierra el archivo del patch como `✅`.
-5. Reanuda la versión que estaba `🚧`: quita la nota de pausa y sigue.
+5. Reanuda la versión que estaba `🚧`.
 
 ---
 
-## Cómo manejar decisiones que divergen del TDD
+## Decisiones que divergen del TDD
 
-Cada decisión que **no es trivial** y diverge del TDD se numera de forma global por app: `D-mapi-001`, `D-mapi-002`, ..., `D-mapi-NNN`. Se anota dentro del archivo de la versión donde se tomó (sección `## Decisiones tomadas durante esta versión`) y se agrega al índice global de decisiones de este README.
+Cada decisión no trivial se numera global por app: `D-mapi-001`, `D-mapi-002`, ..., `D-mapi-NNN`. Vive **en el archivo de la versión donde se tomó** + se agrega al índice global de decisiones de este README.
 
 **Qué es decisión y qué no:**
 
@@ -179,36 +192,45 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 1. Marca el archivo como `✅ Completado`. Cambia "Cierre estimado" por "Cerrado: YYYY-MM-DD".
 2. Bumpea `apps/mapi/package.json` `version` al número de la versión.
-3. Actualiza la tabla de versiones de este README con `✅`.
+3. Actualiza la tabla cronológica de versiones de este README con `✅`.
 4. Si hubo decisiones nuevas, agrégalas a la tabla de decisiones de este README.
-5. Commit con mensaje `release(mapi): vX.Y.Z — [título]`.
-6. Push a `main`.
-7. Tag git: `git tag mapi-vX.Y.Z && git push --tags` (prefijo `mapi-` evita choque con tags de los otros apps).
+5. Si la versión cerró el módulo entero, marca el módulo como `✅` en su `README.md` y en el índice de módulos de este README.
+6. Commit con mensaje `release(mapi): vX.Y.Z — [título]`.
+7. Push a `main`.
+8. Tag git: `git tag mapi-vX.Y.Z && git push --tags` (prefijo `mapi-` evita choque con tags de los otros apps).
 
 ---
 
 ## Reglas duras (no negociables)
 
-1. **Solo una versión `🚧` a la vez en este app.** Excepción: hotfix urgente que pausa la activa.
-2. **No bumpees `apps/mapi/package.json` hasta cerrar.** Mientras esté `🚧`, queda en la versión anterior.
-3. **No mezcles features y fixes mayores en la misma versión.** Si descubres que el fix es grande, ábrelo aparte.
-4. **El TDD manda salvo decisión documentada.** Si diverges sin documentarlo, en 3 meses nadie sabrá por qué.
-5. **Eventos a agregar (event_log), errores de dominio nuevos y endpoints API nuevos son secciones obligatorias.** Si no aplican, escribir "Ninguno" — pero NO omitir.
-6. **Tags git con prefijo `mapi-`** (p.ej. `mapi-v0.2.0`). Cada app tiene su propio namespace de tags.
+1. **Solo una versión `🚧` a la vez en todo el app.** Excepción: hotfix urgente que pausa la activa.
+2. **No bumpees `apps/mapi/package.json` hasta cerrar.**
+3. **No mezcles features y fixes mayores en la misma versión.**
+4. **El TDD manda salvo decisión documentada.**
+5. **Eventos event_log, errores de dominio y endpoints API son secciones obligatorias** del archivo de versión.
+6. **Tags git con prefijo `mapi-`** (`mapi-v0.2.0`).
+7. **Cada commit toca un solo app y solo cosas relacionadas con la versión activa.** No mezclar fixes "de paso" en otros apps.
+8. **Numeración 1:1 con `src/modules/`.** Cuando un módulo nuevo entre, asignar número siguiendo la regla de decenas.
 
 ---
 
-## Versiones
+## Índice de módulos
 
-| Versión | Estado | Tema                                                                                | Archivo                |
-| ------- | ------ | ----------------------------------------------------------------------------------- | ---------------------- |
-| 0.1.0   | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify (mapi.kodapp) | [v0.1.0.md](v0.1.0.md) |
+| Carpeta       | Status | TDD                                  | Versiones                         |
+| ------------- | ------ | ------------------------------------ | --------------------------------- |
+| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+
+---
+
+## Versiones (orden cronológico)
+
+| Versión | Módulo        | Estado | Tema                                                                  | Tag         | Archivo                                            |
+| ------- | ------------- | ------ | --------------------------------------------------------------------- | ----------- | -------------------------------------------------- |
+| 0.1.0   | 00-foundation | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 
 ---
 
 ## Decisiones acumuladas (`D-mapi-NNN`)
-
-Cada decisión se numera de forma global por app. Cuando se toma una nueva, se agrega aquí y en el archivo de la versión donde nació.
 
 | ID         | Decisión                                                                                                | Versión | Diverge TDD |
 | ---------- | ------------------------------------------------------------------------------------------------------- | ------- | ----------- |
@@ -219,6 +241,7 @@ Cada decisión se numera de forma global por app. Cuando se toma una nueva, se a
 | D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)       | 0.1.0   | No          |
 | D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s     | 0.1.0   | No          |
 | D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición) | 0.1.0   | No          |
+| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)      | —       | No          |
 
 ---
 
@@ -226,11 +249,11 @@ Cada decisión se numera de forma global por app. Cuando se toma una nueva, se a
 
 ```
 Trabajo en d:/proyectos/bvcpas-project/apps/mapi/. Lee en orden:
-  1. apps/mapi/roadmap/README.md           — proceso y estado
-  2. apps/mapi/roadmap/vX.Y.Z.md           — archivo con estado 🚧 (si hay)
-  3. README.md raíz                         — cómo correr el proyecto
-  4. docs/INDICE.md                         — estado de módulos
-  5. docs/modulos/MX-nombre/README.md       — TDD del módulo en curso
+  1. apps/mapi/roadmap/README.md                   — proceso, índice, decisiones
+  2. apps/mapi/roadmap/<NN-modulo>/README.md       — TDD del módulo activo
+  3. apps/mapi/roadmap/<NN-modulo>/vX.Y.Z.md       — versión 🚧 (si hay)
+  4. README.md raíz                                 — cómo correr el proyecto
+  5. apps/mapi/roadmap/BACKLOG.md                  — items diferidos por trigger
 
 Mi siguiente tarea es: [describe qué quieres hacer].
 ```
