@@ -1,0 +1,11 @@
+{
+  "id": "11111111-1111-1111-1111-111111111111",
+  "email": "active@example.com",
+  "passwordHash": "$2b$04$WJg8YjJEFcKa6dT5Q5B5UeVKAZ.Mtzm8Dnh6HsULeiPvBfORiZmgi",
+  "fullName": "Active User",
+  "role": "admin",
+  "status": "active",
+  "lastLoginAt": null,
+  "createdAt": "2026-05-01T00:00:00.000Z",
+  "updatedAt": "2026-05-01T00:00:00.000Z"
+}

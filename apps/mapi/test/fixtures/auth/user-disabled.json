@@ -1,0 +1,11 @@
+{
+  "id": "22222222-2222-2222-2222-222222222222",
+  "email": "disabled@example.com",
+  "passwordHash": "$2b$04$WJg8YjJEFcKa6dT5Q5B5UeVKAZ.Mtzm8Dnh6HsULeiPvBfORiZmgi",
+  "fullName": "Disabled User",
+  "role": "viewer",
+  "status": "disabled",
+  "lastLoginAt": null,
+  "createdAt": "2026-05-01T00:00:00.000Z",
+  "updatedAt": "2026-05-01T00:00:00.000Z"
+}

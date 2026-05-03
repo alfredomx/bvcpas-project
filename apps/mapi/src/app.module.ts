@@ -11,6 +11,7 @@ import { EventLogModule } from './modules/event-log/event-log.module'
 import { AuthCoreModule } from './core/auth/auth-core.module'
 import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
 import { RolesGuard } from './core/auth/guards/roles.guard'
+import { AuthModule } from './modules/auth/auth.module'
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RolesGuard } from './core/auth/guards/roles.guard'
     MetricsModule,
     AuthCoreModule,
     EventLogModule,
+    AuthModule,
     HealthModule,
   ],
   providers: [
