@@ -1,0 +1,16 @@
+# Forzar LF (line feed) en todos los archivos del repo.
+# Razón: el server de producción es Linux (Coolify) y el operador trabaja
+# en Windows. Sin esto, git convierte LF↔CRLF al checkout y rompe scripts
+# bash, configs YAML, y archivos de configuración que esperan LF.
+
+* text=auto eol=lf
+
+# Binarios — no aplicar conversión
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary

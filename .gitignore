@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Test
+coverage/
+.nyc_output/
+
+# Env (los .env y .env.test no se commitean, sus .example sí)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.test
+# Excluir explícitamente las plantillas (sí se commitean)
+!.env.example
+!.env.test.example
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+
+# Drizzle
+drizzle/meta/_journal.json.bak
+
+# Docker
+docker/postgres/data/
+
+# Backups
+backups/
+*.dump
+
+# Misc
+.cache/
+.tmp/
+
+# Claude Code state (no se versiona)
+.claude/

@@ -1,0 +1,39 @@
+{
+  "name": "bvcpas-project",
+  "version": "0.1.0",
+  "description": "BV CPAs - sistema operativo del bookkeeper. Repo raíz: orquesta apps/mapi (backend), apps/web (frontend), apps/kiro (Chrome extension). Cada app es independiente (sin npm workspaces).",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "format": "node scripts/run-in-apps.mjs format",
+    "format:check": "node scripts/run-in-apps.mjs format:check",
+    "lint": "node scripts/run-in-apps.mjs lint",
+    "typecheck": "node scripts/run-in-apps.mjs typecheck",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
+  },
+  "lint-staged": {
+    "apps/mapi/**/*.{ts,tsx,js,mjs}": [
+      "prettier --check --config apps/mapi/.prettierrc",
+      "eslint --max-warnings=0 --config apps/mapi/eslint.config.mjs"
+    ],
+    "apps/web/**/*.{ts,tsx,js,mjs}": [
+      "prettier --check --config apps/web/.prettierrc",
+      "eslint --max-warnings=0 --config apps/web/eslint.config.mjs"
+    ],
+    "apps/kiro/**/*.{ts,tsx,js,mjs}": [
+      "prettier --check --config apps/kiro/.prettierrc",
+      "eslint --max-warnings=0 --config apps/kiro/eslint.config.mjs"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --check"
+    ]
+  }
+}
