@@ -15,7 +15,7 @@ export class AdminSessionsController {
   @Patch(':id/revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: 'Revocar una sesión específica',
+    summary: '/v1/admin/sessions/:id/revoke',
     description:
       'Revoca una sesión individual por su id. La próxima request del usuario en ese dispositivo fallará con 401 SESSION_REVOKED.',
   })

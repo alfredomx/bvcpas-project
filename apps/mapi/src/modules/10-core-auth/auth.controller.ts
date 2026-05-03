@@ -24,7 +24,7 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @ApiOperation({
-    summary: 'Login con email y password',
+    summary: '/v1/auth/login',
     description:
       'Devuelve un JWT firmado válido por JWT_EXPIRES_IN (default 7d) + datos del usuario. Crea una sesión revocable en `user_sessions`. Rate limit: 10 intentos/min por IP.',
   })
@@ -46,7 +46,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth('bearer')
   @ApiOperation({
-    summary: 'Logout de la sesión actual',
+    summary: '/v1/auth/logout',
     description: 'Revoca solo la sesión correspondiente al JWT que mandó la request.',
   })
   @ApiResponse({ status: 204, description: 'Sesión revocada' })
@@ -58,7 +58,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @ApiOperation({
-    summary: 'Logout de TODAS las sesiones',
+    summary: '/v1/auth/logout-all',
     description:
       'Revoca todas las sesiones activas del usuario actual (incluida ésta). Útil si pierde un dispositivo.',
   })
@@ -75,7 +75,7 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth('bearer')
   @ApiOperation({
-    summary: 'Datos del usuario autenticado',
+    summary: '/v1/auth/me',
     description: 'Devuelve id, email, nombre, role, status, último login del usuario actual.',
   })
   @ApiResponse({
@@ -99,7 +99,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiBearerAuth('bearer')
   @ApiOperation({
-    summary: 'Cambiar contraseña del usuario actual',
+    summary: '/v1/auth/me/password',
     description:
       'Requiere old_password correcta. Mínimo 8 caracteres. Revoca todas las otras sesiones del usuario (la actual sigue activa).',
   })

@@ -15,7 +15,7 @@ export class AdminUsersSessionsController {
 
   @Get()
   @ApiOperation({
-    summary: 'Listar sesiones de un usuario',
+    summary: '/v1/admin/users/:id/sessions',
     description:
       'Devuelve todas las sesiones (activas + revocadas) del usuario. Útil para detectar dispositivos sospechosos.',
   })
@@ -40,7 +40,7 @@ export class AdminUsersSessionsController {
   @Post('revoke-all')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Revocar TODAS las sesiones del usuario',
+    summary: '/v1/admin/users/:id/sessions/revoke-all',
     description:
       'Útil tras detectar laptop perdido o despido. Combinar con PATCH status=disabled para bloqueo permanente.',
   })

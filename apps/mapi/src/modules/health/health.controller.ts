@@ -19,7 +19,7 @@ export class HealthController {
   @Get()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Health check del servicio',
+    summary: '/healthz',
     description:
       'Verifica que el backend está vivo y conectado a sus dependencias (Postgres). ' +
       'Devuelve 503 si algún componente está down.',
