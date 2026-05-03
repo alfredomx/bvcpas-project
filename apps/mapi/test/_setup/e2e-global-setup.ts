@@ -1,6 +1,7 @@
-import 'dotenv/config'
+import { config as dotenvConfig } from 'dotenv'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
+import { sql } from 'drizzle-orm'
 import postgres from 'postgres'
 
 /**
@@ -10,8 +11,13 @@ import postgres from 'postgres'
  *
  * Cada test e2e individual hace su propio seed/cleanup según necesite.
  * No se hace seed global aquí porque cada test necesita estado controlado.
+ *
+ * Carga `.env.test` (no `.env`) — variables específicas de tests.
  */
 export default async function globalSetup(): Promise<void> {
+  // Carga `.env.test` antes que `.env` para no contaminar tests con DB local.
+  dotenvConfig({ path: '.env.test' })
+
   const databaseUrl = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL
   if (!databaseUrl) {
     throw new Error('DATABASE_URL_TEST o DATABASE_URL requerido para tests E2E')
@@ -27,6 +33,14 @@ export default async function globalSetup(): Promise<void> {
   const db = drizzle(client)
 
   try {
+    // Drop completo de tablas + drizzle metadata antes de aplicar migrations.
+    // Garantiza estado limpio entre runs (importante: mapi_test es compartida).
+    await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS user_sessions CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS event_log CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`)
+    await db.execute(sql`DROP FUNCTION IF EXISTS users_set_updated_at CASCADE`)
+
     await migrate(db, { migrationsFolder: './drizzle/migrations' })
     console.log('[e2e-setup] Migrations OK.')
   } finally {

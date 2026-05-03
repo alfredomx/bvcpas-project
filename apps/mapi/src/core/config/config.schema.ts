@@ -27,7 +27,8 @@ export const configSchema = z.object({
   // 10-core-auth (v0.2.0): JWT + sesiones + cache Redis
   JWT_SECRET: z.string().min(32, 'JWT_SECRET debe tener al menos 32 caracteres'),
   JWT_EXPIRES_IN: z.string().default('7d'),
-  BCRYPT_COST: z.coerce.number().int().min(10).max(14).default(12),
+  // Min 4 acepta BCRYPT_COST=4 en tests (velocidad). En producción setear ≥10.
+  BCRYPT_COST: z.coerce.number().int().min(4).max(14).default(12),
   REDIS_URL: z.string().url(),
 
   // Solo en seed inicial. NO se validan en cada arranque (el seed los lee directo).

@@ -1,6 +1,6 @@
 import { Injectable, type NestMiddleware } from '@nestjs/common'
 import type { Request, Response, NextFunction } from 'express'
-import { v4 as uuidv4 } from 'uuid'
+import { randomUUID } from 'node:crypto'
 import { correlationStorage } from './correlation.context'
 
 const HEADER = 'x-correlation-id'
@@ -16,7 +16,8 @@ const HEADER = 'x-correlation-id'
 export class CorrelationIdMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction): void {
     const incoming = req.headers[HEADER]
-    const correlationId = typeof incoming === 'string' && incoming.length > 0 ? incoming : uuidv4()
+    const correlationId =
+      typeof incoming === 'string' && incoming.length > 0 ? incoming : randomUUID()
 
     res.setHeader(HEADER, correlationId)
 
