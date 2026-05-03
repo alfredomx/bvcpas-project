@@ -1,10 +1,10 @@
 # Roadmap — `kiro` (Chrome extension Manifest v3)
 
-Esta carpeta contiene el plan y estado de cada versión del plugin `kiro` dentro de `bvcpas-project`. Un archivo por versión, todos siguen el mismo formato. Es la **fuente de verdad** para saber qué se hizo, qué se está haciendo y qué falta en este app.
+Plan y estado de cada módulo y versión del plugin `kiro` dentro de `bvcpas-project`. Estructura: una **carpeta por módulo** (numerada `NN-nombre`) con su `README.md` (TDD vivo del módulo) + uno o varios archivos `vX.Y.Z.md` (bitácora de cada versión). Es la **fuente de verdad** para qué se hizo, qué se está haciendo y qué falta.
 
-> **Si eres un modelo (Claude u otro) iniciando sesión nueva sobre el plugin**: lee este README + el archivo con estado `🚧` (si hay) + `README.md` raíz del repo + el TDD del módulo correspondiente en `docs/modulos/`.
+> **Si eres un modelo (Claude u otro) iniciando sesión nueva sobre el plugin**: lee este README + el TDD del módulo en estado `🚧` (si hay) + el `vX.Y.Z.md` activo + `README.md` raíz del repo.
 
-> **Items diferidos del TDD del plugin**: ver [`BACKLOG.md`](BACKLOG.md).
+> **Items diferidos**: ver [`BACKLOG.md`](BACKLOG.md).
 
 > **Roadmap de los otros apps**: cada app de `bvcpas-project` versiona independiente.
 >
@@ -15,41 +15,53 @@ Esta carpeta contiene el plan y estado de cada versión del plugin `kiro` dentro
 
 ## Estado actual
 
-**Versión activa:** ninguna (v0.1.0 cerrada el 2026-05-03 con scaffold mínimo).
-**Siguiente:** sin definir. El plugin es ejecutor (corre en QBO), depende de mapi para tener WebSocket gateway o endpoints HTTP del bridge listos.
-
-## Próximas versiones (orden tentativo)
-
-> Notas pre-decididas. El plugin lo dispara la necesidad concreta de leer/escribir en QBO desde el navegador del operador.
-
-### v0.2.0 (?) — WebSocket client + auth con mapi
-
-Cuando mapi tenga WebSocket gateway (`/v1/bridge`) y endpoints `qbo-internal/*` listos: client del plugin que se autentica con BridgeSecretGuard o JWT (decisión pendiente, ver memoria), establece WS y queda listo para recibir comandos.
-
-### v0.3.0+ — Sync workflows en QBO
-
-Content scripts que detectan páginas QBO, ejecutan queries internas (`getTransactions`, `getOfxPostedTransactions`, etc.), envían batches a mapi vía POST `/v1/qbo-internal/sync-batch`. Probablemente 2-3 versiones por workflow distinto.
-
-El orden depende 100% de qué módulo Mx el operador prioriza y de qué endpoints del bridge entren en mapi primero.
+**Módulo activo:** ninguno (00-foundation cerrado en v0.1.0 el 2026-05-03 con scaffold mínimo).
+**Siguiente:** sin definir. El plugin es ejecutor (corre en QBO) — depende de mapi para tener WebSocket gateway o endpoints HTTP del bridge listos.
 
 ---
 
-## Cómo leer esta carpeta
+## Estructura de la carpeta
 
 ```
 apps/kiro/roadmap/
-├── README.md      ← este archivo (índice + reglas del proceso)
-├── BACKLOG.md     ← items diferidos del TDD, agrupados por trigger
-├── v0.1.0.md      ← cada versión es un archivo independiente
-└── v0.X.Y.md      ← solo uno puede tener estado "🚧 En progreso" a la vez
+├── README.md                  ← este archivo (índice + reglas + tabla de decisiones)
+├── BACKLOG.md                 ← items diferidos por trigger
+├── 00-foundation/             ← bootstrap del plugin
+│   ├── README.md              ← TDD vivo del módulo
+│   └── v0.1.0.md              ← bitácora de la versión que cerró el módulo
+├── 1x-bridge-client/          ← (futuro, cuando mapi tenga /v1/bridge)
+│   ├── README.md
+│   └── v0.X.Y.md
+├── 2x-content-scripts/        ← (futuro, detección y queries QBO)
+│   └── ...
+└── ...
 ```
 
-Las versiones siguen [SemVer](https://semver.org/lang/es/):
+### Numeración por dominio
+
+A diferencia de `mapi` (donde la numeración es 1:1 con `src/modules/`), en `kiro` la estructura del código de Chrome extension no se organiza por módulos numerados nativamente. La numeración aquí en `roadmap/` agrupa por dominio funcional para mantener consistencia con el resto del proyecto:
+
+| Decena | Dominio                                                |
+| ------ | ------------------------------------------------------ |
+| 0x     | Infra/bootstrap (`00-foundation`)                      |
+| 1x     | Comunicación con mapi (bridge client, auth, reconnect) |
+| 2x     | Content scripts / detección QBO / queries internas     |
+| 3x+    | Libre (popup UI, settings, distribución, etc.)         |
+
+**Unidades dejan hueco** para insertar dominios sin renombrar.
+
+---
+
+## Versionado SemVer
+
+Versiones siguen [SemVer](https://semver.org/lang/es/):
 
 - `MAJOR.MINOR.PATCH` — `0.2.0`, `1.2.5`, etc.
 - **MAJOR** — cambios incompatibles. No hay v1.0.0 todavía.
-- **MINOR** — feature nueva, content script nuevo, refactor grande.
+- **MINOR** — feature/content script nuevo, refactor grande.
 - **PATCH** — fix bloqueante o ajuste pequeño.
+
+**Las versiones son por app, no por módulo.** Cada `vX.Y.Z` solo existe **una vez** en todo el roadmap del app, dentro de la carpeta del módulo principal de esa versión.
 
 > **Nota Manifest v3:** la versión del `manifest.json` debe sincronizarse con el `package.json` al cerrar. Chrome Web Store rechaza versiones que no avancen monotónicamente.
 
@@ -57,24 +69,26 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 
 ## Estados posibles
 
-| Emoji | Estado      | Significado                                                   |
-| ----- | ----------- | ------------------------------------------------------------- |
-| ✅    | Completado  | Versión cerrada, en main, taggeada en git                     |
-| 🚧    | En progreso | Trabajo activo, **solo una versión a la vez** puede estar así |
-| 📅    | Planeado    | Existe el archivo pero el trabajo no ha empezado              |
-| ⏸️    | Pausado     | Empezó pero se detuvo (rara vez se usa, requiere nota)        |
+| Emoji | Estado       | Significado                                                        |
+| ----- | ------------ | ------------------------------------------------------------------ |
+| ✅    | Completado   | Módulo o versión cerrada, en main, taggeada en git                 |
+| 🚧    | En progreso  | Trabajo activo. **Solo una versión `🚧` a la vez en todo el app.** |
+| 🔬    | En discusión | TDD del módulo en revisión, sin abrir versión todavía              |
+| 📅    | Planeado     | Existe el archivo pero el trabajo no ha empezado                   |
+| ⏸️    | Pausado      | Empezó pero se detuvo (rara vez se usa, requiere nota)             |
 
 ---
 
-## Cómo planear una nueva versión
+## Cómo planear una versión nueva
 
-1. **Decide el número:** ¿es feature/script nuevo (MINOR) o fix (PATCH)?
-2. **Crea el archivo** `apps/kiro/roadmap/vX.Y.Z.md` usando la plantilla de abajo.
-3. **NO bumpees `apps/kiro/package.json` ni `manifest.json` todavía.** Eso pasa al cerrar.
-4. **Marca como `🚧 En progreso`** y agrega entrada al índice de este README.
-5. **Cierra primero la versión que estaba `🚧`** antes de empezar otra.
+1. **Identifica el módulo principal** de la versión. Si no existe, créalo (`apps/kiro/roadmap/NN-nombre/README.md` con el TDD).
+2. **Decide el número de versión** consultando la tabla cronológica de abajo. El siguiente número libre.
+3. **Crea el archivo** `apps/kiro/roadmap/NN-nombre/vX.Y.Z.md` usando la plantilla.
+4. **NO bumpees `apps/kiro/package.json` ni `manifest.json` todavía.** Eso pasa al cerrar la versión (ambos a la vez).
+5. **Marca como `🚧 En progreso`** y agrega entrada al índice + a la tabla del TDD del módulo.
+6. **Cierra primero la versión que estaba `🚧`** antes de empezar otra.
 
-### Plantilla de versión
+### Plantilla de versión (`vX.Y.Z.md`)
 
 ```markdown
 # vX.Y.Z — [Título corto descriptivo]
@@ -82,17 +96,18 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 **Estado**: 🚧 En progreso
 **Inicio**: YYYY-MM-DD
 **Cierre estimado**: YYYY-MM-DD
-**TDD ref**: [link al doc del TDD si aplica]
+**Módulo**: NN-nombre
+**TDD ref**: [README.md](README.md)
 
 ## Alcance
 
 ### Sí entra
 
-- Feature/content script concreto que esta versión va a entregar.
+- Subset concreto de las tareas del TDD del módulo que esta versión va a cerrar.
 
 ### NO entra (fuera de alcance)
 
-- Cosas relacionadas que se difieren a versiones futuras (con cuál).
+- Tareas del TDD que se difieren a versiones posteriores.
 
 ## Permisos Chrome nuevos
 
@@ -108,13 +123,13 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 
 ## Endpoints de mapi consumidos
 
-> **Sección obligatoria.** Si no aplica, escribir "Ninguno". Lista endpoints del backend o mensajes WebSocket.
+> **Sección obligatoria.** Si no aplica, escribir "Ninguno".
 
 - [ ] `<METHOD> /v1/<path>` o `ws:<event>` — desde dónde, propósito.
 
 ## TODOs
 
-- [ ] Tarea 1 (granularidad: lo más pequeño que tiene sentido revisar solo)
+- [ ] Tarea 1 (la más pequeña que tiene sentido revisar sola)
 - [ ] Tarea 2
 - [ ] Bumpear `apps/kiro/package.json` Y `apps/kiro/manifest.json` a vX.Y.Z (deben ser idénticos)
 - [ ] Commit + push + tag `kiro-vX.Y.Z`
@@ -132,18 +147,18 @@ Las versiones siguen [SemVer](https://semver.org/lang/es/):
 
 ## Notas operativas
 
-- Algo que hay que recordar pero no tiene fecha ni dueño.
+- Algo que recordar pero sin tarea concreta.
 ```
 
 ---
 
 ## Cómo manejar fixes
 
-Misma regla que mapi/bvcpas: **¿bloquea?** → patch. **¿Puede esperar?** → sección `## Fixes` del archivo activo. **¿Lo descubrí mientras hacía el feature?** → es trabajo del feature.
+Misma regla que mapi/bvcpas: **¿bloquea?** → patch. **¿Puede esperar?** → sección `## Fixes` del archivo activo. **¿Lo descubrí mientras hacía el feature?** → trabajo del feature.
 
 ---
 
-## Cómo manejar decisiones que divergen del TDD
+## Decisiones que divergen del TDD
 
 Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
@@ -159,32 +174,42 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
 1. Marca el archivo como `✅ Completado`. "Cierre estimado" → "Cerrado: YYYY-MM-DD".
 2. Bumpea **AMBOS**: `apps/kiro/package.json` Y `apps/kiro/manifest.json` `version` al número. Deben ser idénticos.
-3. Actualiza la tabla de versiones de este README con `✅`.
+3. Actualiza la tabla cronológica de versiones de este README con `✅`.
 4. Si hubo decisiones nuevas, agrégalas a la tabla de decisiones.
-5. Commit con mensaje `release(kiro): vX.Y.Z — [título]`.
-6. Push a `main`.
-7. Tag git: `git tag kiro-vX.Y.Z && git push --tags`.
-8. (Opcional, según política Chrome Web Store): generar `dist.zip` y subir si aplica.
+5. Si la versión cerró el módulo entero, marca el módulo como `✅` en su `README.md` y en el índice de módulos de este README.
+6. Commit con mensaje `release(kiro): vX.Y.Z — [título]`.
+7. Push a `main`.
+8. Tag git: `git tag kiro-vX.Y.Z && git push --tags`.
+9. (Opcional, según política Chrome Web Store): generar `dist.zip` y subir si aplica.
 
 ---
 
 ## Reglas duras
 
-1. **Solo una versión `🚧` a la vez en este app.**
+1. **Solo una versión `🚧` a la vez en todo el app.**
 2. **No bumpees `package.json` ni `manifest.json` hasta cerrar.**
 3. **`package.json.version` y `manifest.json.version` deben coincidir** al cierre.
-4. **No mezcles features y fixes mayores.**
+4. **No mezcles features y fixes mayores en la misma versión.**
 5. **El TDD manda salvo decisión documentada.**
-6. **Permisos Chrome, content scripts y endpoints consumidos son secciones obligatorias.**
+6. **Permisos Chrome, content scripts y endpoints consumidos son secciones obligatorias** del archivo de versión.
 7. **Tags git con prefijo `kiro-`.**
+8. **Cada commit toca un solo app y solo cosas relacionadas con la versión activa.**
 
 ---
 
-## Versiones
+## Índice de módulos
 
-| Versión | Estado | Tema                                        | Archivo                |
-| ------- | ------ | ------------------------------------------- | ---------------------- |
-| 0.1.0   | ✅     | Scaffold Vite + Manifest v3 (popup "Hello") | [v0.1.0.md](v0.1.0.md) |
+| Carpeta       | Status | TDD                                  | Versiones                         |
+| ------------- | ------ | ------------------------------------ | --------------------------------- |
+| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+
+---
+
+## Versiones (orden cronológico)
+
+| Versión | Módulo        | Estado | Tema                                        | Tag         | Archivo                                            |
+| ------- | ------------- | ------ | ------------------------------------------- | ----------- | -------------------------------------------------- |
+| 0.1.0   | 00-foundation | ✅     | Scaffold Vite + Manifest v3 (popup "Hello") | kiro-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 
 ---
 
@@ -203,11 +228,11 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
 ```
 Trabajo en d:/proyectos/bvcpas-project/apps/kiro/. Lee en orden:
-  1. apps/kiro/roadmap/README.md           — proceso y estado
-  2. apps/kiro/roadmap/vX.Y.Z.md           — archivo con estado 🚧 (si hay)
-  3. README.md raíz                         — cómo correr el proyecto
-  4. docs/INDICE.md                         — estado de módulos
-  5. docs/modulos/MX-nombre/README.md       — TDD del módulo en curso
+  1. apps/kiro/roadmap/README.md                    — proceso, índice, decisiones
+  2. apps/kiro/roadmap/<NN-modulo>/README.md        — TDD del módulo activo
+  3. apps/kiro/roadmap/<NN-modulo>/vX.Y.Z.md        — versión 🚧 (si hay)
+  4. README.md raíz                                  — cómo correr el proyecto
+  5. apps/kiro/roadmap/BACKLOG.md                   — items diferidos por trigger
 
 Mi siguiente tarea es: [describe qué quieres hacer].
 ```
