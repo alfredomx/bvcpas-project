@@ -1,7 +1,7 @@
 {
   "name": "bvcpas-project",
   "version": "0.1.0",
-  "description": "BV CPAs - sistema operativo del bookkeeper. Repo raíz: orquesta apps/mapi (backend), apps/web (frontend), apps/kiro (Chrome extension). Cada app es independiente (sin npm workspaces).",
+  "description": "BV CPAs - sistema operativo del bookkeeper. Repo raíz: orquesta apps/mapi (backend), apps/bvcpas (frontend), apps/kiro (Chrome extension). Cada app es independiente (sin npm workspaces).",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
@@ -24,9 +24,9 @@
       "prettier --check --config apps/mapi/.prettierrc",
       "node scripts/run-eslint.mjs apps/mapi"
     ],
-    "apps/web/**/*.{ts,tsx,js,mjs}": [
-      "prettier --check --config apps/web/.prettierrc",
-      "node scripts/run-eslint.mjs apps/web"
+    "apps/bvcpas/**/*.{ts,tsx,js,mjs}": [
+      "prettier --check --config apps/bvcpas/.prettierrc",
+      "node scripts/run-eslint.mjs apps/bvcpas"
     ],
     "apps/kiro/**/*.{ts,tsx,js,mjs}": [
       "prettier --check --config apps/kiro/.prettierrc",

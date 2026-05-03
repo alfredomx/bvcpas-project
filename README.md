@@ -13,7 +13,7 @@ Sistema operativo del bookkeeper. Reemplaza progresivamente los Google Sheets in
 ```
 apps/
 ├── mapi/      Backend NestJS (REST + WebSocket gateway)
-├── web/      Frontend Next.js (dashboards)
+├── bvcpas/    Frontend Next.js (dashboards)
 └── kiro/      Chrome extension (ejecutor en QBO)
 ```
 
@@ -46,7 +46,7 @@ docker compose -f docker-compose.local.yml up -d
 
 # 4. Instalar deps de cada app (cuando existan)
 cd apps/mapi && npm install && cd ../..
-cd apps/web && npm install && cd ../..
+cd apps/bvcpas && npm install && cd ../..
 cd apps/kiro && npm install && cd ../..
 
 # 5. Configurar env vars
@@ -73,7 +73,7 @@ URLs locales:
 ### Arrancar frontend en local
 
 ```bash
-cd apps/web
+cd apps/bvcpas
 npm run dev    # levanta en http://localhost:3000
 ```
 
