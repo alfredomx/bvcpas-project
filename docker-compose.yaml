@@ -1,0 +1,87 @@
+# docker-compose.yaml — stack production-ready para Coolify.
+#
+# Coolify clona el repo desde GitHub, ejecuta `docker compose build` y `up`.
+# Las env vars con ${...} las llena Coolify desde su panel UI.
+#
+# Para validar local antes de deploy:
+#   1. Crear .env.production-test con valores tipo prod (POSTGRES_USER, etc.)
+#   2. docker compose --env-file .env.production-test build
+#   3. docker compose --env-file .env.production-test up -d
+#   4. Verificar /v1/healthz responde con env=production y DB up
+#   5. docker compose down -v && rm .env.production-test
+#
+# Notas:
+# - Coolify crea su propia red bridge por stack. No declaramos `networks:`.
+# - Sin `container_name` (Coolify les pone UUID).
+# - Sin `ports:` exposed al host. `expose:` para Traefik routing.
+# - Sin Loki, Prometheus, Grafana, backup container, cloudflared.
+#   Esos entran cuando se necesiten.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - mapi-postgres-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - mapi-redis-prod-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mapi:
+    build:
+      context: ./apps/mapi
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4100
+      LOG_LEVEL: info
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      PUBLIC_URL: ${PUBLIC_URL}
+      # Resto de envs (JWT_SECRET, ENCRYPTION_KEY, INTUIT_*, etc.) vienen del
+      # panel Coolify cuando los módulos correspondientes entren. En P0 sólo se
+      # necesitan las de arriba.
+    expose:
+      - '4100'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - 'CMD'
+        - 'node'
+        - '-e'
+        - "require('http').get('http://localhost:4100/v1/healthz', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    labels:
+      # Coolify Traefik enruta el subdominio (configurado en panel UI) a mapi:4100.
+      - traefik.enable=true
+      - traefik.http.services.mapi.loadbalancer.server.port=4100
+
+volumes:
+  mapi-postgres-prod-data:
+  mapi-redis-prod-data:
