@@ -34,6 +34,20 @@ export const configSchema = z.object({
   // Solo en seed inicial. NO se validan en cada arranque (el seed los lee directo).
   INITIAL_ADMIN_EMAIL: z.preprocess(emptyToUndefined, z.string().email().optional()),
   INITIAL_ADMIN_FULL_NAME: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+
+  // 20-intuit-oauth (v0.3.0): encryption + OAuth Intuit
+  // ENCRYPTION_KEY: 32 bytes base64. Generar con: openssl rand -base64 32
+  ENCRYPTION_KEY: z
+    .string()
+    .regex(
+      /^[A-Za-z0-9+/]{43}=$/,
+      'ENCRYPTION_KEY debe ser 32 bytes base64 (44 chars con padding =)',
+    ),
+  INTUIT_CLIENT_ID: z.string().min(1, 'INTUIT_CLIENT_ID requerido'),
+  INTUIT_CLIENT_SECRET: z.string().min(1, 'INTUIT_CLIENT_SECRET requerido'),
+  INTUIT_REDIRECT_URI: z.string().url('INTUIT_REDIRECT_URI debe ser URL válida'),
+  INTUIT_ENVIRONMENT: z.enum(['production']).default('production'),
+  INTUIT_MINOR_VERSION: z.coerce.number().int().min(1).default(75),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

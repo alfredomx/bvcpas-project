@@ -8,6 +8,13 @@
       "when": 1777804730219,
       "tag": "0000_users_sessions_eventlog",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777837274498,
+      "tag": "0001_clients_intuit_tokens",
+      "breakpoints": true
     }
   ]
 }

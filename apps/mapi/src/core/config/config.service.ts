@@ -60,4 +60,28 @@ export class AppConfigService {
   get redisUrl(): string {
     return this.cfg.REDIS_URL
   }
+
+  get encryptionKey(): string {
+    return this.cfg.ENCRYPTION_KEY
+  }
+
+  get intuitClientId(): string {
+    return this.cfg.INTUIT_CLIENT_ID
+  }
+
+  get intuitClientSecret(): string {
+    return this.cfg.INTUIT_CLIENT_SECRET
+  }
+
+  get intuitRedirectUri(): string {
+    return this.cfg.INTUIT_REDIRECT_URI
+  }
+
+  get intuitEnvironment(): AppConfig['INTUIT_ENVIRONMENT'] {
+    return this.cfg.INTUIT_ENVIRONMENT
+  }
+
+  get intuitMinorVersion(): number {
+    return this.cfg.INTUIT_MINOR_VERSION
+  }
 }

@@ -1,8 +1,8 @@
 # 20-intuit-oauth — OAuth Intuit + tokens encriptados + proxy V3
 
 **App:** mapi
-**Status:** 🔬 En discusión (TDD)
-**Versiones que lo construyen:** v0.3.0 (schema + endpoints), v0.3.1 (migración 77 clientes)
+**Status:** 🚧 En desarrollo (v0.3.0)
+**Versiones que lo construyen:** [v0.3.0](v0.3.0.md) (schema + endpoints), [v0.3.1](v0.3.1.md) (migración 77 clientes)
 **Última revisión:** 2026-05-03
 
 ---

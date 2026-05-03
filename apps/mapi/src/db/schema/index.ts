@@ -3,3 +3,5 @@
 export * from './users'
 export * from './user-sessions'
 export * from './event-log'
+export * from './clients'
+export * from './intuit-tokens'
