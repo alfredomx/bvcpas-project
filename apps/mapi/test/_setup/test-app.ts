@@ -54,7 +54,7 @@ export async function truncateTables(): Promise<void> {
   const db = drizzle(client)
   try {
     await db.execute(
-      sql`TRUNCATE TABLE intuit_tokens, clients, user_sessions, event_log, users RESTART IDENTITY CASCADE`,
+      sql`TRUNCATE TABLE client_public_links, client_period_followups, client_transaction_responses, client_transactions, intuit_tokens, clients, user_sessions, event_log, users RESTART IDENTITY CASCADE`,
     )
   } finally {
     await client.end()

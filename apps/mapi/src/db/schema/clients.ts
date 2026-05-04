@@ -1,4 +1,5 @@
 import {
+  boolean,
   pgTable,
   uuid,
   text,
@@ -41,6 +42,19 @@ export const CLIENT_TIERS = ['silver', 'gold', 'platinum'] as const
 export type ClientTier = (typeof CLIENT_TIERS)[number]
 
 /**
+ * Filtro de transacciones que el cliente recibe en el endpoint público.
+ *
+ * - `all`: ve uncategorized expense + uncategorized income.
+ * - `expense`: solo uncategorized expense.
+ * - `income`: solo uncategorized income.
+ *
+ * AMAs (`ask_my_accountant`) NUNCA se mandan al cliente — son para revisión
+ * interna por contador. El filter no afecta eso.
+ */
+export const CLIENT_TRANSACTIONS_FILTERS = ['all', 'income', 'expense'] as const
+export type ClientTransactionsFilter = (typeof CLIENT_TRANSACTIONS_FILTERS)[number]
+
+/**
  * Tabla de clientes bookkeeper. Cada row representa una empresa que el
  * operador atiende. Heredado de mapi v0.x con shape idéntico.
  *
@@ -60,6 +74,14 @@ export const clients = pgTable(
     timezone: varchar('timezone', { length: 60 }), // p.ej. America/Mexico_City
     status: varchar('status', { length: 20, enum: CLIENT_STATUSES }).notNull().default('active'),
     tier: varchar('tier', { length: 20, enum: CLIENT_TIERS }).notNull().default('silver'),
+    draftEmailEnabled: boolean('draft_email_enabled').notNull().default(true),
+    transactionsFilter: varchar('transactions_filter', {
+      length: 20,
+      enum: CLIENT_TRANSACTIONS_FILTERS,
+    })
+      .notNull()
+      .default('all'),
+    ccEmail: text('cc_email'),
     primaryContactName: varchar('primary_contact_name', { length: 120 }),
     primaryContactEmail: varchar('primary_contact_email', { length: 255 }),
     notes: text('notes'),
