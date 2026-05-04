@@ -6,7 +6,7 @@ import { CurrentUser } from '../../../core/auth/decorators/current-user.decorato
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { ClientNotFoundError } from '../intuit-oauth.errors'
-import { ClientsRepository } from '../clients/clients.repository'
+import { ClientsRepository } from '../../11-clients/clients.repository'
 import { AuthorizeResponseDto, CallbackQueryDto } from './dto/intuit-oauth.dto'
 import { IntuitOauthService } from './intuit-oauth.service'
 

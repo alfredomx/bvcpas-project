@@ -1,52 +1,89 @@
-# 11-clients — CRUD base de clientes + configuración por cliente
+# 11-clients — CRUD admin de clientes
 
 **App:** mapi
-**Status:** 📅 (schema cubierto por 20-intuit-oauth v0.3.0)
-**Versiones que lo construyen:** ver [20-intuit-oauth/v0.3.0.md](../20-intuit-oauth/v0.3.0.md)
+**Status:** ✅ Cerrado (CRUD admin entregado en v0.4.0)
+**Versiones que lo construyen:** [v0.4.0](v0.4.0.md) (CRUD inicial)
+**Schema base:** ya creado en [20-intuit-oauth v0.3.0](../20-intuit-oauth/v0.3.0.md). Este módulo **solo agrega endpoints**, no toca schema.
 **Última revisión:** 2026-05-03
-
----
-
-## ⚠️ Nota importante
-
-El **schema `clients` viene dentro de [`20-intuit-oauth` v0.3.0](../20-intuit-oauth/README.md)**, no en una versión separada. Esto se decidió porque:
-
-1. La tabla `clients` no tiene sentido sin tokens Intuit (un cliente bookkeeper SIEMPRE tiene su QBO autorizado).
-2. La migración de los 77 clientes (v0.3.1) trae clients + intuit_tokens en un solo script.
-
-**Cuándo se reabre este módulo:** cuando M1 (Dashboard Administrator) requiera **extender** clients con columnas de configuración operativa (sync_start_date, sync_enabled, email_drafts_enabled, filter, contact, cc_email, etc.). Esa extensión sí amerita su propia versión bajo `11-clients/v0.X.Y.md`.
-
-Hasta entonces, el schema base de `clients` vive bajo el TDD de `20-intuit-oauth`.
 
 ---
 
 ## Por qué existe este módulo
 
-Toda la operación del bookkeeper gira alrededor del concepto de "cliente" (una empresa con QuickBooks Online a la que el operador da servicio de bookkeeping). Sin esta tabla, no hay con qué relacionar tokens Intuit, syncs, dashboards, ni nada de Etapa 1.
+77 clientes ya viven en `mapi_prod` (migrados desde mapi v0.x en v0.3.1). Hoy solo se pueden ver vía `psql` o el JOIN implícito en `GET /v1/intuit/tokens`. Falta:
 
-Reusa el diseño de mapi v0.x con renames donde el naming no era consumible. Los 77 clientes existentes en mapi v0.x se migran cuando entre P1 (`20-intuit-oauth` v0.3.1).
+- **Listar** clientes con filtros y paginación.
+- **Ver detalle** de un cliente (incluye metadata expandida de Intuit: país, dirección, teléfono, website).
+- **Editar** campos que no llegan de Intuit: `industry`, `entity_type`, `timezone`, `primary_contact_name`, `notes`.
+- **Cambiar status** (`active` → `paused` → `offboarded`) — soft delete heredado de mapi v0.x.
 
----
-
-## Alcance (TBD — se diseña cuando arranque la versión)
-
-### Sí entra (preliminar)
-
-- Tabla `clients` con shape mínimo: id, qbo_realm_id, company_name, contact_email, status, metadata, timestamps.
-- Endpoints CRUD admin: `POST /v1/admin/clients`, `GET /v1/admin/clients`, `GET /v1/admin/clients/:id`, `PATCH /v1/admin/clients/:id`.
-- Soft delete via `status='offboarded'` (heredado D-039 mapi v0.x).
-- Configuración por cliente cuando entre M1 (Dashboard Administrator): `sync_start_date`, `sync_enabled`, `email_drafts_enabled`, `filter`, `start_date`, `end_date`, `cc_email`, etc.
-
-### NO entra (preliminar)
-
-- AuthGuard real — los endpoints son `@Public()` hasta que `10-core-auth` exista.
-- Lógica de OAuth Intuit — vive en `20-intuit/01-oauth/`.
-- UI — vive en `apps/bvcpas/roadmap/20-dashboards-clientes/m1-admin/`.
+Sin esto, los dashboards M1+ no pueden listar nada — todos consumen `/v1/clients` como fuente.
 
 ---
 
-## Notas
+## Flujo
 
-- Naming visible al operador (NAM-1) se aprueba cuando se abra la versión.
-- Schema definitivo se discute con el operador antes de generar migration.
-- La mejora real de UX llega con M1 — este módulo solo hace que la tabla exista.
+**Caso 1 — Listar clientes en dashboard.**
+
+1. Admin entra al dashboard → React llama `GET /v1/clients?status=active&search=acme&page=1&pageSize=50`.
+2. Backend valida JWT, consulta `clients` con filtros, devuelve `{items, total, page, pageSize}`.
+
+**Caso 2 — Ver detalle.**
+
+1. Admin click en cliente → `GET /v1/clients/:id`.
+2. Backend devuelve cliente completo + metadata desempaquetada (`intuit_country`, `intuit_phone`, etc. a top-level).
+
+**Caso 3 — Editar campos operativos.**
+
+1. Admin abre form → `PATCH /v1/clients/:id` con body parcial.
+2. Backend valida campos editables (no permite cambiar `id`, `qbo_realm_id`, `created_at`).
+3. Emite `client.updated` en event_log con diff.
+
+**Caso 4 — Cambiar status.**
+
+1. Admin selecciona "Pausar" o "Dar de baja" → `POST /v1/clients/:id/status` con `{status: 'paused' | 'offboarded'}`.
+2. Backend actualiza, emite evento `client.status_changed`.
+3. **Status `offboarded` NO borra tokens** — quedan para auditoría. La operación normal los ignora porque filtra por `status='active'`.
+
+---
+
+## Decisiones operativas
+
+- **No crear `POST /v1/clients`**: clientes nacen vía OAuth callback (`/v1/intuit/connect`), no vía CRUD admin. Crear sin realm sería un cliente fantasma sin QBO. Si en el futuro se necesita (cliente sin QBO), se agrega entonces.
+- **Soft delete**: `status='offboarded'`. Tokens y filas se preservan para auditoría e historia. No hay `DELETE`.
+- **Paths sin `/admin/`**: `@Roles('admin')` en el controller. (Convención del proyecto.)
+- **Schema NO se toca**: las columnas son las de v0.3.0. Los campos vacíos (`industry`, `entity_type`, etc.) se llenan via PATCH cuando el operador los conozca. No se renombran ni añaden columnas en v0.4.0.
+
+---
+
+## Endpoints API
+
+| Método | Path                     | Descripción                         | Roles |
+| ------ | ------------------------ | ----------------------------------- | ----- |
+| GET    | `/v1/clients`            | Listar paginado con filtros         | admin |
+| GET    | `/v1/clients/:id`        | Detalle con metadata expandida      | admin |
+| PATCH  | `/v1/clients/:id`        | Editar campos operativos            | admin |
+| POST   | `/v1/clients/:id/status` | Cambiar status (active/paused/offb) | admin |
+
+**`/v1/clients/:id/connect`** ya existe en `20-intuit-oauth` (re-auth target) — no se duplica aquí.
+
+---
+
+## Errores de dominio
+
+- `ClientNotFoundError` (404) — ya existe desde v0.3.0, se reusa.
+- `InvalidStatusTransitionError` (400) — futura, cuando entre validación de transiciones (no en v0.4.0).
+
+---
+
+## Eventos event_log
+
+- `client.updated` — payload: `{ clientId, changedFields, before, after }`. Actor: admin que editó.
+- `client.status_changed` — payload: `{ clientId, fromStatus, toStatus }`. Actor: admin.
+
+---
+
+## Versiones
+
+- **v0.4.0** (en progreso): CRUD inicial — list/getById/update/changeStatus.
+- **v0.4.x futuras** (no planeadas todavía): config operativa por cliente cuando entre M1 (sync_start_date, email_drafts_enabled, etc.).

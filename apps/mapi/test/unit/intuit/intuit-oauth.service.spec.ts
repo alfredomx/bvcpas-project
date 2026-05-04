@@ -1,7 +1,7 @@
 import type { Redis } from 'ioredis'
 import { IntuitOauthService } from '../../../src/modules/20-intuit-oauth/oauth/intuit-oauth.service'
 import type { IntuitTokensRepository } from '../../../src/modules/20-intuit-oauth/tokens/intuit-tokens.repository'
-import type { ClientsRepository } from '../../../src/modules/20-intuit-oauth/clients/clients.repository'
+import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
 import type { EncryptionService } from '../../../src/core/encryption/encryption.service'
 import type { IntuitOauthClientFactory } from '../../../src/modules/20-intuit-oauth/intuit-oauth-client.factory'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'

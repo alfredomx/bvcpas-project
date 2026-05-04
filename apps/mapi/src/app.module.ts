@@ -14,6 +14,7 @@ import { RolesGuard } from './core/auth/guards/roles.guard'
 import { AuthModule } from './modules/10-core-auth/auth.module'
 import { EncryptionModule } from './core/encryption/encryption.module'
 import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module'
+import { ClientsModule } from './modules/11-clients/clients.module'
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module
     EncryptionModule,
     EventLogModule,
     AuthModule,
+    ClientsModule,
     IntuitOauthModule,
     HealthModule,
   ],
