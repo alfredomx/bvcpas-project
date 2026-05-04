@@ -15,7 +15,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** ninguno (entre módulos). `11-clients` ✅ cerrado con v0.4.0; `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2.
+**Módulo activo:** `11-clients` 🚧 (v0.4.0 + v0.5.0 cerradas, abierto a futuras versiones para tareas mensuales/badges); `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2.
 **Próxima versión planeada:** `21-intuit-bridge` (P2 — WebSocket gateway con plugin Chrome). Sin versión asignada todavía.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
@@ -239,7 +239,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------- |
 | 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md) |
 | 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)  |
-| 11-clients                      | ✅     | base+M1 | [README.md](11-clients/README.md)                      | [v0.4.0](11-clients/v0.4.0.md)    |
+| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                   |
 | 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2          |
 | 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                 |
 | 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                 |
@@ -263,6 +263,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.3.1   | 20-intuit-oauth | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)          | mapi-v0.3.1 | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md) |
 | 0.3.2   | 20-intuit-oauth | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B        | mapi-v0.3.2 | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md) |
 | 0.4.0   | 11-clients      | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests             | mapi-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)           |
+| 0.5.0   | 11-clients      | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=     | mapi-v0.5.0 | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)           |
 
 ---
 

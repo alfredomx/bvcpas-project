@@ -39,6 +39,7 @@ function serialize(c: Client): ClientDto {
     fiscal_year_start: c.fiscalYearStart,
     timezone: c.timezone,
     status: c.status,
+    tier: c.tier,
     primary_contact_name: c.primaryContactName,
     primary_contact_email: c.primaryContactEmail,
     notes: c.notes,
@@ -59,7 +60,7 @@ export class ClientsController {
   @ApiOperation({
     summary: '/v1/clients',
     description:
-      'Listado paginado de clientes. Filtros opcionales: `status` (active/paused/offboarded) y `search` (parcial en legal_name).',
+      'Listado paginado de clientes. Filtros opcionales: `status` (active/paused/offboarded), `tier` (silver/gold/platinum) y `search` (parcial en legal_name).',
   })
   @ApiResponse({ status: 200, type: ClientsListResponseDto })
   async list(
@@ -69,6 +70,7 @@ export class ClientsController {
       page: query.page,
       pageSize: query.pageSize,
       ...(query.status ? { status: query.status } : {}),
+      ...(query.tier ? { tier: query.tier } : {}),
       ...(query.search ? { search: query.search } : {}),
     })
     return {

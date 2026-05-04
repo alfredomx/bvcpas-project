@@ -27,6 +27,20 @@ export const CLIENT_STATUSES = ['active', 'paused', 'offboarded'] as const
 export type ClientStatus = (typeof CLIENT_STATUSES)[number]
 
 /**
+ * Tier del cliente. Permite clasificar por nivel de servicio para filtros y
+ * (en el futuro) reglas de urgencia/SLA.
+ *
+ * - `silver`: cliente estándar (default).
+ * - `gold`: cliente con prioridad media-alta.
+ * - `platinum`: cliente VIP, prioridad máxima.
+ *
+ * Hardcoded en código por ahora. Cuando se necesite configurar pesos/cobertura
+ * por tier, se reemplaza con tabla `tiers` y FK (BACKLOG).
+ */
+export const CLIENT_TIERS = ['silver', 'gold', 'platinum'] as const
+export type ClientTier = (typeof CLIENT_TIERS)[number]
+
+/**
  * Tabla de clientes bookkeeper. Cada row representa una empresa que el
  * operador atiende. Heredado de mapi v0.x con shape idéntico.
  *
@@ -45,6 +59,7 @@ export const clients = pgTable(
     fiscalYearStart: smallint('fiscal_year_start'), // 1-12 (mes)
     timezone: varchar('timezone', { length: 60 }), // p.ej. America/Mexico_City
     status: varchar('status', { length: 20, enum: CLIENT_STATUSES }).notNull().default('active'),
+    tier: varchar('tier', { length: 20, enum: CLIENT_TIERS }).notNull().default('silver'),
     primaryContactName: varchar('primary_contact_name', { length: 120 }),
     primaryContactEmail: varchar('primary_contact_email', { length: 255 }),
     notes: text('notes'),

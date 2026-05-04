@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import type { Client, ClientStatus } from '../../db/schema/clients'
+import type { Client, ClientStatus, ClientTier } from '../../db/schema/clients'
 import { EventLogService } from '../95-event-log/event-log.service'
 import { ClientNotFoundError } from '../20-intuit-oauth/intuit-oauth.errors'
 import {
@@ -12,6 +12,7 @@ export interface ListClientsParams {
   page: number
   pageSize: number
   status?: ClientStatus
+  tier?: ClientTier
   search?: string
 }
 
@@ -29,6 +30,7 @@ const EDITABLE_FIELDS = [
   'entityType',
   'fiscalYearStart',
   'timezone',
+  'tier',
   'primaryContactName',
   'primaryContactEmail',
   'notes',
@@ -62,6 +64,7 @@ export class ClientsService {
       page: params.page,
       pageSize: params.pageSize,
       ...(params.status ? { status: params.status } : {}),
+      ...(params.tier ? { tier: params.tier } : {}),
       ...(params.search ? { search: params.search } : {}),
     }
     const { items, total } = await this.repo.list(filters)

@@ -30,6 +30,7 @@ function buildClient(overrides: Partial<Client> = {}): Client {
     fiscalYearStart: null,
     timezone: null,
     status: 'active',
+    tier: 'silver',
     primaryContactName: null,
     primaryContactEmail: null,
     notes: null,
@@ -95,6 +96,45 @@ describe('ClientsService', () => {
         status: 'active',
         search: 'acme',
       })
+    })
+
+    it('CR-clients-002b — pasa tier al repo cuando se filtra', async () => {
+      const m = makeMocks()
+      m.repo.list.mockResolvedValueOnce({ items: [], total: 0 })
+
+      const svc = buildService(m)
+      await svc.list({ page: 1, pageSize: 50, tier: 'gold' })
+
+      expect(m.repo.list).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 50,
+        tier: 'gold',
+      })
+    })
+  })
+
+  describe('CR-clients-008 — update() acepta tier', () => {
+    it('cambio de tier silver→platinum se persiste y emite client.updated', async () => {
+      const m = makeMocks()
+      const before = buildClient({ id: 'c1', tier: 'silver' })
+      const after = { ...before, tier: 'platinum' as const }
+      m.repo.findById.mockResolvedValueOnce(before)
+      m.repo.update.mockResolvedValueOnce(after)
+
+      const svc = buildService(m)
+      const result = await svc.update('c1', { tier: 'platinum' }, 'admin-uuid')
+
+      expect(result.tier).toBe('platinum')
+      expect(m.repo.update).toHaveBeenCalledWith('c1', { tier: 'platinum' })
+      expect(m.events.log).toHaveBeenCalledWith(
+        'client.updated',
+        expect.objectContaining({
+          clientId: 'c1',
+          changedFields: expect.arrayContaining(['tier']),
+        }),
+        'admin-uuid',
+        { type: 'client', id: 'c1' },
+      )
     })
   })
 

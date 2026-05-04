@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { CLIENT_STATUSES } from '../../../db/schema/clients'
+import { CLIENT_STATUSES, CLIENT_TIERS } from '../../../db/schema/clients'
 
 export const ListClientsQuerySchema = z
   .object({
@@ -13,6 +13,7 @@ export const ListClientsQuerySchema = z
       .default(50)
       .describe('Tamaño de página (max 200)'),
     status: z.enum(CLIENT_STATUSES).optional().describe('Filtra por status'),
+    tier: z.enum(CLIENT_TIERS).optional().describe('Filtra por tier (silver/gold/platinum)'),
     search: z
       .string()
       .min(1)
@@ -33,6 +34,7 @@ const ClientSchema = z.object({
   fiscal_year_start: z.number().int().nullable(),
   timezone: z.string().nullable(),
   status: z.enum(CLIENT_STATUSES),
+  tier: z.enum(CLIENT_TIERS),
   primary_contact_name: z.string().nullable(),
   primary_contact_email: z.string().nullable(),
   notes: z.string().nullable(),
@@ -62,6 +64,7 @@ export const UpdateClientSchema = z
     entityType: z.string().max(40).nullable().optional(),
     fiscalYearStart: z.number().int().min(1).max(12).nullable().optional(),
     timezone: z.string().max(60).nullable().optional(),
+    tier: z.enum(CLIENT_TIERS).optional(),
     primaryContactName: z.string().max(120).nullable().optional(),
     primaryContactEmail: z.string().email().max(255).nullable().optional(),
     notes: z.string().nullable().optional(),

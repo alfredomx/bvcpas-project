@@ -15,6 +15,13 @@
       "when": 1777837274498,
       "tag": "0001_clients_intuit_tokens",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777878168357,
+      "tag": "0002_clients_tier",
+      "breakpoints": true
     }
   ]
 }

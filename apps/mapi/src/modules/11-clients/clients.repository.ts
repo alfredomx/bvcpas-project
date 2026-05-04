@@ -5,6 +5,7 @@ import {
   CLIENT_STATUSES,
   type Client,
   type ClientStatus,
+  type ClientTier,
   type NewClient,
   clients,
 } from '../../db/schema/clients'
@@ -27,6 +28,7 @@ export interface UpdateClientData {
   fiscalYearStart?: number | null
   timezone?: string | null
   status?: ClientStatus
+  tier?: ClientTier
   primaryContactName?: string | null
   primaryContactEmail?: string | null
   notes?: string | null
@@ -36,6 +38,7 @@ export interface ListClientsFilters {
   page: number
   pageSize: number
   status?: ClientStatus
+  tier?: ClientTier
   search?: string
 }
 
@@ -98,6 +101,9 @@ export class ClientsRepository {
     const conditions: SQL[] = []
     if (filters.status) {
       conditions.push(eq(clients.status, filters.status))
+    }
+    if (filters.tier) {
+      conditions.push(eq(clients.tier, filters.tier))
     }
     if (filters.search) {
       conditions.push(ilike(clients.legalName, `%${filters.search}%`))

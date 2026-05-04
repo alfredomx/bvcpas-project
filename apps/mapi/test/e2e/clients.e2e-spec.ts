@@ -26,6 +26,7 @@ interface ClientShape {
   legal_name: string
   qbo_realm_id: string | null
   status: 'active' | 'paused' | 'offboarded'
+  tier: 'silver' | 'gold' | 'platinum'
   industry: string | null
 }
 
@@ -54,13 +55,13 @@ describe('Clients E2E (Tipo B)', () => {
         INSERT INTO users (email, password_hash, full_name, role, status)
         VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Clients', 'admin', 'active')
       `
-      // Seed 3 clientes
+      // Seed 3 clientes con distintos tiers
       await client`
-        INSERT INTO clients (legal_name, qbo_realm_id, status)
+        INSERT INTO clients (legal_name, qbo_realm_id, status, tier)
         VALUES
-          ('Acme LLC', 'r-001', 'active'),
-          ('Beta Corp', 'r-002', 'paused'),
-          ('Cascade Co', 'r-003', 'active')
+          ('Acme LLC', 'r-001', 'active', 'silver'),
+          ('Beta Corp', 'r-002', 'paused', 'gold'),
+          ('Cascade Co', 'r-003', 'active', 'platinum')
       `
     } finally {
       await client.end()
@@ -212,6 +213,68 @@ describe('Clients E2E (Tipo B)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       expect((after.body as ClientShape).status).toBe(beforeStatus)
+    })
+  })
+
+  describe('SMK-clients-007 — filtro ?tier=', () => {
+    it('?tier=gold retorna solo Beta Corp', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/clients?tier=gold')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+      const body = res.body as ListResponseShape
+      expect(body.total).toBe(1)
+      expect(body.items[0]?.legal_name).toBe('Beta Corp')
+    })
+
+    it('?tier=platinum retorna solo Cascade Co', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/v1/clients?tier=platinum')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+      const body = res.body as ListResponseShape
+      expect(body.total).toBe(1)
+      expect(body.items[0]?.legal_name).toBe('Cascade Co')
+    })
+
+    it('?tier=invalid → 400', async () => {
+      await request(app.getHttpServer())
+        .get('/v1/clients?tier=diamond')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(400)
+    })
+  })
+
+  describe('SMK-clients-008 — PATCH cambia tier', () => {
+    it('Acme silver → platinum, response refleja', async () => {
+      const list = await request(app.getHttpServer())
+        .get('/v1/clients?search=Acme')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+      const acmeId = (list.body as ListResponseShape).items[0].id
+
+      const res = await request(app.getHttpServer())
+        .patch(`/v1/clients/${acmeId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ tier: 'platinum' })
+        .expect(200)
+      expect((res.body as ClientShape).tier).toBe('platinum')
+    })
+  })
+
+  describe('SMK-clients-009 — PATCH con tier inválido → 400', () => {
+    it('tier=diamond rechazado por Zod', async () => {
+      const list = await request(app.getHttpServer())
+        .get('/v1/clients?search=Beta')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200)
+      const betaId = (list.body as ListResponseShape).items[0].id
+
+      await request(app.getHttpServer())
+        .patch(`/v1/clients/${betaId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ tier: 'diamond' })
+        .expect(400)
     })
   })
 })

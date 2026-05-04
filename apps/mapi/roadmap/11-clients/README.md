@@ -1,10 +1,10 @@
 # 11-clients — CRUD admin de clientes
 
 **App:** mapi
-**Status:** ✅ Cerrado (CRUD admin entregado en v0.4.0)
-**Versiones que lo construyen:** [v0.4.0](v0.4.0.md) (CRUD inicial)
-**Schema base:** ya creado en [20-intuit-oauth v0.3.0](../20-intuit-oauth/v0.3.0.md). Este módulo **solo agrega endpoints**, no toca schema.
-**Última revisión:** 2026-05-03
+**Status:** 🚧 En desarrollo (CRUD base en v0.4.0, tier en v0.5.0; futuras versiones agregarán workflow mensual)
+**Versiones que lo construyen:** [v0.4.0](v0.4.0.md) (CRUD inicial), [v0.5.0](v0.5.0.md) (tier silver/gold/platinum)
+**Schema base:** creado en [20-intuit-oauth v0.3.0](../20-intuit-oauth/v0.3.0.md). v0.5.0 agregó columna `tier`. Próximas versiones agregarán schema para tareas/períodos mensuales.
+**Última revisión:** 2026-05-04
 
 ---
 
