@@ -16,6 +16,7 @@ import { EncryptionModule } from './core/encryption/encryption.module'
 import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module'
 import { ClientsModule } from './modules/11-clients/clients.module'
 import { CustomerSupportModule } from './modules/12-customer-support/customer-support.module'
+import { DashboardsModule } from './modules/13-dashboards/dashboards.module'
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { CustomerSupportModule } from './modules/12-customer-support/customer-su
     ClientsModule,
     IntuitOauthModule,
     CustomerSupportModule,
+    DashboardsModule,
     HealthModule,
   ],
   providers: [

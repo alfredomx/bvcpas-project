@@ -24,16 +24,35 @@
 
 ## Flujo del operador (admin)
 
-### 1. Lista clientes (sidebar del dashboard)
+### 1. Cargar el dashboard completo (lista maestra)
+
+Al entrar al dashboard, el frontend hace **una sola llamada** que trae todos los clientes activos con sus stats agregados:
 
 ```http
-GET /v1/clients?status=active
+GET /v1/dashboards/customer-support?from=2025-01-01&to=2026-04-30
 Authorization: Bearer <jwt>
 ```
 
-Tag Scalar: `Clients`. Devuelve los 77+ clientes activos con: `id`, `legal_name`, `tier`, `qbo_realm_id`, `transactions_filter`, `cc_email`, `draft_email_enabled`, etc.
+Tag Scalar: `Dashboards`. **Versión:** v0.6.1.
 
-Cuando entren los badges de urgencia (CRITICAL/HIGH/MONITOR/CLEAN), se calculan en el frontend a partir de los followups y stats. **Backlog**: que el backend los precompute.
+**Frontend calcula `from` y `to`**: `from = ${currentYear-1}-01-01`, `to = último día del mes anterior`.
+
+Response: por cada cliente activo, devuelve `stats` (uncats_count, amas_count, responded_count, progress_pct, amount_total, last_synced_at), `followup` (status, sent_at), `monthly` (previous_year_total + by_month con los 12 meses del año actual). Esto es lo que pinta la tabla de la imagen 2 (lista maestra) y los badges del sidebar.
+
+Frontend filtra por `tier`, `status`, etc. en JS — no se hacen más requests al backend para eso.
+
+### 1.b. Detalle de un cliente (panel central)
+
+Cuando el operador click en un cliente:
+
+```http
+GET /v1/dashboards/customer-support/<clientId>?from=2025-01-01&to=2026-04-30
+Authorization: Bearer <jwt>
+```
+
+Tag Scalar: `Dashboards`. Mismo shape que list pero por un cliente, con campos extra: `client.primary_contact_name`, `client.cc_email`, `followup.last_reply_at`, `followup.internal_notes`, `stats.silent_streak_days`.
+
+Esto es lo que se ve en la imagen 1 (panel central del cliente seleccionado).
 
 ### 2. Sync mensual (botón "Sync" en el dashboard)
 
