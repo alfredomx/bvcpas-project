@@ -8,6 +8,14 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 
 ## Por trigger
 
+### Trigger: cuando los 77 clientes lleven ≥3 días estables en bvcpas-project prod
+
+> Migración v0.3.1 cerrada el 2026-05-03. Tokens migrados, refresh transparente verificado. mapi v0.x prod sigue corriendo en paralelo durante el periodo de validación.
+
+- Apagar mapi v0.x prod (server `mapi.alfredo.mx`): detener stack docker compose, desuscribir tunnel cloudflared, dejar postgres en cold storage por si hay que rollback.
+- Quitar redirect URI `https://mapi.alfredo.mx/v1/intuit/callback` de la app Intuit "BV CPAs, PLLC" (ya no se usa).
+- Dejar último dump `db-2026-05-03-060001.dump` archivado en gdrive como punto de regreso.
+
 ### Trigger: cuando arranque el segundo connector (no qbo-dev)
 
 > Connector base genérico que abstrae lógica común. Hoy con un solo connector (qbo-dev) la abstracción sería prematura. Heredado de mapi v0.x D-096.
