@@ -28,8 +28,15 @@ interface LoginResponseShape {
 }
 
 interface TransactionShape {
+  id: string
   qbo_txn_type: string
   qbo_txn_id: string
+  category: string
+  amount: string
+}
+
+interface PublicTransactionShape {
+  id: string
   category: string
   amount: string
   client_note: string | null
@@ -42,7 +49,7 @@ interface TransactionsListShape {
 
 interface PublicResponseShape {
   client: { id: string; legal_name: string; transactions_filter: string }
-  items: TransactionShape[]
+  items: PublicTransactionShape[]
 }
 
 interface PublicLinkShape {
@@ -61,6 +68,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   let app: INestApplication
   let adminToken: string
   let clientId: string
+  let txn001Id: string
   const realmId = 'realm-cs-001'
 
   beforeAll(async () => {
@@ -85,7 +93,7 @@ describe('Customer Support E2E (Tipo B)', () => {
       clientId = c.id
 
       // Seed transacciones directamente
-      await client`
+      const inserted = (await client`
         INSERT INTO client_transactions (
           realm_id, qbo_txn_type, qbo_txn_id, client_id, txn_date, vendor_name,
           memo, split_account, category, amount
@@ -93,7 +101,9 @@ describe('Customer Support E2E (Tipo B)', () => {
           (${realmId}, 'Expense', 'tx-001', ${clientId}, '2026-04-01', 'Acme', 'lunch', 'Bank', 'uncategorized_expense', '50.00'),
           (${realmId}, 'Deposit', 'tx-002', ${clientId}, '2026-04-02', '', 'wire', 'Bank', 'uncategorized_income', '1000.00'),
           (${realmId}, 'Bill',    'tx-003', ${clientId}, '2026-04-03', 'X',  'q',     'Bank', 'ask_my_accountant',     '75.00')
-      `
+        RETURNING id, qbo_txn_id
+      `) as unknown as { id: string; qbo_txn_id: string }[]
+      txn001Id = inserted.find((r) => r.qbo_txn_id === 'tx-001')!.id
     } finally {
       await client.end()
     }
@@ -112,7 +122,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-001 — GET /transactions admin', () => {
     it('lista 3 transacciones', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/clients/${clientId}/transactions`)
+        .get(`/v1/transactions?clientId=${clientId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -123,7 +133,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-003 — filtros category + filter', () => {
     it('?category=ask_my_accountant retorna solo el AMA', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/clients/${clientId}/transactions?category=ask_my_accountant`)
+        .get(`/v1/transactions?clientId=${clientId}&category=ask_my_accountant`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -133,7 +143,7 @@ describe('Customer Support E2E (Tipo B)', () => {
 
     it('?filter=expense excluye income (admin)', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/clients/${clientId}/transactions?filter=expense`)
+        .get(`/v1/transactions?clientId=${clientId}&filter=expense`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -144,16 +154,16 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-004 — public-links idempotente', () => {
     it('segunda llamada retorna mismo token', async () => {
       const first = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats' })
+        .send({ clientId, purpose: 'uncats' })
         .expect(200)
       const tokenFirst = (first.body as PublicLinkShape).token
 
       const second = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats' })
+        .send({ clientId, purpose: 'uncats' })
         .expect(200)
       expect((second.body as PublicLinkShape).token).toBe(tokenFirst)
     })
@@ -162,9 +172,9 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-007 — GET público excluye AMAs', () => {
     it('cliente con tier=all ve uncats expense + income, sin AMA', async () => {
       const link = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats' })
+        .send({ clientId, purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
@@ -173,21 +183,22 @@ describe('Customer Support E2E (Tipo B)', () => {
         .expect(200)
       const body = res.body as PublicResponseShape
       expect(body.items).toHaveLength(2)
-      expect(body.items.find((t) => t.qbo_txn_id === 'tx-003')).toBeUndefined()
+      // No hay tx-003 (es AMA). Verificamos por categories.
+      expect(body.items.find((t) => t.category === 'ask_my_accountant')).toBeUndefined()
     })
   })
 
   describe('SMK-cs-008 — PATCH público guarda nota', () => {
     it('upsert response y verificable vía admin endpoint', async () => {
       const link = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats' })
+        .send({ clientId, purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
       await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/Expense/tx-001`)
+        .patch(`/v1/public/transactions/${token}/${txn001Id}`)
         .send({ note: 'gasto de mi viaje' })
         .expect(200)
 
@@ -196,12 +207,12 @@ describe('Customer Support E2E (Tipo B)', () => {
         .get(`/v1/public/transactions/${token}`)
         .expect(200)
       const body = res.body as PublicResponseShape
-      const t1 = body.items.find((t) => t.qbo_txn_id === 'tx-001')
+      const t1 = body.items.find((t) => t.id === txn001Id)
       expect(t1?.client_note).toBe('gasto de mi viaje')
 
       // Edición sobreescribe (UPDATE)
       await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/Expense/tx-001`)
+        .patch(`/v1/public/transactions/${token}/${txn001Id}`)
         .send({ note: 'editado' })
         .expect(200)
 
@@ -224,14 +235,15 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-009 — PATCH público con txn inexistente → 404', () => {
     it('TRANSACTION_NOT_FOUND_IN_SNAPSHOT', async () => {
       const link = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats' })
+        .send({ clientId, purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
+      const fakeUuid = '00000000-0000-0000-0000-000000000000'
       const res = await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/Expense/missing-id`)
+        .patch(`/v1/public/transactions/${token}/${fakeUuid}`)
         .send({ note: 'no existe' })
         .expect(404)
       expect((res.body as { code: string }).code).toBe('TRANSACTION_NOT_FOUND_IN_SNAPSHOT')
@@ -240,11 +252,10 @@ describe('Customer Support E2E (Tipo B)', () => {
 
   describe('SMK-cs-010 — GET público con token revocado → 410', () => {
     it('después de revoke devuelve 410', async () => {
-      // crear nuevo (force) para no afectar otros tests
       const link = await request(app.getHttpServer())
-        .post(`/v1/clients/${clientId}/public-links`)
+        .post('/v1/public-links')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ purpose: 'uncats', force: true })
+        .send({ clientId, purpose: 'uncats', force: true })
         .expect(200)
       const linkId = (link.body as PublicLinkShape).id
       const token = (link.body as PublicLinkShape).token
@@ -264,7 +275,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-011 — GET followups default', () => {
     it('si no existe, retorna pending', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/clients/${clientId}/followups?period=2026-04`)
+        .get(`/v1/followups?clientId=${clientId}&period=2026-04`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       expect((res.body as FollowupShape).status).toBe('pending')
@@ -274,7 +285,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-012 — PATCH followups', () => {
     it('cambia status a sent + emite evento', async () => {
       await request(app.getHttpServer())
-        .patch(`/v1/clients/${clientId}/followups?period=2026-04`)
+        .patch(`/v1/followups?clientId=${clientId}&period=2026-04`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ status: 'sent', internalNotes: 'enviado por admin' })
         .expect(200)
@@ -298,7 +309,7 @@ describe('Customer Support E2E (Tipo B)', () => {
     it('borra del snapshot pero respuesta queda en transaction_responses', async () => {
       // Pre: tx-001 ya tiene response (de SMK-008). La borramos del snapshot.
       await request(app.getHttpServer())
-        .delete(`/v1/clients/${clientId}/transactions/Expense/tx-001`)
+        .delete(`/v1/transactions/${txn001Id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(204)
 

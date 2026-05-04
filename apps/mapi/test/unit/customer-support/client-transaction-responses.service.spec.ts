@@ -17,9 +17,11 @@ import type { ClientTransactionResponse } from '../../../src/db/schema/client-tr
  */
 
 const NOW = new Date('2026-05-04T12:00:00Z')
+const TXN_UUID = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
 
 function buildTxn(overrides: Partial<ClientTransaction> = {}): ClientTransaction {
   return {
+    id: TXN_UUID,
     realmId: 'r-1',
     qboTxnType: 'Expense',
     qboTxnId: '101',
@@ -74,7 +76,7 @@ function makeMocks(): Mocks {
       listByClient: jest.fn(),
     } as unknown as jest.Mocked<ClientTransactionResponsesRepository>,
     txnRepo: {
-      findOne: jest.fn(),
+      findById: jest.fn(),
     } as unknown as jest.Mocked<ClientTransactionsRepository>,
     events: { log: jest.fn().mockResolvedValue(undefined) },
   }
@@ -92,18 +94,12 @@ describe('ClientTransactionResponsesService', () => {
   describe('CR-cs-010 — TransactionNotFoundInSnapshotError', () => {
     it('lanza si la transacción no existe en el snapshot', async () => {
       const m = makeMocks()
-      m.txnRepo.findOne.mockResolvedValueOnce(null)
+      m.txnRepo.findById.mockResolvedValueOnce(null)
 
       const svc = buildService(m)
-      await expect(
-        svc.saveResponse({
-          clientId: 'c-1',
-          realmId: 'r-1',
-          qboTxnType: 'Expense',
-          qboTxnId: 'missing',
-          note: 'algo',
-        }),
-      ).rejects.toBeInstanceOf(TransactionNotFoundInSnapshotError)
+      await expect(svc.saveResponse({ txnId: TXN_UUID, note: 'algo' })).rejects.toBeInstanceOf(
+        TransactionNotFoundInSnapshotError,
+      )
       expect(m.responsesRepo.upsert).not.toHaveBeenCalled()
     })
   })
@@ -111,18 +107,12 @@ describe('ClientTransactionResponsesService', () => {
   describe('CR-cs-011 — UPSERT con snapshot inline', () => {
     it('copia los campos de la transacción al insert/update', async () => {
       const m = makeMocks()
-      m.txnRepo.findOne.mockResolvedValueOnce(buildTxn())
+      m.txnRepo.findById.mockResolvedValueOnce(buildTxn())
       m.responsesRepo.findByTxn.mockResolvedValueOnce(null)
       m.responsesRepo.upsert.mockResolvedValueOnce(buildResponse())
 
       const svc = buildService(m)
-      await svc.saveResponse({
-        clientId: 'c-1',
-        realmId: 'r-1',
-        qboTxnType: 'Expense',
-        qboTxnId: '101',
-        note: 'mi nota',
-      })
+      await svc.saveResponse({ txnId: TXN_UUID, note: 'mi nota' })
 
       const upsertArg = m.responsesRepo.upsert.mock.calls[0]?.[0]
       expect(upsertArg).toMatchObject({
@@ -143,18 +133,12 @@ describe('ClientTransactionResponsesService', () => {
   describe('CR-cs-012 — evento isUpdate=false', () => {
     it('cuando no había respuesta previa', async () => {
       const m = makeMocks()
-      m.txnRepo.findOne.mockResolvedValueOnce(buildTxn())
+      m.txnRepo.findById.mockResolvedValueOnce(buildTxn())
       m.responsesRepo.findByTxn.mockResolvedValueOnce(null)
       m.responsesRepo.upsert.mockResolvedValueOnce(buildResponse())
 
       const svc = buildService(m)
-      await svc.saveResponse({
-        clientId: 'c-1',
-        realmId: 'r-1',
-        qboTxnType: 'Expense',
-        qboTxnId: '101',
-        note: 'nueva',
-      })
+      await svc.saveResponse({ txnId: TXN_UUID, note: 'nueva' })
 
       expect(m.events.log).toHaveBeenCalledWith(
         'client_transaction_response.saved',
@@ -168,18 +152,12 @@ describe('ClientTransactionResponsesService', () => {
   describe('CR-cs-013 — evento isUpdate=true', () => {
     it('cuando ya había respuesta previa', async () => {
       const m = makeMocks()
-      m.txnRepo.findOne.mockResolvedValueOnce(buildTxn())
+      m.txnRepo.findById.mockResolvedValueOnce(buildTxn())
       m.responsesRepo.findByTxn.mockResolvedValueOnce(buildResponse())
       m.responsesRepo.upsert.mockResolvedValueOnce(buildResponse({ clientNote: 'editada' }))
 
       const svc = buildService(m)
-      await svc.saveResponse({
-        clientId: 'c-1',
-        realmId: 'r-1',
-        qboTxnType: 'Expense',
-        qboTxnId: '101',
-        note: 'editada',
-      })
+      await svc.saveResponse({ txnId: TXN_UUID, note: 'editada' })
 
       expect(m.events.log).toHaveBeenCalledWith(
         'client_transaction_response.saved',

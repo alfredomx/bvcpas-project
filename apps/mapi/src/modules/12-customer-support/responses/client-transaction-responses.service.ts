@@ -6,10 +6,7 @@ import { ClientTransactionResponsesRepository } from './client-transaction-respo
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
 
 export interface SaveResponseInput {
-  clientId: string
-  realmId: string
-  qboTxnType: string
-  qboTxnId: string
+  txnId: string // id UUID interno de client_transactions
   note: string
 }
 
@@ -18,9 +15,10 @@ export interface SaveResponseInput {
  * (UPSERT en el repo). Si el cliente edita después, se refresca el snapshot
  * inline + actualiza la nota.
  *
- * Antes de guardar, valida que la transacción exista en `client_transactions`
- * (snapshot actual). Si el cliente intenta responder a algo que ya no está,
- * lanza `TransactionNotFoundInSnapshotError` (404).
+ * `saveResponse` recibe el id UUID interno de la transacción (txnId), busca
+ * la fila en `client_transactions` y de ahí saca clientId/realmId/qboTxnType/
+ * qboTxnId. Si la transacción ya no existe en el snapshot (porque se hizo un
+ * sync nuevo y desapareció), lanza `TransactionNotFoundInSnapshotError` (404).
  */
 @Injectable()
 export class ClientTransactionResponsesService {
@@ -31,21 +29,21 @@ export class ClientTransactionResponsesService {
   ) {}
 
   async saveResponse(input: SaveResponseInput): Promise<ClientTransactionResponse> {
-    const txn = await this.txnRepo.findOne(input.realmId, input.qboTxnType, input.qboTxnId)
-    if (!txn) throw new TransactionNotFoundInSnapshotError(input.qboTxnId)
+    const txn = await this.txnRepo.findById(input.txnId)
+    if (!txn) throw new TransactionNotFoundInSnapshotError(input.txnId)
 
     const existed = await this.responsesRepo.findByTxn(
-      input.clientId,
-      input.realmId,
-      input.qboTxnType,
-      input.qboTxnId,
+      txn.clientId,
+      txn.realmId,
+      txn.qboTxnType,
+      txn.qboTxnId,
     )
 
     const saved = await this.responsesRepo.upsert({
-      clientId: input.clientId,
-      realmId: input.realmId,
-      qboTxnType: input.qboTxnType,
-      qboTxnId: input.qboTxnId,
+      clientId: txn.clientId,
+      realmId: txn.realmId,
+      qboTxnType: txn.qboTxnType,
+      qboTxnId: txn.qboTxnId,
       txnDate: txn.txnDate,
       vendorName: txn.vendorName,
       memo: txn.memo,
@@ -58,13 +56,13 @@ export class ClientTransactionResponsesService {
     await this.events.log(
       'client_transaction_response.saved',
       {
-        clientId: input.clientId,
-        qboTxnId: input.qboTxnId,
-        qboTxnType: input.qboTxnType,
+        clientId: txn.clientId,
+        qboTxnId: txn.qboTxnId,
+        qboTxnType: txn.qboTxnType,
         isUpdate: existed !== null,
       },
       undefined,
-      { type: 'client', id: input.clientId },
+      { type: 'client', id: txn.clientId },
     )
 
     return saved

@@ -1,8 +1,14 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common'
+import { Controller, Get, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
-import { TransactionResponseDto, TransactionResponsesListDto } from '../dto/customer-support.dto'
+import {
+  ClientIdQueryDto,
+  ClientIdQuerySchema,
+  TransactionResponseDto,
+  TransactionResponsesListDto,
+} from '../dto/customer-support.dto'
 import { ClientTransactionResponsesService } from './client-transaction-responses.service'
 
 function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
@@ -24,22 +30,24 @@ function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
   }
 }
 
-@ApiTags('Customer Support')
+@ApiTags('Clients - Customer Support')
 @ApiBearerAuth('bearer')
-@Controller('clients/:id/transaction-responses')
+@Controller('transaction-responses')
 @Roles('admin')
 export class ClientTransactionResponsesController {
   constructor(private readonly service: ClientTransactionResponsesService) {}
 
   @Get()
   @ApiOperation({
-    summary: '/v1/clients/:id/transaction-responses',
+    summary: '/v1/transaction-responses',
     description:
-      'Listado de respuestas del cliente. Persistente — incluye respuestas históricas que ya no aparecen en el snapshot actual.',
+      'Listado de respuestas del cliente. Persistente — incluye respuestas históricas que ya no aparecen en el snapshot actual. Requiere `?clientId=`.',
   })
   @ApiResponse({ status: 200, type: TransactionResponsesListDto })
-  async list(@Param('id', ParseUUIDPipe) clientId: string): Promise<TransactionResponsesListDto> {
-    const items = await this.service.listForClient(clientId)
+  async list(
+    @Query(new ZodValidationPipe(ClientIdQuerySchema)) query: ClientIdQueryDto,
+  ): Promise<TransactionResponsesListDto> {
+    const items = await this.service.listForClient(query.clientId)
     return { items: items.map(serializeResp) }
   }
 }

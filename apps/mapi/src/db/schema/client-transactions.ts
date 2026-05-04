@@ -1,4 +1,4 @@
-import { date, numeric, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { date, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import { clients } from './clients'
 
@@ -29,13 +29,15 @@ export type ClientTransactionCategory = (typeof CLIENT_TRANSACTION_CATEGORIES)[n
  *
  * Las respuestas del cliente viven en `client_transaction_responses`, NO aquí.
  *
- * PK compuesta `(realm_id, qbo_txn_type, qbo_txn_id)`: identificador natural de
- * QBO. Sin UUID interno porque la tabla es desechable; cuando se borra el row
- * no hay FKs que rompamos.
+ * PK = `id` UUID interno. La tupla `(realm_id, qbo_txn_type, qbo_txn_id)` es
+ * UNIQUE: identifica naturalmente la transacción en QBO (QBO reusa IDs entre
+ * tipos de entidad, por eso necesita el type también).
  */
 export const clientTransactions = pgTable(
   'client_transactions',
   {
+    id: uuid('id').primaryKey().defaultRandom(),
+
     realmId: text('realm_id').notNull(),
     qboTxnType: text('qbo_txn_type').notNull(), // 'Expense', 'Deposit', 'Check', 'Bill', 'JournalEntry', 'Transfer'...
     qboTxnId: text('qbo_txn_id').notNull(),
@@ -57,7 +59,11 @@ export const clientTransactions = pgTable(
       .default(sql`now()`),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.realmId, table.qboTxnType, table.qboTxnId] }),
+    qboNaturalKeyIdx: uniqueIndex('client_transactions_qbo_natural_key_idx').on(
+      table.realmId,
+      table.qboTxnType,
+      table.qboTxnId,
+    ),
   }),
 )
 

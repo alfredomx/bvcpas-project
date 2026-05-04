@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch } from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Public } from '../../../common/decorators/public.decorator'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
@@ -12,9 +12,12 @@ import {
 } from '../dto/customer-support.dto'
 import { ClientPublicLinksService } from '../public-links/client-public-links.service'
 import { ClientTransactionResponsesService } from '../responses/client-transaction-responses.service'
-import { ClientTransactionResponsesRepository } from '../responses/client-transaction-responses.repository'
 import { ClientTransactionsRepository } from '../transactions/client-transactions.repository'
 import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import {
+  PublicLinkInvalidError,
+  TransactionNotFoundInSnapshotError,
+} from '../customer-support.errors'
 import type { Client, ClientTransactionsFilter } from '../../../db/schema/clients'
 import type { ClientTransaction } from '../../../db/schema/client-transactions'
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
@@ -33,16 +36,14 @@ function applyFilter(
 
 function serializeForPublic(
   t: ClientTransaction,
-  responseByQboId: Map<string, ClientTransactionResponse>,
+  responseByTxnId: Map<string, ClientTransactionResponse>,
 ): PublicTransactionDto {
-  const key = `${t.qboTxnType}:${t.qboTxnId}`
-  const r = responseByQboId.get(key)
+  const r = responseByTxnId.get(t.id)
   if (t.category === 'ask_my_accountant') {
     throw new Error('AMA no debería llegar al endpoint público')
   }
   return {
-    qbo_txn_type: t.qboTxnType,
-    qbo_txn_id: t.qboTxnId,
+    id: t.id,
     txn_date: t.txnDate,
     docnum: t.docnum,
     vendor_name: t.vendorName,
@@ -82,13 +83,12 @@ function serializeResponse(r: ClientTransactionResponse): TransactionResponseDto
   }
 }
 
-@ApiTags('Public — Customer Support')
+@ApiTags('Clients - Customer Support Public')
 @Controller('public/transactions')
 export class PublicTransactionsController {
   constructor(
     private readonly linksService: ClientPublicLinksService,
     private readonly responsesService: ClientTransactionResponsesService,
-    private readonly responsesRepo: ClientTransactionResponsesRepository,
     private readonly txnRepo: ClientTransactionsRepository,
     private readonly clientsRepo: ClientsRepository,
   ) {}
@@ -98,7 +98,7 @@ export class PublicTransactionsController {
   @ApiOperation({
     summary: '/v1/public/transactions/:token',
     description:
-      'Endpoint público para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.',
+      'Endpoint público (sin JWT, autenticado por token) para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.',
   })
   @ApiResponse({ status: 200, type: PublicTransactionsResponseDto })
   @ApiResponse({ status: 404, description: 'Token inválido' })
@@ -111,48 +111,58 @@ export class PublicTransactionsController {
     const items = await this.txnRepo.list({ clientId: client.id })
     const filtered = applyFilter(items, client.transactionsFilter)
 
+    // Indexar respuestas por id de transacción del snapshot. Si una respuesta
+    // existe pero ya no está en snapshot, no aparece en la vista pública.
     const responses = await this.responsesService.listForClient(client.id)
-    const responseByQboId = new Map<string, ClientTransactionResponse>()
+    const responseByTxnId = new Map<string, ClientTransactionResponse>()
+    const responsesByQboNaturalKey = new Map<string, ClientTransactionResponse>()
     for (const r of responses) {
-      responseByQboId.set(`${r.qboTxnType}:${r.qboTxnId}`, r)
+      responsesByQboNaturalKey.set(`${r.qboTxnType}:${r.qboTxnId}`, r)
+    }
+    for (const t of filtered) {
+      const r = responsesByQboNaturalKey.get(`${t.qboTxnType}:${t.qboTxnId}`)
+      if (r) responseByTxnId.set(t.id, r)
     }
 
     return {
       client: clientPublicView(client),
-      items: filtered.map((t) => serializeForPublic(t, responseByQboId)),
+      items: filtered.map((t) => serializeForPublic(t, responseByTxnId)),
     }
   }
 
   @Public()
-  @Patch(':token/:qboTxnType/:qboTxnId')
+  @Patch(':token/:txnId')
   @ApiOperation({
-    summary: '/v1/public/transactions/:token/:qboTxnType/:qboTxnId',
+    summary: '/v1/public/transactions/:token/:txnId',
     description:
-      'El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita.',
+      'El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita. `:txnId` es el id UUID interno de la transacción.',
   })
   @ApiResponse({ status: 200, type: TransactionResponseDto })
   @ApiResponse({ status: 404, description: 'Transacción no existe en snapshot actual' })
   @ApiResponse({ status: 410, description: 'Token revocado o expirado' })
   async saveNote(
     @Param('token') token: string,
-    @Param('qboTxnType') qboTxnType: string,
-    @Param('qboTxnId') qboTxnId: string,
+    @Param('txnId', ParseUUIDPipe) txnId: string,
     @Body(new ZodValidationPipe(SaveNoteBodySchema)) body: SaveNoteBodyDto,
   ): Promise<TransactionResponseDto> {
     const link = await this.linksService.validateToken(token, 'uncats')
-    const client = await this.clientsRepo.findById(link.clientId)
-    if (!client) throw new ClientNotFoundError(link.clientId)
-    if (!client.qboRealmId) throw new ClientNotFoundError(link.clientId)
+
+    // Resolvemos la transacción por su id UUID y verificamos que pertenezca
+    // al cliente del token. Si no, tratamos como token invalid (no leak de
+    // existencia de IDs).
+    const txn = await this.txnRepo.findById(txnId)
+    if (!txn) throw new TransactionNotFoundInSnapshotError(txnId)
+    if (txn.clientId !== link.clientId) throw new PublicLinkInvalidError()
+
+    // AMAs no se pueden editar desde el endpoint público.
+    if (txn.category === 'ask_my_accountant') {
+      throw new TransactionNotFoundInSnapshotError(txnId)
+    }
 
     const saved = await this.responsesService.saveResponse({
-      clientId: client.id,
-      realmId: client.qboRealmId,
-      qboTxnType,
-      qboTxnId,
+      txnId,
       note: body.note,
     })
-    // Marca la respuesta como reciente para que el dashboard pueda detectarla.
-    void this.responsesRepo
     return serializeResponse(saved)
   }
 }

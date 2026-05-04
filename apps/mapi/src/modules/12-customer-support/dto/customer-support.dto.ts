@@ -5,19 +5,32 @@ import { FOLLOWUP_STATUSES } from '../../../db/schema/client-period-followups'
 import { PUBLIC_LINK_PURPOSES } from '../../../db/schema/client-public-links'
 import { CLIENT_TRANSACTIONS_FILTERS } from '../../../db/schema/clients'
 
+// ───── shared ────────────────────────────────────────────────────────────
+
+export const ClientIdQuerySchema = z
+  .object({
+    clientId: z.string().uuid().describe('UUID del cliente'),
+  })
+  .describe('Query con clientId requerido')
+
+export class ClientIdQueryDto extends createZodDto(ClientIdQuerySchema) {}
+
 // ───── transactions ──────────────────────────────────────────────────────
 
-export const SyncTransactionsQuerySchema = z
+export const SyncTransactionsBodySchema = z
   .object({
+    clientId: z.string().uuid(),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate debe ser YYYY-MM-DD'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate debe ser YYYY-MM-DD'),
   })
-  .describe('Rango de fechas para sync con Intuit')
+  .strict()
+  .describe('Body para sync con Intuit (cliente + rango de fechas)')
 
-export class SyncTransactionsQueryDto extends createZodDto(SyncTransactionsQuerySchema) {}
+export class SyncTransactionsBodyDto extends createZodDto(SyncTransactionsBodySchema) {}
 
 export const ListTransactionsQuerySchema = z
   .object({
+    clientId: z.string().uuid(),
     category: z.enum(CLIENT_TRANSACTION_CATEGORIES).optional(),
     filter: z.enum(CLIENT_TRANSACTIONS_FILTERS).optional(),
     startDate: z
@@ -29,11 +42,12 @@ export const ListTransactionsQuerySchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate debe ser YYYY-MM-DD')
       .optional(),
   })
-  .describe('Filtros para listar transacciones')
+  .describe('Filtros para listar transacciones de un cliente')
 
 export class ListTransactionsQueryDto extends createZodDto(ListTransactionsQuerySchema) {}
 
 const TransactionSchema = z.object({
+  id: z.string().uuid(),
   realm_id: z.string(),
   qbo_txn_type: z.string(),
   qbo_txn_id: z.string(),
@@ -99,9 +113,10 @@ export class TransactionResponsesListDto extends createZodDto(TransactionRespons
 
 export const FollowupQuerySchema = z
   .object({
+    clientId: z.string().uuid(),
     period: z.string().regex(/^\d{4}-\d{2}$/, 'period debe ser YYYY-MM'),
   })
-  .describe('Periodo a consultar/actualizar')
+  .describe('Cliente + periodo (YYYY-MM)')
 
 export class FollowupQueryDto extends createZodDto(FollowupQuerySchema) {}
 
@@ -134,6 +149,7 @@ export class UpdateFollowupDto extends createZodDto(UpdateFollowupSchema) {}
 
 export const CreatePublicLinkSchema = z
   .object({
+    clientId: z.string().uuid(),
     purpose: z.enum(PUBLIC_LINK_PURPOSES),
     expiresAt: z.string().datetime().nullable().optional(),
     maxUses: z.number().int().positive().nullable().optional(),
@@ -171,8 +187,7 @@ export class PublicLinksListDto extends createZodDto(PublicLinksListSchema) {}
 // ───── public (cliente con token) ────────────────────────────────────────
 
 const PublicTransactionSchema = z.object({
-  qbo_txn_type: z.string(),
-  qbo_txn_id: z.string(),
+  id: z.string().uuid(),
   txn_date: z.string(),
   docnum: z.string().nullable(),
   vendor_name: z.string().nullable(),

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common'
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
@@ -25,35 +25,35 @@ function serialize(v: FollowupView): FollowupDto {
   }
 }
 
-@ApiTags('Customer Support')
+@ApiTags('Clients - Customer Support')
 @ApiBearerAuth('bearer')
-@Controller('clients/:id/followups')
+@Controller('followups')
 @Roles('admin')
 export class ClientPeriodFollowupsController {
   constructor(private readonly service: ClientPeriodFollowupsService) {}
 
   @Get()
   @ApiOperation({
-    summary: '/v1/clients/:id/followups',
-    description: 'Status del cliente en el periodo. Si no existe, retorna default `pending`.',
+    summary: '/v1/followups',
+    description:
+      'Status del cliente en un periodo. Requiere `?clientId=&period=`. Si no existe row, retorna default `pending`.',
   })
   @ApiResponse({ status: 200, type: FollowupDto })
   async get(
-    @Param('id', ParseUUIDPipe) clientId: string,
     @Query(new ZodValidationPipe(FollowupQuerySchema)) query: FollowupQueryDto,
   ): Promise<FollowupDto> {
-    const result = await this.service.getOrInit(clientId, query.period)
+    const result = await this.service.getOrInit(query.clientId, query.period)
     return serialize(result)
   }
 
   @Patch()
   @ApiOperation({
-    summary: '/v1/clients/:id/followups',
-    description: 'Actualiza status / sentAt / lastReplyAt / sentByUserId / internalNotes. UPSERT.',
+    summary: '/v1/followups',
+    description:
+      'Actualiza status / sentAt / lastReplyAt / sentByUserId / internalNotes para un cliente y periodo. Requiere `?clientId=&period=`. UPSERT.',
   })
   @ApiResponse({ status: 200, type: FollowupDto })
   async update(
-    @Param('id', ParseUUIDPipe) clientId: string,
     @Query(new ZodValidationPipe(FollowupQuerySchema)) query: FollowupQueryDto,
     @Body(new ZodValidationPipe(UpdateFollowupSchema)) dto: UpdateFollowupDto,
     @CurrentUser() actor: SessionContext,
@@ -67,7 +67,7 @@ export class ClientPeriodFollowupsController {
       ...(dto.sentByUserId !== undefined ? { sentByUserId: dto.sentByUserId } : {}),
       ...(dto.internalNotes !== undefined ? { internalNotes: dto.internalNotes } : {}),
     }
-    const result = await this.service.update(clientId, query.period, input, actor.userId)
+    const result = await this.service.update(query.clientId, query.period, input, actor.userId)
     return serialize(result)
   }
 }

@@ -60,35 +60,19 @@ export class ClientTransactionsRepository {
       .orderBy(asc(clientTransactions.txnDate))
   }
 
-  async deleteOne(realmId: string, qboTxnType: string, qboTxnId: string): Promise<boolean> {
+  async deleteById(id: string): Promise<boolean> {
     const deleted = await this.db
       .delete(clientTransactions)
-      .where(
-        and(
-          eq(clientTransactions.realmId, realmId),
-          eq(clientTransactions.qboTxnType, qboTxnType),
-          eq(clientTransactions.qboTxnId, qboTxnId),
-        ),
-      )
-      .returning({ qboTxnId: clientTransactions.qboTxnId })
+      .where(eq(clientTransactions.id, id))
+      .returning({ id: clientTransactions.id })
     return deleted.length > 0
   }
 
-  async findOne(
-    realmId: string,
-    qboTxnType: string,
-    qboTxnId: string,
-  ): Promise<ClientTransaction | null> {
+  async findById(id: string): Promise<ClientTransaction | null> {
     const [row] = await this.db
       .select()
       .from(clientTransactions)
-      .where(
-        and(
-          eq(clientTransactions.realmId, realmId),
-          eq(clientTransactions.qboTxnType, qboTxnType),
-          eq(clientTransactions.qboTxnId, qboTxnId),
-        ),
-      )
+      .where(eq(clientTransactions.id, id))
       .limit(1)
     return row ?? null
   }
