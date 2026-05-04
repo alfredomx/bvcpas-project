@@ -1,6 +1,6 @@
 {
   "name": "mapi",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "BV CPAs - backend NestJS",
   "private": true,
   "license": "UNLICENSED",
@@ -25,6 +25,7 @@
     "test:e2e": "jest --config ./test/_setup/jest-e2e.json --runInBand --forceExit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:migrate-from-v0x": "tsx scripts/migrate-from-mapi-v0x.ts",
     "db:seed": "tsx scripts/seed-admin.ts",
     "db:studio": "drizzle-kit studio"
   },

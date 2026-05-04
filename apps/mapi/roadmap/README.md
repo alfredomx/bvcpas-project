@@ -15,7 +15,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Módulo activo:** ninguno (entre módulos). `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1.
+**Módulo activo:** ninguno (entre módulos). `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2.
 **Próxima versión planeada:** `11-clients` (CRUD admin de clientes — `GET /v1/clients` + edición + status). Sin versión asignada todavía.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
@@ -235,21 +235,21 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                                 |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------------------------------------------- |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                                         |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                                          |
-| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | (cubierto en 20-intuit-oauth v0.3.0)                                      |
-| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | [v0.3.0](20-intuit-oauth/v0.3.0.md) + [v0.3.1](20-intuit-oauth/v0.3.1.md) |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                                         |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                                         |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                                         |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                                         |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                                         |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                                         |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                                         |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                                         |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                                         |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                            |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------ |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)    |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)     |
+| 11-clients                      | 📅     | base+M1 | [README.md](11-clients/README.md)                      | (cubierto en 20-intuit-oauth v0.3.0) |
+| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2             |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                    |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                    |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                    |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                    |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                    |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                    |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                    |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                    |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                    |
 
 ---
 
@@ -261,6 +261,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.2.0   | 10-core-auth    | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                         | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)       |
 | 0.3.0   | 20-intuit-oauth | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas | mapi-v0.3.0 | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md) |
 | 0.3.1   | 20-intuit-oauth | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)          | mapi-v0.3.1 | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md) |
+| 0.3.2   | 20-intuit-oauth | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B        | mapi-v0.3.2 | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md) |
 
 ---
 

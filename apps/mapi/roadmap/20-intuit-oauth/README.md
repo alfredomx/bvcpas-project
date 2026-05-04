@@ -2,7 +2,7 @@
 
 **App:** mapi
 **Status:** ✅ Cerrado
-**Versiones que lo construyen:** [v0.3.0](v0.3.0.md) (schema + endpoints), [v0.3.1](v0.3.1.md) (migración 77 clientes)
+**Versiones que lo construyen:** [v0.3.0](v0.3.0.md) (schema + endpoints), [v0.3.1](v0.3.1.md) (migración 77 clientes), [v0.3.2](v0.3.2.md) (script TS reproducible + tests)
 **Última revisión:** 2026-05-03
 
 ---
