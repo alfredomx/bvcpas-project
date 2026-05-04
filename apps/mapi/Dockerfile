@@ -4,7 +4,7 @@ FROM node:22-alpine AS deps
 WORKDIR /app
 ENV NODE_ENV=development
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts
 
 FROM node:22-alpine AS build
 WORKDIR /app
@@ -16,7 +16,7 @@ RUN npm run build
 FROM node:22-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts --omit=dev && npm cache clean --force
+RUN --mount=type=cache,target=/root/.npm npm ci --ignore-scripts --omit=dev && npm cache clean --force
 
 FROM node:22-alpine AS runtime
 WORKDIR /app
