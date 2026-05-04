@@ -9,7 +9,7 @@ import { IntuitTokensRepository } from '../tokens/intuit-tokens.repository'
 import { IntuitTokensService } from '../tokens/intuit-tokens.service'
 import { IntuitCallRequestDto, TokensListResponseDto } from './dto/intuit-admin.dto'
 
-@ApiTags('Intuit Admin')
+@ApiTags('Intuit')
 @ApiBearerAuth('bearer')
 @Controller('intuit')
 @Roles('admin')

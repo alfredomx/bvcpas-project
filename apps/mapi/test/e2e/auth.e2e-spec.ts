@@ -130,7 +130,7 @@ describe('Auth E2E (Tipo B)', () => {
       viewerEmail = `viewer-${Date.now()}@example.com`
 
       const createRes = await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           email: viewerEmail,
@@ -154,7 +154,7 @@ describe('Auth E2E (Tipo B)', () => {
 
     it('viewer hace request a endpoint admin → 403 INSUFFICIENT_PERMISSIONS', async () => {
       const res = await request(app.getHttpServer())
-        .get('/v1/admin/users')
+        .get('/v1/users')
         .set('Authorization', `Bearer ${viewerToken}`)
         .expect(403)
 
@@ -164,7 +164,7 @@ describe('Auth E2E (Tipo B)', () => {
 
     it('admin ve sesiones del viewer (1 activa)', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/admin/users/${viewerId}/sessions`)
+        .get(`/v1/users/${viewerId}/sessions`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
@@ -175,7 +175,7 @@ describe('Auth E2E (Tipo B)', () => {
 
     it('admin revoca todas las sesiones del viewer', async () => {
       const res = await request(app.getHttpServer())
-        .post(`/v1/admin/users/${viewerId}/sessions/revoke-all`)
+        .post(`/v1/users/${viewerId}/sessions/revoke-all`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
@@ -195,7 +195,7 @@ describe('Auth E2E (Tipo B)', () => {
 
     it('admin deshabilita al viewer', async () => {
       await request(app.getHttpServer())
-        .patch(`/v1/admin/users/${viewerId}`)
+        .patch(`/v1/users/${viewerId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ status: 'disabled' })
         .expect(200)
@@ -209,7 +209,7 @@ describe('Auth E2E (Tipo B)', () => {
       // INVALID_CREDENTIALS).
 
       const resetRes = await request(app.getHttpServer())
-        .post(`/v1/admin/users/${viewerId}/reset-password`)
+        .post(`/v1/users/${viewerId}/reset-password`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
@@ -230,13 +230,13 @@ describe('Auth E2E (Tipo B)', () => {
       const email = `dup-${Date.now()}@example.com`
 
       await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ email, fullName: 'First', role: 'viewer' })
         .expect(201)
 
       const res = await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ email, fullName: 'Second', role: 'viewer' })
         .expect(409)
@@ -252,7 +252,7 @@ describe('Auth E2E (Tipo B)', () => {
       const email = `dual-${Date.now()}@example.com`
 
       const createRes = await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ email, fullName: 'Dual', role: 'viewer' })
         .expect(201)
@@ -290,7 +290,7 @@ describe('Auth E2E (Tipo B)', () => {
       const email = `logout-${Date.now()}@example.com`
 
       const createRes = await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ email, fullName: 'Logout', role: 'viewer' })
         .expect(201)
@@ -338,7 +338,7 @@ describe('Auth E2E (Tipo B)', () => {
       const email = `logoutall-${Date.now()}@example.com`
 
       const createRes = await request(app.getHttpServer())
-        .post('/v1/admin/users')
+        .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ email, fullName: 'LogoutAll', role: 'viewer' })
         .expect(201)

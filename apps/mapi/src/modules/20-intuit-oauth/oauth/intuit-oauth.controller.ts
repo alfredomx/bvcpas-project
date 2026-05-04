@@ -10,7 +10,7 @@ import { ClientsRepository } from '../../11-clients/clients.repository'
 import { AuthorizeResponseDto, CallbackQueryDto } from './dto/intuit-oauth.dto'
 import { IntuitOauthService } from './intuit-oauth.service'
 
-@ApiTags('Intuit OAuth')
+@ApiTags('Intuit')
 @Controller()
 export class IntuitOauthController {
   constructor(
@@ -33,18 +33,18 @@ export class IntuitOauthController {
     return { authorizationUrl: url }
   }
 
-  @Post('clients/:id/connect')
+  @Post('intuit/clients/:id/reconnect')
   @ApiBearerAuth('bearer')
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/clients/:id/connect',
+    summary: '/v1/intuit/clients/:id/reconnect',
     description:
-      'Genera URL de Intuit para reconectar QBO a un cliente existente. El callback valida que el realm devuelto coincida (o asocia uno nuevo si el cliente no tenía).',
+      'Genera URL de Intuit para reconectar QBO a un cliente existente. Diferente a /v1/intuit/connect: aquí pre-asignas el cliente target. El callback valida que el realm devuelto coincida (o asocia uno nuevo si el cliente no tenía).',
   })
   @ApiResponse({ status: 200, type: AuthorizeResponseDto })
   @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
-  async connectTarget(
+  async reconnectTarget(
     @Param('id') clientId: string,
     @CurrentUser() user: SessionContext,
   ): Promise<AuthorizeResponseDto> {

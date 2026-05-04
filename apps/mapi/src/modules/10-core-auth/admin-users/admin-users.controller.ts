@@ -24,16 +24,16 @@ import {
   UsersListResponseDto,
 } from './dto/user.dto'
 
-@ApiTags('Admin / Users')
+@ApiTags('Users')
 @ApiBearerAuth('bearer')
-@Controller('admin/users')
+@Controller('users')
 @Roles('admin')
 export class AdminUsersController {
   constructor(private readonly adminUsers: AdminUsersService) {}
 
   @Get()
   @ApiOperation({
-    summary: '/v1/admin/users',
+    summary: '/v1/users',
     description: 'Listado paginado de todos los usuarios. Solo admin.',
   })
   @ApiResponse({ status: 200, description: 'Lista paginada', type: UsersListResponseDto })
@@ -58,7 +58,7 @@ export class AdminUsersController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
-    summary: '/v1/admin/users',
+    summary: '/v1/users',
     description:
       'Crea un usuario nuevo. Si initialPassword no se proporciona, se genera una aleatoria y se devuelve UNA vez en la response.',
   })
@@ -77,7 +77,7 @@ export class AdminUsersController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: '/v1/admin/users/:id' })
+  @ApiOperation({ summary: '/v1/users/:id' })
   @ApiResponse({ status: 200, description: 'Usuario encontrado', type: UserDto })
   @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
   async getOne(@Param('id', ParseUUIDPipe) id: string): Promise<UserDto> {
@@ -87,7 +87,7 @@ export class AdminUsersController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: '/v1/admin/users/:id',
+    summary: '/v1/users/:id',
     description:
       'Edita full_name, role o status. NO incluye password (usar /reset-password). Cambiar status a disabled NO revoca sesiones existentes — usar /sessions/revoke-all para eso.',
   })
@@ -105,7 +105,7 @@ export class AdminUsersController {
   @Post(':id/reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/admin/users/:id/reset-password',
+    summary: '/v1/users/:id/reset-password',
     description:
       'Genera password aleatoria, la asigna y revoca TODAS las sesiones del usuario. Devuelve la temporary password UNA vez.',
   })
