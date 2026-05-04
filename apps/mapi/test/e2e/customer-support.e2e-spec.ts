@@ -154,14 +154,14 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-004 — public-links idempotente', () => {
     it('segunda llamada retorna mismo token', async () => {
       const first = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats' })
         .expect(200)
       const tokenFirst = (first.body as PublicLinkShape).token
 
       const second = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats' })
         .expect(200)
@@ -172,7 +172,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-007 — GET público excluye AMAs', () => {
     it('cliente con tier=all ve uncats expense + income, sin AMA', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats' })
         .expect(200)
@@ -191,7 +191,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-008 — PATCH público guarda nota', () => {
     it('upsert response y verificable vía admin endpoint', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats' })
         .expect(200)
@@ -235,7 +235,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-009 — PATCH público con txn inexistente → 404', () => {
     it('TRANSACTION_NOT_FOUND_IN_SNAPSHOT', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats' })
         .expect(200)
@@ -253,7 +253,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-010 — GET público con token revocado → 410', () => {
     it('después de revoke devuelve 410', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public-links')
+        .post('/v1/public/links')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ clientId, purpose: 'uncats', force: true })
         .expect(200)
@@ -261,7 +261,7 @@ describe('Customer Support E2E (Tipo B)', () => {
       const token = (link.body as PublicLinkShape).token
 
       await request(app.getHttpServer())
-        .post(`/v1/public-links/${linkId}/revoke`)
+        .post(`/v1/public/links/${linkId}/revoke`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(204)
 

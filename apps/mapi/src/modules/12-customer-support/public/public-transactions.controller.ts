@@ -83,7 +83,7 @@ function serializeResponse(r: ClientTransactionResponse): TransactionResponseDto
   }
 }
 
-@ApiTags('Clients - Customer Support Public')
+@ApiTags('Public')
 @Controller('public/transactions')
 export class PublicTransactionsController {
   constructor(

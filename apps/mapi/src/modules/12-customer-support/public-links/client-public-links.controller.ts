@@ -42,17 +42,17 @@ function serialize(l: ClientPublicLink): PublicLinkDto {
   }
 }
 
-@ApiTags('Clients - Customer Support')
+@ApiTags('Public')
 @ApiBearerAuth('bearer')
 @Roles('admin')
-@Controller('public-links')
+@Controller('public/links')
 export class ClientPublicLinksController {
   constructor(private readonly service: ClientPublicLinksService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/public-links',
+    summary: '/v1/public/links',
     description:
       'Crea (o devuelve, idempotente) un link público para un cliente. Pasa `force: true` para revocar el activo y crear uno nuevo. Body: `{clientId, purpose, expiresAt?, maxUses?, metadata?, force?}`.',
   })
@@ -74,7 +74,7 @@ export class ClientPublicLinksController {
 
   @Get()
   @ApiOperation({
-    summary: '/v1/public-links',
+    summary: '/v1/public/links',
     description:
       'Lista todos los links de un cliente (activos y revocados). Requiere `?clientId=`.',
   })
@@ -89,7 +89,7 @@ export class ClientPublicLinksController {
   @Post(':id/revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: '/v1/public-links/:id/revoke',
+    summary: '/v1/public/links/:id/revoke',
     description: 'Revoca el link inmediatamente. El cliente que lo use recibe 410.',
   })
   @ApiResponse({ status: 204, description: 'Link revocado' })

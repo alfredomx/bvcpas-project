@@ -30,16 +30,16 @@ function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
   }
 }
 
-@ApiTags('Clients - Customer Support')
+@ApiTags('Transactions')
 @ApiBearerAuth('bearer')
-@Controller('transaction-responses')
+@Controller('transactions/responses')
 @Roles('admin')
 export class ClientTransactionResponsesController {
   constructor(private readonly service: ClientTransactionResponsesService) {}
 
   @Get()
   @ApiOperation({
-    summary: '/v1/transaction-responses',
+    summary: '/v1/transactions/responses',
     description:
       'Listado de respuestas del cliente. Persistente — incluye respuestas históricas que ya no aparecen en el snapshot actual. Requiere `?clientId=`.',
   })

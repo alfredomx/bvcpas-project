@@ -64,7 +64,7 @@ function applyClientFilter(
   return items
 }
 
-@ApiTags('Clients - Customer Support')
+@ApiTags('Transactions')
 @ApiBearerAuth('bearer')
 @Controller('transactions')
 @Roles('admin')
