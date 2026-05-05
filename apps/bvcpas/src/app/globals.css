@@ -1,31 +1,114 @@
 @import 'tailwindcss';
 
+/* ============================================================================
+   Identidad bvcpas (D-bvcpas-009)
+   ----------------------------------------------------------------------------
+   Tokens semánticos centralizados. Para cambiar la identidad visual, editar
+   solo este archivo — los componentes consumen estos tokens, nunca colores
+   literales.
+
+   Reglas:
+   - Componentes usan clases tipo `bg-surface-canvas`, `text-text-primary`,
+     `bg-brand-navy`, `text-brand-accent`, `border-border-strong`.
+   - shadcn/ui consume los aliases mapeados (`bg-primary`, `text-foreground`,
+     etc.) que viven en :root abajo. Esos aliases apuntan a los tokens
+     semánticos, así shadcn renderiza con la identidad bvcpas sin reescribir
+     los componentes.
+   - Status colors (`status-success`, `status-warning`, etc.) se usan en
+     pills, badges, alertas. Tienen fondos sutiles con alpha 0.10.
+
+   Paleta heredada de reference/cs-navy2.css y reference/login-navy-v2.html.
+   ============================================================================ */
+
 @theme {
+  /* Fonts */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
+
+  /* Surfaces (fondos) */
+  --color-surface-canvas: #ffffff;
+  --color-surface-soft: #f7f8fb;
+  --color-surface-muted: #eef0f6;
+  --color-surface-strong: #e3e6ef;
+  --color-surface-stronger: #d3d7e3;
+  --color-surface-hover: #f1f3f8;
+  --color-surface-selected: #e8ebf3;
+  --color-surface-lavender: #eaedf6;
+  --color-surface-lavender-strong: #dde2f0;
+
+  /* Borders */
+  --color-border-default: #e5e7ef;
+  --color-border-strong: #ccd1de;
+  --color-border-soft: #eef0f5;
+
+  /* Text scale (toda en navy) */
+  --color-text-primary: #1a2244;
+  --color-text-secondary: #424b6e;
+  --color-text-muted: #6b7390;
+  --color-text-tertiary: #9aa0b3;
+  --color-text-disabled: #c2c6d3;
+  --color-text-inverse: #ffffff;
+
+  /* Brand (navy + naranja) */
+  --color-brand-navy: #1a2244;
+  --color-brand-navy-soft: #2a356b;
+  --color-brand-navy-softer: #3a4685;
+  --color-brand-accent: #f59e0b;
+  --color-brand-accent-strong: #ea7f0c;
+  --color-brand-accent-soft: #fdba3a;
+
+  /* Status */
+  --color-status-success: #2f8f5e;
+  --color-status-warning: #c97a14;
+  --color-status-danger: #c64a3a;
+  --color-status-info: #1e2a52;
+  --color-status-special: #4b3a78;
+
+  /* Status backgrounds (alpha 0.10 sobre el color base) */
+  --color-status-success-bg: rgba(47, 143, 94, 0.1);
+  --color-status-warning-bg: rgba(201, 122, 20, 0.1);
+  --color-status-danger-bg: rgba(198, 74, 58, 0.1);
+  --color-status-info-bg: rgba(30, 42, 82, 0.08);
+  --color-status-special-bg: rgba(75, 58, 120, 0.1);
+
+  /* Radio base */
+  --radius: 0.5rem;
 }
 
+/* ============================================================================
+   Aliases shadcn/ui — mapean los nombres semánticos de shadcn a los tokens
+   bvcpas. shadcn los espera como variables CSS sin prefijo `--color-`, por
+   eso se redeclaran aquí en :root.
+   ============================================================================ */
+
 :root {
-  --background: 0 0% 98%;
-  --foreground: 0 0% 7%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 7%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 7%;
-  --primary: 222 47% 18%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 210 40% 96%;
-  --secondary-foreground: 222 47% 18%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 210 40% 96%;
-  --accent-foreground: 222 47% 18%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 222 47% 18%;
-  --radius: 0.5rem;
+  --background: var(--color-surface-canvas);
+  --foreground: var(--color-text-primary);
+
+  --card: var(--color-surface-canvas);
+  --card-foreground: var(--color-text-primary);
+
+  --popover: var(--color-surface-canvas);
+  --popover-foreground: var(--color-text-primary);
+
+  --primary: var(--color-brand-navy);
+  --primary-foreground: var(--color-text-inverse);
+
+  --secondary: var(--color-surface-muted);
+  --secondary-foreground: var(--color-text-primary);
+
+  --muted: var(--color-surface-soft);
+  --muted-foreground: var(--color-text-muted);
+
+  --accent: var(--color-surface-muted);
+  --accent-foreground: var(--color-text-primary);
+
+  --destructive: var(--color-status-danger);
+  --destructive-foreground: var(--color-text-inverse);
+
+  --border: var(--color-border-default);
+  --input: var(--color-border-default);
+  --ring: var(--color-brand-navy);
 }
 
 html,
@@ -36,8 +119,8 @@ body {
 }
 
 body {
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: var(--color-surface-canvas);
+  color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
   line-height: 1.5;
 }
