@@ -17,7 +17,7 @@ import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module
 import { ClientsModule } from './modules/11-clients/clients.module'
 import { CustomerSupportModule } from './modules/12-customer-support/customer-support.module'
 import { DashboardsModule } from './modules/13-dashboards/dashboards.module'
-import { MicrosoftOauthModule } from './modules/21-microsoft-oauth/microsoft-oauth.module'
+import { ConnectionsModule } from './modules/21-connections/connections.module'
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { MicrosoftOauthModule } from './modules/21-microsoft-oauth/microsoft-oau
     IntuitOauthModule,
     CustomerSupportModule,
     DashboardsModule,
-    MicrosoftOauthModule,
+    ConnectionsModule,
     HealthModule,
   ],
   providers: [
