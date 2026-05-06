@@ -19,7 +19,7 @@ import { ArrowRight, Lock, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useSession } from '../hooks/use-session'
-import { ApiError } from '@/lib/http'
+import { mapErrorMessage } from '../lib/map-error-message'
 import { cn } from '@/lib/utils'
 
 const schema = z.object({
@@ -28,23 +28,6 @@ const schema = z.object({
 })
 
 type FormValues = z.infer<typeof schema>
-
-function mapErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    switch (error.code) {
-      case 'INVALID_CREDENTIALS':
-        return 'Invalid email or password.'
-      case 'USER_DISABLED':
-        return 'Your account is disabled. Contact your firm admin.'
-      case 'SESSION_REVOKED':
-      case 'SESSION_EXPIRED':
-        return 'Your session expired. Sign in again.'
-      default:
-        return 'Could not sign in. Try again.'
-    }
-  }
-  return 'Could not sign in. Try again.'
-}
 
 export function LoginForm() {
   const router = useRouter()
