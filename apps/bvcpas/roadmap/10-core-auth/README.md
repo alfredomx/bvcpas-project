@@ -4,7 +4,7 @@
 **Status:** ✅ Completo (primera versión cerrada; el módulo puede
 reabrirse en el futuro para `change-password`).
 **Versiones que lo construyen:** [v0.2.0](v0.2.0.md) (login + sesión +
-guard inicial)
+guard inicial), [v0.2.1](v0.2.1.md) (tests retroactivos)
 **Última revisión:** 2026-05-05
 **Espejo backend:** [`apps/mapi/roadmap/10-core-auth/`](../../../mapi/roadmap/10-core-auth/README.md)
 

@@ -402,3 +402,56 @@ NEXT_PUBLIC_API_URL=https://dev.alfredo.mx
      archivo.
    - Crea `src/modules/<NN-modulo>/README.md` cuando arranques a codear.
 7. Si tu cambio rompe alguna convención de aquí: pregunta antes.
+
+---
+
+## 12. Testing
+
+**Stack:** [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/) + JSDOM. Sin Jest, sin Playwright (por ahora), sin MSW.
+
+**Política TDD-first** (desde v0.3.0):
+
+- **Antes de codear** una pieza nueva, escribe el test que la describe.
+  El test arranca en rojo. Lo discutimos. Se vuelve verde solo cuando
+  la implementación cumple lo que el test exige.
+- **v0.2.1 fue excepción retroactiva:** los tests se escribieron sobre
+  código de v0.2.0 que ya existía. A partir de v0.3.0 ya no.
+
+**Estructura:**
+
+- Archivos `*.test.ts` y `*.test.tsx` **al lado del código** que prueban,
+  no en una carpeta `test/` separada. Convención de Vitest, reduce
+  fricción al moverte entre código y test.
+- Setup global vive en `apps/bvcpas/test/setup.ts`.
+- Configuración en `apps/bvcpas/vitest.config.mts` (`.mts` por
+  compatibilidad ESM con `vite-tsconfig-paths`).
+
+**Comandos:**
+
+```bash
+cd apps/bvcpas
+npm run test          # corre toda la suite una vez
+npm run test:watch    # watch mode (deja en terminal aparte)
+npm run test src/lib/http.test.ts            # un archivo
+npm run test -- -t "INVALID_CREDENTIALS"     # filtrar por nombre
+```
+
+**Pre-commit:** los tests **NO entran al pre-commit hook** (solo
+prettier + eslint + typecheck). Razón: añadir tests al hook lo vuelve
+lento (~5–15s) y termina en `--no-verify`. El pre-commit atrapa errores
+mecánicos; los tests verifican comportamiento — están un nivel después.
+
+**Trigger para revisar política:** cuando exista CI, evaluar pre-push
+hook con tests como middle ground antes de mover suite obligatoria a CI.
+
+**Qué NO se testea:**
+
+- Componentes shadcn primitivos (`button`, `input`, etc.) — los provee
+  shadcn ya testeados upstream.
+- `globals.css` / Tailwind — no es código.
+- Tests cosméticos (toggles, animaciones) si el comportamiento ya está
+  cubierto por tests de flujo.
+
+Ver [`roadmap/10-core-auth/v0.2.1.md`](10-core-auth/v0.2.1.md) para el
+patrón concreto de mocks (vi.fn / vi.mock / vi.stubGlobal /
+vi.stubEnv).

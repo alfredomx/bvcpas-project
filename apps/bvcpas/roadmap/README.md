@@ -26,12 +26,12 @@ falta.
 
 **Módulos activos:**
 
-- `10-core-auth` ✅ (v0.2.0 cerrada — login real contra mapi).
+- `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
 - `00-foundation` ✅ (v0.1.0 cerrada — scaffold base).
 - `15-app-shell` 📅 (planeado para v0.3.0).
 
-**Próxima versión:** v0.2.1 — patch que añade infra de tests
-(Vitest + Testing Library, nivel 2) + tests retroactivos para v0.2.0.
+**Política de testing** (desde v0.3.0): TDD-first. Tests antes que
+código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
@@ -279,23 +279,27 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | ------- | ------------- | ------ | ------------------------------------------------ | ------------- | -------------------------------------------------- |
 | 0.1.0   | 00-foundation | ✅     | Scaffold base (Tailwind v4, shadcn, alias `@/*`) | bvcpas-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 | 0.2.0   | 10-core-auth  | ✅     | Login real contra mapi + sesión + guard          | bvcpas-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
+| 0.2.1   | 10-core-auth  | ✅     | Tests retroactivos (Vitest + Testing Library)    | bvcpas-v0.2.1 | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)   |
 
 ---
 
 ## Decisiones acumuladas (`D-bvcpas-NNN`)
 
-| ID           | Decisión                                                                                               | Versión | Diverge TDD |
-| ------------ | ------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| D-bvcpas-001 | Cliente HTTP propio (~50 líneas sobre `fetch`), sin `ofetch`/`ky`/`axios`                              | 0.2.0   | No          |
-| D-bvcpas-002 | `sessionStorage` (no `localStorage` ni cookie); checkbox "Keep me signed in" eliminado                 | 0.2.0   | No          |
-| D-bvcpas-003 | Validar sesión con `GET /v1/auth/me` al montar `(authenticated)/`                                      | 0.2.0   | No          |
-| D-bvcpas-004 | `ApiError` como clase JS, no objetos planos ni Result types                                            | 0.2.0   | No          |
-| D-bvcpas-005 | Form con `react-hook-form` + `zod` + shadcn `<Form>`                                                   | 0.2.0   | No          |
-| D-bvcpas-006 | Evento DOM `auth:unauthorized` para cerrar sesión global ante 401                                      | 0.2.0   | No          |
-| D-bvcpas-007 | Sin tests automatizados en v0.2.0; validación manual contra `dev.alfredo.mx`. **A revertir en v0.2.1** | 0.2.0   | No          |
-| D-bvcpas-008 | Login vive en `/` (`src/app/page.tsx`), no en `/login`. La ruta `/login` no existe                     | 0.2.0   | Sí          |
-| D-bvcpas-009 | Sistema de tokens semánticos centralizado en `globals.css`; prohibido usar colores literales           | 0.2.0   | Sí          |
-| D-bvcpas-010 | `useSession` como Context global (`<SessionProvider>`), no hook con estado local por instancia         | 0.2.0   | Sí          |
+| ID           | Decisión                                                                                              | Versión | Diverge TDD |
+| ------------ | ----------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| D-bvcpas-001 | Cliente HTTP propio (~50 líneas sobre `fetch`), sin `ofetch`/`ky`/`axios`                             | 0.2.0   | No          |
+| D-bvcpas-002 | `sessionStorage` (no `localStorage` ni cookie); checkbox "Keep me signed in" eliminado                | 0.2.0   | No          |
+| D-bvcpas-003 | Validar sesión con `GET /v1/auth/me` al montar `(authenticated)/`                                     | 0.2.0   | No          |
+| D-bvcpas-004 | `ApiError` como clase JS, no objetos planos ni Result types                                           | 0.2.0   | No          |
+| D-bvcpas-005 | Form con `react-hook-form` + `zod` + shadcn `<Form>`                                                  | 0.2.0   | No          |
+| D-bvcpas-006 | Evento DOM `auth:unauthorized` para cerrar sesión global ante 401                                     | 0.2.0   | No          |
+| D-bvcpas-007 | ~~Sin tests automatizados~~ — REVERTIDA por D-bvcpas-011                                              | 0.2.0   | No          |
+| D-bvcpas-008 | Login vive en `/` (`src/app/page.tsx`), no en `/login`. La ruta `/login` no existe                    | 0.2.0   | Sí          |
+| D-bvcpas-009 | Sistema de tokens semánticos centralizado en `globals.css`; prohibido usar colores literales          | 0.2.0   | Sí          |
+| D-bvcpas-010 | `useSession` como Context global (`<SessionProvider>`), no hook con estado local por instancia        | 0.2.0   | Sí          |
+| D-bvcpas-011 | Adopción de testing (Vitest + Testing Library + JSDOM); TDD-first desde v0.3.0. Revierte D-bvcpas-007 | 0.2.1   | Sí          |
+| D-bvcpas-012 | Extracción de `mapErrorMessage` a `lib/map-error-message.ts` para testabilidad                        | 0.2.1   | Sí          |
+| D-bvcpas-013 | `vitest.config.mts` (no `.ts`) por compat ESM con `vite-tsconfig-paths`; `esbuild.jsx='automatic'`    | 0.2.1   | No          |
 
 ---
 
