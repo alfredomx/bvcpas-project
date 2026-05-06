@@ -48,6 +48,11 @@ export const configSchema = z.object({
   INTUIT_REDIRECT_URI: z.string().url('INTUIT_REDIRECT_URI debe ser URL válida'),
   INTUIT_ENVIRONMENT: z.enum(['production']).default('production'),
   INTUIT_MINOR_VERSION: z.coerce.number().int().min(1).default(75),
+
+  // 21-microsoft-oauth (v0.6.2): Microsoft Graph (Outlook por usuario)
+  MICROSOFT_CLIENT_ID: z.string().min(1, 'MICROSOFT_CLIENT_ID requerido'),
+  MICROSOFT_CLIENT_SECRET: z.string().min(20, 'MICROSOFT_CLIENT_SECRET requerido (≥20 chars)'),
+  MICROSOFT_REDIRECT_URI: z.string().url('MICROSOFT_REDIRECT_URI debe ser URL válida'),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

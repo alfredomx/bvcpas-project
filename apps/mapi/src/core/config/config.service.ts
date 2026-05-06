@@ -84,4 +84,16 @@ export class AppConfigService {
   get intuitMinorVersion(): number {
     return this.cfg.INTUIT_MINOR_VERSION
   }
+
+  get microsoftClientId(): string {
+    return this.cfg.MICROSOFT_CLIENT_ID
+  }
+
+  get microsoftClientSecret(): string {
+    return this.cfg.MICROSOFT_CLIENT_SECRET
+  }
+
+  get microsoftRedirectUri(): string {
+    return this.cfg.MICROSOFT_REDIRECT_URI
+  }
 }
