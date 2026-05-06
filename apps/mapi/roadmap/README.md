@@ -17,7 +17,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Módulos activos:**
 
-- `21-microsoft-oauth` ✅ (v0.6.2 cerrada — OAuth Outlook por usuario + envío de prueba). **Será reemplazado por `21-connections` en v0.7.0** (refactor a módulo genérico multi-provider).
+- `21-connections` ✅ (v0.7.0 cerrada — módulo genérico multi-cuenta + multi-provider, Microsoft implementado, Google/Dropbox pre-declarados).
 - `13-dashboards` 🚧 (v0.6.1 cerrada — dashboard customer-support con lista maestra + detalle).
 - `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links).
 - `11-clients` 🚧 (v0.4.0 + v0.5.0 cerradas).
@@ -25,9 +25,10 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Próximas versiones planeadas:**
 
-- v0.7.0 — Refactor a módulo `21-connections` genérico (multi-cuenta, multi-provider). Tabla `user_connections` reemplaza `user_microsoft_tokens`. Microsoft pasa a ser un provider satélite. Prepara terreno para Google, Dropbox.
+- v0.7.1 — Provider Google (Gmail + Drive) en `21-connections`.
+- v0.7.2 — Provider Dropbox en `21-connections`.
 - v0.6.3 — Writeback de respuestas a QBO (escribir notas al campo Memo).
-- v0.6.4 — Integración del envío de followups con módulo 12-customer-support.
+- v0.6.4 — Integración del envío de followups (módulo 12) usando conexiones del módulo 21.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -246,24 +247,24 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                              |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------------------------ |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                      |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                       |
-| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                        |
-| 12-customer-support             | 🚧     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0                                                 |
-| 13-dashboards                   | 🚧     | M1+     | [README.md](13-dashboards/README.md)                   | v0.6.1                                                 |
-| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                               |
-| 21-microsoft-oauth              | ✅     | M3 prep | [README.md](21-microsoft-oauth/README.md)              | v0.6.2 (será reemplazado en v0.7.0 por 21-connections) |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                      |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                      |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                      |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                      |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                      |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                      |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                      |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                      |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                      |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                     |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)             |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)              |
+| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                               |
+| 12-customer-support             | 🚧     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0                                        |
+| 13-dashboards                   | 🚧     | M1+     | [README.md](13-dashboards/README.md)                   | v0.6.1                                        |
+| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                      |
+| 21-connections                  | 🚧     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 (Microsoft; Google/Dropbox pendientes) |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                             |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                             |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                             |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                             |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                             |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                             |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                             |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                             |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                             |
 
 ---
 
@@ -280,24 +281,32 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=     | mapi-v0.5.0 | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
 | 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links      | mapi-v0.6.0 | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
 | 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente               | mapi-v0.6.1 | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
-| 0.6.2   | 21-microsoft-oauth  | ✅     | Microsoft OAuth (Outlook por usuario) + endpoint test-email                   | mapi-v0.6.2 | [21-microsoft-oauth/v0.6.2.md](21-microsoft-oauth/v0.6.2.md)   |
+| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                | mapi-v0.6.2 | (carpeta y archivo borrados en v0.7.0)                         |
+| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)          | mapi-v0.7.0 | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
 
 ---
 
 ## Decisiones acumuladas (`D-mapi-NNN`)
 
-| ID         | Decisión                                                                                                | Versión | Diverge TDD |
-| ---------- | ------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| D-mapi-001 | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                               | 0.1.0   | No          |
-| D-mapi-002 | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                     | 0.1.0   | No          |
-| D-mapi-003 | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                | 0.1.0   | No          |
-| D-mapi-004 | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                            | 0.1.0   | No          |
-| D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)       | 0.1.0   | No          |
-| D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s     | 0.1.0   | No          |
-| D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición) | 0.1.0   | No          |
-| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)      | —       | No          |
-| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)            | 0.2.0   | No          |
-| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.  | 0.2.0   | No          |
+| ID         | Decisión                                                                                                   | Versión | Diverge TDD  |
+| ---------- | ---------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| D-mapi-001 | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                                  | 0.1.0   | No           |
+| D-mapi-002 | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                        | 0.1.0   | No           |
+| D-mapi-003 | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                   | 0.1.0   | No           |
+| D-mapi-004 | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                               | 0.1.0   | No           |
+| D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)          | 0.1.0   | No           |
+| D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s        | 0.1.0   | No           |
+| D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición)    | 0.1.0   | No           |
+| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)         | —       | No           |
+| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)               | 0.2.0   | No           |
+| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.     | 0.2.0   | No           |
+| D-mapi-011 | SCOPES Microsoft reducidos a `Mail.Send User.Read offline_access` (tenant bv-cpas.com bloquea ReadWrite)   | 0.6.2   | No           |
+| D-mapi-012 | Solo `User.Read` declarado en Azure API permissions; resto via runtime scopes (dynamic consent)            | 0.6.2   | No           |
+| D-mapi-013 | Tabla genérica `user_connections` con `provider` text en vez de tablas separadas por provider              | 0.7.0   | Sí (nuevo)   |
+| D-mapi-014 | Plugin pattern `IProvider` para providers (Microsoft / Google / Dropbox) en lugar de módulos hermanos      | 0.7.0   | No           |
+| D-mapi-015 | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)            | 0.7.0   | No           |
+| D-mapi-016 | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa       | 0.7.0   | No           |
+| D-mapi-017 | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main) | 0.7.0   | Sí (proceso) |
 
 ---
 

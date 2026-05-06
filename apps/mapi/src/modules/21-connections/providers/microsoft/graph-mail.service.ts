@@ -1,8 +1,9 @@
 import { Inject, Injectable, Optional } from '@nestjs/common'
-import { MicrosoftGraphError } from '../microsoft-oauth.errors'
-import { MSFT_FETCH, MicrosoftTokenRefreshService } from '../tokens/microsoft-token-refresh.service'
+import { ProviderApiError } from '../../connection.errors'
 
 const GRAPH_SEND_MAIL_URL = 'https://graph.microsoft.com/v1.0/me/sendMail'
+
+export const MSFT_FETCH = Symbol('MSFT_FETCH')
 
 export interface SendMailInput {
   to: string
@@ -12,14 +13,9 @@ export interface SendMailInput {
 
 @Injectable()
 export class GraphMailService {
-  constructor(
-    private readonly refresh: MicrosoftTokenRefreshService,
-    @Optional() @Inject(MSFT_FETCH) private readonly fetchFn: typeof fetch = fetch,
-  ) {}
+  constructor(@Optional() @Inject(MSFT_FETCH) private readonly fetchFn: typeof fetch = fetch) {}
 
-  async sendMail(userId: string, input: SendMailInput): Promise<void> {
-    const accessToken = await this.refresh.getValidAccessToken(userId)
-
+  async sendMail(accessToken: string, input: SendMailInput): Promise<void> {
     const payload = {
       message: {
         subject: input.subject,
@@ -40,7 +36,7 @@ export class GraphMailService {
 
     if (!res.ok) {
       const text = await res.text().catch(() => '')
-      throw new MicrosoftGraphError(`Graph sendMail falló (${res.status})`, res.status, text)
+      throw new ProviderApiError(`Graph sendMail falló (${res.status})`, res.status, text)
     }
   }
 }

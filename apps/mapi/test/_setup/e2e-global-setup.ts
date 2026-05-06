@@ -42,6 +42,7 @@ export default async function globalSetup(): Promise<void> {
     await db.execute(sql`DROP TABLE IF EXISTS client_transactions CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS intuit_tokens CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_microsoft_tokens CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS user_connections CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS clients CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_sessions CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS event_log CASCADE`)
