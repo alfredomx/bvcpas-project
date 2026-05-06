@@ -1,9 +1,10 @@
 # 15-app-shell — Sidebar + topbar + avatar (UI shell autenticada)
 
 **App:** bvcpas
-**Status:** 📅 Planeado (primera versión: v0.3.0)
-**Versiones que lo construyen:** —
-**Última revisión:** 2026-05-05
+**Status:** 🚧 En desarrollo (v0.3.0)
+**Versiones que lo construyen:** [v0.3.0](v0.3.0.md) (scaffolding +
+componentes visuales + tabs con placeholders)
+**Última revisión:** 2026-05-06
 **Espejo backend:** ninguno — este módulo es puro frontend, no tiene
 contraparte en mapi.
 
