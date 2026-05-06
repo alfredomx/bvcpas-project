@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import { Toaster } from '@/components/ui/sonner'
+import { QueryProvider } from '@/lib/query-provider'
 import { SessionProvider } from '@/modules/10-core-auth/hooks/use-session'
 import './globals.css'
 
@@ -32,10 +33,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-MX" className={`${inter.variable} ${jetbrains.variable}`}>
       <body>
-        <SessionProvider>
-          {children}
-          <Toaster />
-        </SessionProvider>
+        <QueryProvider>
+          <SessionProvider>
+            {children}
+            <Toaster />
+          </SessionProvider>
+        </QueryProvider>
       </body>
     </html>
   )
