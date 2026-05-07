@@ -1,15 +1,15 @@
 import type { Redis } from 'ioredis'
 import { IntuitOauthService } from '../../../src/modules/20-intuit-oauth/oauth/intuit-oauth.service'
-import type { IntuitTokensRepository } from '../../../src/modules/20-intuit-oauth/tokens/intuit-tokens.repository'
+import type { ConnectionsService } from '../../../src/modules/21-connections/connections.service'
 import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
-import type { EncryptionService } from '../../../src/core/encryption/encryption.service'
 import type { IntuitOauthClientFactory } from '../../../src/modules/20-intuit-oauth/intuit-oauth-client.factory'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import { IntuitStateInvalidError } from '../../../src/modules/20-intuit-oauth/intuit-oauth.errors'
 import type { AppConfigService } from '../../../src/core/config/config.service'
 
 /**
- * Tests Tipo A para IntuitOauthService. Mocks para Redis, repos, SDK y fetch.
+ * Tests Tipo A para IntuitOauthService. Mocks para Redis, ConnectionsService,
+ * ClientsRepository, SDK y fetch.
  *
  * Cobertura:
  * - CR-intuit-030: getAuthorizationUrlForNewClient guarda state en Redis con TTL.
@@ -18,13 +18,15 @@ import type { AppConfigService } from '../../../src/core/config/config.service'
  * - CR-intuit-033: handleCallback con realm que YA existe → silent re-auth.
  * - CR-intuit-034: handleCallback con state inválido → IntuitStateInvalidError.
  * - CR-intuit-035: handleCallback borra state de Redis al final del flow.
+ *
+ * v0.8.0: el upsert ya no va a IntuitTokensRepository sino a
+ * ConnectionsService.upsert con provider='intuit'.
  */
 
 interface Mocks {
   redis: jest.Mocked<Pick<Redis, 'get' | 'set' | 'del'>>
-  tokensRepo: jest.Mocked<IntuitTokensRepository>
+  connections: jest.Mocked<ConnectionsService>
   clientsRepo: jest.Mocked<ClientsRepository>
-  encryption: jest.Mocked<EncryptionService>
   oauthClientFactory: jest.Mocked<IntuitOauthClientFactory>
   events: { log: jest.Mock }
   authorizeUriMock: jest.Mock
@@ -53,18 +55,15 @@ function makeMocks(): Mocks {
       set: jest.fn().mockResolvedValue('OK'),
       del: jest.fn().mockResolvedValue(1),
     },
-    tokensRepo: {
-      upsert: jest.fn(),
-    } as unknown as jest.Mocked<IntuitTokensRepository>,
+    connections: {
+      upsert: jest.fn().mockResolvedValue({ id: 'conn-fake' }),
+    } as unknown as jest.Mocked<ConnectionsService>,
     clientsRepo: {
       findById: jest.fn(),
       findByRealmId: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
     } as unknown as jest.Mocked<ClientsRepository>,
-    encryption: {
-      encrypt: jest.fn((s: string) => `enc:${s}`),
-    } as unknown as jest.Mocked<EncryptionService>,
     oauthClientFactory,
     events: { log: jest.fn().mockResolvedValue(undefined) },
     authorizeUriMock,
@@ -79,9 +78,8 @@ function buildSvc(m: Mocks): IntuitOauthService {
   } as unknown as AppConfigService
   return new IntuitOauthService(
     m.redis as unknown as Redis,
-    m.tokensRepo,
+    m.connections,
     m.clientsRepo,
-    m.encryption,
     m.oauthClientFactory,
     cfg,
     m.events as unknown as EventLogService,
@@ -164,12 +162,14 @@ describe('IntuitOauthService', () => {
       expect(result.outcome).toBe('created')
       expect(result.client_id).toBe('new-client-uuid')
       expect(m.clientsRepo.create).toHaveBeenCalledTimes(1)
-      expect(m.tokensRepo.upsert).toHaveBeenCalledWith(
+      expect(m.connections.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
+          provider: 'intuit',
           clientId: 'new-client-uuid',
-          realmId: 'r1',
-          accessTokenEncrypted: 'enc:a-tok',
-          refreshTokenEncrypted: 'enc:r-tok',
+          externalAccountId: 'r1',
+          scopeType: 'full',
+          accessToken: 'a-tok',
+          refreshToken: 'r-tok',
         }),
       )
       expect(m.events.log).toHaveBeenCalledWith(
@@ -212,8 +212,12 @@ describe('IntuitOauthService', () => {
       expect(result.outcome).toBe('reauth-silent')
       expect(result.client_id).toBe('existing-client')
       expect(m.clientsRepo.create).not.toHaveBeenCalled()
-      expect(m.tokensRepo.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ clientId: 'existing-client' }),
+      expect(m.connections.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          provider: 'intuit',
+          clientId: 'existing-client',
+          externalAccountId: 'r1',
+        }),
       )
       expect(m.events.log).toHaveBeenCalledWith(
         'intuit.client.reauth_silent',

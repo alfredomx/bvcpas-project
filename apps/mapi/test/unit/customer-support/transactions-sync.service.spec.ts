@@ -118,9 +118,9 @@ describe('TransactionsSyncService', () => {
       m.clientsRepo.findById.mockResolvedValueOnce(null)
 
       const svc = buildService(m)
-      await expect(svc.syncFromQbo('missing', '2025-01-01', '2026-04-30')).rejects.toBeInstanceOf(
-        ClientNotFoundError,
-      )
+      await expect(
+        svc.syncFromQbo('missing', '2025-01-01', '2026-04-30', 'user-1'),
+      ).rejects.toBeInstanceOf(ClientNotFoundError)
       expect(m.api.call).not.toHaveBeenCalled()
     })
   })
@@ -131,9 +131,9 @@ describe('TransactionsSyncService', () => {
       m.clientsRepo.findById.mockResolvedValueOnce(buildClient({ qboRealmId: null }))
 
       const svc = buildService(m)
-      await expect(svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')).rejects.toBeInstanceOf(
-        ClientNotConnectedError,
-      )
+      await expect(
+        svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1'),
+      ).rejects.toBeInstanceOf(ClientNotConnectedError)
       expect(m.api.call).not.toHaveBeenCalled()
     })
   })
@@ -205,7 +205,7 @@ describe('TransactionsSyncService', () => {
       m.txnRepo.insertMany.mockResolvedValueOnce(4)
 
       const svc = buildService(m)
-      const result = await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      const result = await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(result.insertedCount).toBe(4)
       const insertCall = m.txnRepo.insertMany.mock.calls[0]?.[0]
@@ -235,7 +235,7 @@ describe('TransactionsSyncService', () => {
       )
 
       const svc = buildService(m)
-      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       const inserted = m.txnRepo.insertMany.mock.calls[0]?.[0]?.[0]
       expect(inserted?.category).toBe('ask_my_accountant')
@@ -263,7 +263,7 @@ describe('TransactionsSyncService', () => {
       )
 
       const svc = buildService(m)
-      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(m.txnRepo.insertMany.mock.calls[0]?.[0]?.[0]?.category).toBe('uncategorized_income')
     })
@@ -288,7 +288,7 @@ describe('TransactionsSyncService', () => {
       )
 
       const svc = buildService(m)
-      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(m.txnRepo.insertMany.mock.calls[0]?.[0]?.[0]?.category).toBe('uncategorized_expense')
     })
@@ -317,7 +317,7 @@ describe('TransactionsSyncService', () => {
       m.txnRepo.insertMany.mockResolvedValueOnce(1)
 
       const svc = buildService(m)
-      const result = await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      const result = await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(m.txnRepo.deleteByClientAndDateRange).toHaveBeenCalledWith(
         'client-1',
@@ -348,7 +348,7 @@ describe('TransactionsSyncService', () => {
       )
 
       const svc = buildService(m)
-      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(m.txnRepo.insertMany.mock.calls[0]?.[0]?.[0]?.amount).toBe('50')
     })
@@ -362,7 +362,7 @@ describe('TransactionsSyncService', () => {
       m.txnRepo.deleteByClientAndDateRange.mockResolvedValueOnce(3)
 
       const svc = buildService(m)
-      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30')
+      await svc.syncFromQbo('client-1', '2025-01-01', '2026-04-30', 'user-1')
 
       expect(m.events.log).toHaveBeenCalledWith(
         'client_transactions.synced',

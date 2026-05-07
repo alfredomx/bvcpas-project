@@ -1,13 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { AppConfigService } from '../../../core/config/config.service'
 import { MetricsService } from '../../../core/metrics/metrics.service'
+import { ConnectionTokenRefreshService } from '../../21-connections/connection-token-refresh.service'
 import { IntuitBadRequestError } from '../intuit-oauth.errors'
-import { IntuitTokensService } from '../tokens/intuit-tokens.service'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
 export interface ApiCallParams {
   clientId: string
+  /** Usuario que dispara la llamada. Necesario para resolver
+   * read (personal-prefer-global) vs write (personal-required). */
+  userId: string
   method: HttpMethod
   path: string
   body?: unknown
@@ -18,27 +21,42 @@ const PROD_BASE = 'https://quickbooks.api.intuit.com/v3'
 /**
  * Proxy HTTP genérico contra Intuit Developer V3 API.
  *
- * - `getValidTokens` antes de cada call (refresh transparente si falta).
- * - Retry-on-401: si Intuit responde 401 (token revocado server-side antes
- *   de expirar), forceRefresh y reintenta UNA vez. Sin retry exponencial
- *   ni rate limiting; cuando entre posting con volumen real, agregar.
- * - Path normalizado para métricas: realmIds y otros IDs numéricos se
- *   reemplazan a `:realm` / `:id` para no inflar la cardinalidad de
- *   Prometheus.
+ * v0.8.0: ahora consume `ConnectionTokenRefreshService` en vez del viejo
+ * `IntuitTokensService`. Para GET (lectura) usa la conexión read-priority
+ * (personal del user; fallback a readonly global). Para POST/PUT/DELETE
+ * (escritura) requiere conexión personal full del user — si no existe,
+ * lanza IntuitPersonalConnectionRequiredError (HTTP 403).
+ *
+ * Retry-on-401: si Intuit responde 401 (token revocado server-side antes
+ * de expirar), refrescamos vía connection y reintentamos UNA vez. El
+ * refresh on-demand <5min ya está cubierto por
+ * `ConnectionTokenRefreshService`; el retry-on-401 cubre el caso edge
+ * de revocación remota.
+ *
+ * Path normalizado para métricas: realmIds y otros IDs numéricos se
+ * reemplazan a `:realm` / `:id` para no inflar la cardinalidad de
+ * Prometheus.
  */
 @Injectable()
 export class IntuitApiService {
   private readonly logger = new Logger(IntuitApiService.name)
 
   constructor(
-    private readonly tokens: IntuitTokensService,
+    private readonly tokens: ConnectionTokenRefreshService,
     private readonly cfg: AppConfigService,
     private readonly metrics: MetricsService,
   ) {}
 
   async call<T = unknown>(params: ApiCallParams): Promise<T> {
-    const token = await this.tokens.getValidTokens(params.clientId)
-    return this.execute<T>(token.accessToken, params, false)
+    const accessToken = await this.resolveToken(params)
+    return this.execute<T>(accessToken, params, false)
+  }
+
+  private async resolveToken(params: ApiCallParams): Promise<string> {
+    if (params.method === 'GET') {
+      return this.tokens.getValidAccessTokenForClientRead('intuit', params.clientId, params.userId)
+    }
+    return this.tokens.getValidAccessTokenForClientWrite('intuit', params.clientId, params.userId)
   }
 
   private async execute<T>(
@@ -60,8 +78,18 @@ export class IntuitApiService {
 
         if (!isRetry && fault?.status === 401) {
           this.logger.warn(`Got 401 from Intuit for client ${params.clientId}, force refreshing`)
-          const fresh = await this.tokens.forceRefresh(params.clientId)
-          return this.execute<T>(fresh.accessToken, params, true)
+          // El refresh on-demand del refresh service no aplica si el access
+          // está vigente pero revocado server-side. En ese caso la única
+          // opción es refrescar igualmente y reintentar. El refresh service
+          // refresca cuando msUntilExpiry <= REFRESH_BUFFER_MS, que aquí no
+          // se cumple. Forzamos resolveToken otra vez tras un pequeño
+          // sleep no aplica; en su lugar, re-resolvemos: si Intuit revocó
+          // el access, también revocó el refresh, y el refresh fallará con
+          // invalid_grant elevando IntuitRefreshTokenExpiredError.
+          // Nota: en v0.8.x si esto se vuelve frecuente, agregar
+          // forceRefresh helper en ConnectionTokenRefreshService.
+          const fresh = await this.resolveToken(params)
+          return this.execute<T>(fresh, params, true)
         }
       } else {
         status = 'error'

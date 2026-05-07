@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common'
-import type { DecryptedUserConnection } from '../../db/schema/user-connections'
+import type { DecryptedUserConnection, Provider } from '../../db/schema/user-connections'
 import type { TokenRefreshResult } from './providers/provider.interface'
+import { IntuitTokensNotFoundError } from '../20-intuit-oauth/intuit-oauth.errors'
 import { ConnectionsService } from './connections.service'
 import { ProviderRegistry } from './provider-registry.service'
 
@@ -22,8 +23,45 @@ export class ConnectionTokenRefreshService {
     private readonly registry: ProviderRegistry,
   ) {}
 
+  /**
+   * Para una conexión específica del user. Usado por providers por-user
+   * (Microsoft) donde el connectionId se conoce de antemano.
+   */
   async getValidAccessToken(connectionId: string, userId: string): Promise<string> {
     const decrypted = await this.connections.getDecryptedByIdForUser(connectionId, userId)
+    return this.refreshIfNeeded(decrypted)
+  }
+
+  /**
+   * Para un cliente (Intuit), modo LECTURA. Prefiere personal del user;
+   * fallback a global readonly. Si ninguna existe, lanza
+   * IntuitTokensNotFoundError (HTTP 404).
+   */
+  async getValidAccessTokenForClientRead(
+    provider: Provider,
+    clientId: string,
+    userId: string,
+  ): Promise<string> {
+    const decrypted = await this.connections.findActiveForRead(provider, clientId, userId)
+    if (!decrypted) throw new IntuitTokensNotFoundError(clientId)
+    return this.refreshIfNeeded(decrypted)
+  }
+
+  /**
+   * Para un cliente (Intuit), modo ESCRITURA. SOLO personal del user con
+   * scope_type='full'. Si no existe, ConnectionsService lanza
+   * IntuitPersonalConnectionRequiredError (HTTP 403).
+   */
+  async getValidAccessTokenForClientWrite(
+    provider: Provider,
+    clientId: string,
+    userId: string,
+  ): Promise<string> {
+    const decrypted = await this.connections.findActiveForWriteOrThrow(provider, clientId, userId)
+    return this.refreshIfNeeded(decrypted)
+  }
+
+  private async refreshIfNeeded(decrypted: DecryptedUserConnection): Promise<string> {
     const msUntilExpiry = decrypted.accessTokenExpiresAt.getTime() - Date.now()
     if (msUntilExpiry > REFRESH_BUFFER_MS) {
       return decrypted.accessToken

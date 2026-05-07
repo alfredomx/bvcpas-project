@@ -57,7 +57,12 @@ export class TransactionsSyncService {
     private readonly events: EventLogService,
   ) {}
 
-  async syncFromQbo(clientId: string, startDate: string, endDate: string): Promise<SyncResult> {
+  async syncFromQbo(
+    clientId: string,
+    startDate: string,
+    endDate: string,
+    userId: string,
+  ): Promise<SyncResult> {
     const startedAt = Date.now()
     const client = await this.clientsRepo.findById(clientId)
     if (!client) throw new ClientNotFoundError(clientId)
@@ -71,6 +76,7 @@ export class TransactionsSyncService {
     this.logger.log(`Syncing transactions for client=${clientId} ${startDate}..${endDate}`)
     const response = await this.api.call<QBTransactionListResponse>({
       clientId,
+      userId,
       method: 'GET',
       path,
     })

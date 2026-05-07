@@ -13,7 +13,9 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
+import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { Client } from '../../../db/schema/clients'
 import type { ClientTransaction } from '../../../db/schema/client-transactions'
 import { ClientsRepository } from '../../11-clients/clients.repository'
@@ -86,8 +88,14 @@ export class ClientTransactionsController {
   @ApiResponse({ status: 400, description: 'Cliente sin QBO conectado' })
   async sync(
     @Body(new ZodValidationPipe(SyncTransactionsBodySchema)) body: SyncTransactionsBodyDto,
+    @CurrentUser() user: SessionContext,
   ): Promise<SyncResultDto> {
-    const result = await this.syncService.syncFromQbo(body.clientId, body.startDate, body.endDate)
+    const result = await this.syncService.syncFromQbo(
+      body.clientId,
+      body.startDate,
+      body.endDate,
+      user.userId,
+    )
     return {
       client_id: result.clientId,
       start_date: result.startDate,

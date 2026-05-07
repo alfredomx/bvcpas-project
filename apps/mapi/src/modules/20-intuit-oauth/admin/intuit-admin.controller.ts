@@ -33,11 +33,13 @@ export class IntuitAdminController {
   async call(
     @Param('realmId') realmId: string,
     @Body() dto: IntuitCallRequestDto,
+    @CurrentUser() user: SessionContext,
   ): Promise<unknown> {
     const tokens = await this.tokensRepo.findByRealmId(realmId)
     if (!tokens) throw new IntuitTokensNotFoundError(realmId)
     return this.api.call({
       clientId: tokens.clientId,
+      userId: user.userId,
       method: dto.method,
       path: dto.path,
       body: dto.body,

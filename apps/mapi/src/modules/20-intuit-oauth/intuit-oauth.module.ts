@@ -3,6 +3,7 @@ import { ScheduleModule } from '@nestjs/schedule'
 import { AppConfigModule } from '../../core/config/config.module'
 import { RedisModule } from '../../core/auth/redis.module'
 import { ClientsModule } from '../11-clients/clients.module'
+import { ConnectionsModule } from '../21-connections/connections.module'
 import { EventLogModule } from '../95-event-log/event-log.module'
 import { IntuitAdminController } from './admin/intuit-admin.controller'
 import { IntuitApiService } from './api-client/intuit-api.service'
@@ -25,7 +26,14 @@ import { IntuitTokensService } from './tokens/intuit-tokens.service'
  * - DELETE /v1/intuit/tokens/:clientId — borrar tokens (admin).
  */
 @Module({
-  imports: [AppConfigModule, RedisModule, ClientsModule, EventLogModule, ScheduleModule.forRoot()],
+  imports: [
+    AppConfigModule,
+    RedisModule,
+    ClientsModule,
+    ConnectionsModule,
+    EventLogModule,
+    ScheduleModule.forRoot(),
+  ],
   controllers: [IntuitOauthController, IntuitAdminController],
   providers: [
     IntuitOauthClientFactory,
