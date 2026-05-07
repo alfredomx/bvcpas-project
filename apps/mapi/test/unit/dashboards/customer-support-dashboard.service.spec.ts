@@ -2,8 +2,8 @@ import {
   CustomerSupportDashboardService,
   computeProgressPct,
   computeSilentStreakDays,
-} from '../../../src/modules/13-dashboards/customer-support/customer-support-dashboard.service'
-import type { CustomerSupportDashboardRepository } from '../../../src/modules/13-dashboards/customer-support/customer-support-dashboard.repository'
+} from '../../../src/modules/13-views/customer-support/customer-support-dashboard.service'
+import type { CustomerSupportDashboardRepository } from '../../../src/modules/13-views/customer-support/customer-support-dashboard.repository'
 import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
 import { ClientNotFoundError } from '../../../src/modules/20-intuit-oauth/intuit-oauth.errors'
 import type { Client } from '../../../src/db/schema/clients'

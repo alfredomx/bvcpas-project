@@ -5,17 +5,17 @@ import { CustomerSupportDashboardRepository } from './customer-support/customer-
 import { CustomerSupportDashboardService } from './customer-support/customer-support-dashboard.service'
 
 /**
- * Módulo 13-dashboards: aloja endpoints custom de pantallas del operador.
+ * Módulo 13-views: vistas globales agregadas para el operador.
+ * Renombrado desde 13-dashboards en v0.8.0 (D-mapi-019).
  *
- * Convención: 1 sub-carpeta por dashboard. Cada dashboard expone endpoints
- * `GET /v1/dashboards/<nombre>` (lista) y opcionalmente `GET /v1/dashboards/
- * <nombre>/:clientId` (detalle).
+ * Las URLs cambian a `/v1/views/<nombre>` para listas globales (cross-cliente).
+ * El detalle por cliente vive en `12-customer-support/clients/` bajo
+ * `/v1/clients/:id/<nombre>`.
  *
  * Hoy:
- * - customer-support/ — primera tab del dashboard home.
+ * - customer-support/ — primera tab del dashboard home (renombrado a uncats en v0.8.0).
  *
- * Futuros: reconciliations, w-9, 1099, mgt-report, tax-packet, qtr-payroll,
- * property-tax. Cada uno suma su sub-carpeta + 1-2 endpoints.
+ * Futuros: recon, w-9, 1099, mgt-report, tax-packet, qtr-payroll, property-tax.
  */
 @Module({
   imports: [ClientsModule],

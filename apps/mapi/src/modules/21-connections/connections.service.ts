@@ -88,6 +88,8 @@ export class ConnectionsService {
       userId: row.userId,
       provider: row.provider as Provider,
       externalAccountId: row.externalAccountId,
+      clientId: row.clientId,
+      scopeType: row.scopeType as 'full' | 'readonly',
       email: row.email,
       label: row.label,
       scopes: row.scopes,
@@ -97,6 +99,7 @@ export class ConnectionsService {
           ? null
           : this.encryption.decrypt(row.refreshTokenEncrypted),
       accessTokenExpiresAt: row.accessTokenExpiresAt,
+      refreshTokenExpiresAt: row.refreshTokenExpiresAt,
     }
   }
 

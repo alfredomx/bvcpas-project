@@ -50,6 +50,13 @@
       "when": 1778049015848,
       "tag": "0006_many_lifeguard",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778125891522,
+      "tag": "0007_redundant_lake",
+      "breakpoints": true
     }
   ]
 }

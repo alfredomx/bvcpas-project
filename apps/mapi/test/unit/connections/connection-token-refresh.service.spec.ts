@@ -22,12 +22,15 @@ function buildDecrypted(overrides: Partial<DecryptedUserConnection> = {}): Decry
     userId: 'user-1',
     provider: 'microsoft',
     externalAccountId: 'msft-uid-abc',
+    clientId: null,
+    scopeType: 'full',
     email: 'bob@example.com',
     label: null,
     scopes: 'Mail.Send User.Read offline_access',
     accessToken: 'access-current',
     refreshToken: 'refresh-current',
     accessTokenExpiresAt: new Date(NOW.getTime() + 60 * 60 * 1000), // 1h
+    refreshTokenExpiresAt: null,
     ...overrides,
   }
 }
