@@ -49,3 +49,17 @@ export class ProviderApiError extends DomainError {
     )
   }
 }
+
+/**
+ * Lanzado cuando un endpoint de ESCRITURA sobre Intuit no encuentra
+ * conexión personal del user actual con scope_type='full'. El frontend
+ * debe ofrecer "Conecta tu Intuit personal" cuando recibe este 403.
+ */
+export class IntuitPersonalConnectionRequiredError extends DomainError {
+  readonly code = 'INTUIT_PERSONAL_CONNECTION_REQUIRED'
+  constructor(clientId: string) {
+    super(
+      `Para esta acción se requiere tu conexión personal de Intuit en el cliente ${clientId}. La cuenta global solo permite lectura.`,
+    )
+  }
+}

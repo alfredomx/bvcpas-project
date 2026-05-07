@@ -3,21 +3,25 @@ import { EncryptionService } from '../../core/encryption/encryption.service'
 import type {
   DecryptedUserConnection,
   Provider,
+  ScopeType,
   UserConnection,
 } from '../../db/schema/user-connections'
-import { ConnectionNotFoundError } from './connection.errors'
+import { ConnectionNotFoundError, IntuitPersonalConnectionRequiredError } from './connection.errors'
 import { ConnectionsRepository, type ListByUserFilters } from './connections.repository'
 
 export interface UpsertPlainConnection {
   userId: string
   provider: Provider
   externalAccountId: string
+  clientId?: string | null
+  scopeType?: ScopeType
   email: string | null
   label: string | null
   scopes: string
   accessToken: string
   refreshToken: string | null
   accessTokenExpiresAt: Date
+  refreshTokenExpiresAt?: Date | null
   metadata?: Record<string, unknown> | null
 }
 
@@ -30,6 +34,8 @@ export interface PublicConnection {
   userId: string
   provider: Provider
   externalAccountId: string
+  clientId: string | null
+  scopeType: ScopeType
   email: string | null
   label: string | null
   scopes: string
@@ -44,12 +50,33 @@ function toPublic(row: UserConnection): PublicConnection {
     userId: row.userId,
     provider: row.provider as Provider,
     externalAccountId: row.externalAccountId,
+    clientId: row.clientId,
+    scopeType: row.scopeType as ScopeType,
     email: row.email,
     label: row.label,
     scopes: row.scopes,
     accessTokenExpiresAt: row.accessTokenExpiresAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  }
+}
+
+function toDecrypted(row: UserConnection, encryption: EncryptionService): DecryptedUserConnection {
+  return {
+    id: row.id,
+    userId: row.userId,
+    provider: row.provider as Provider,
+    externalAccountId: row.externalAccountId,
+    clientId: row.clientId,
+    scopeType: row.scopeType as ScopeType,
+    email: row.email,
+    label: row.label,
+    scopes: row.scopes,
+    accessToken: encryption.decrypt(row.accessTokenEncrypted),
+    refreshToken:
+      row.refreshTokenEncrypted === null ? null : encryption.decrypt(row.refreshTokenEncrypted),
+    accessTokenExpiresAt: row.accessTokenExpiresAt,
+    refreshTokenExpiresAt: row.refreshTokenExpiresAt,
   }
 }
 
@@ -65,6 +92,8 @@ export class ConnectionsService {
       userId: data.userId,
       provider: data.provider,
       externalAccountId: data.externalAccountId,
+      clientId: data.clientId,
+      scopeType: data.scopeType,
       email: data.email,
       label: data.label,
       scopes: data.scopes,
@@ -72,6 +101,7 @@ export class ConnectionsService {
       refreshTokenEncrypted:
         data.refreshToken === null ? null : this.encryption.encrypt(data.refreshToken),
       accessTokenExpiresAt: data.accessTokenExpiresAt,
+      refreshTokenExpiresAt: data.refreshTokenExpiresAt,
       metadata: data.metadata ?? null,
     })
     return toPublic(row)
@@ -83,24 +113,40 @@ export class ConnectionsService {
   ): Promise<DecryptedUserConnection> {
     const row = await this.repo.findByIdForUser(connectionId, userId)
     if (!row) throw new ConnectionNotFoundError(connectionId)
-    return {
-      id: row.id,
-      userId: row.userId,
-      provider: row.provider as Provider,
-      externalAccountId: row.externalAccountId,
-      clientId: row.clientId,
-      scopeType: row.scopeType as 'full' | 'readonly',
-      email: row.email,
-      label: row.label,
-      scopes: row.scopes,
-      accessToken: this.encryption.decrypt(row.accessTokenEncrypted),
-      refreshToken:
-        row.refreshTokenEncrypted === null
-          ? null
-          : this.encryption.decrypt(row.refreshTokenEncrypted),
-      accessTokenExpiresAt: row.accessTokenExpiresAt,
-      refreshTokenExpiresAt: row.refreshTokenExpiresAt,
-    }
+    return toDecrypted(row, this.encryption)
+  }
+
+  /**
+   * Conexión activa para LECTURA sobre un cliente.
+   * Política (delegada al repository):
+   * 1. Personal del user con scope_type='full'.
+   * 2. Fallback a global readonly.
+   * Devuelve null si ninguna existe.
+   */
+  async findActiveForRead(
+    provider: Provider,
+    clientId: string,
+    userId: string,
+  ): Promise<DecryptedUserConnection | null> {
+    const row = await this.repo.findActiveForRead(provider, clientId, userId)
+    if (!row) return null
+    return toDecrypted(row, this.encryption)
+  }
+
+  /**
+   * Conexión activa para ESCRITURA sobre un cliente.
+   * Política: SOLO personal del user con scope_type='full'.
+   * Si no existe → IntuitPersonalConnectionRequiredError (HTTP 403)
+   * para Intuit. Para otros providers se podría generalizar.
+   */
+  async findActiveForWriteOrThrow(
+    provider: Provider,
+    clientId: string,
+    userId: string,
+  ): Promise<DecryptedUserConnection> {
+    const row = await this.repo.findActiveForWrite(provider, clientId, userId)
+    if (!row) throw new IntuitPersonalConnectionRequiredError(clientId)
+    return toDecrypted(row, this.encryption)
   }
 
   async listByUser(userId: string, filters: ListByUserFilters = {}): Promise<PublicConnection[]> {
