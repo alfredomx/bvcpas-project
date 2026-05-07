@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ClientsRepository } from '../../11-clients/clients.repository'
-import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import { IntuitApiService } from '../../20-intuit-oauth/api-client/intuit-api.service'
 import { EventLogService } from '../../95-event-log/event-log.service'
 import type {

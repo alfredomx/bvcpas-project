@@ -3,7 +3,7 @@ import type { ClientTransactionsRepository } from '../../../src/modules/12-custo
 import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
 import type { IntuitApiService } from '../../../src/modules/20-intuit-oauth/api-client/intuit-api.service'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
-import { ClientNotFoundError } from '../../../src/modules/20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../../src/modules/11-clients/clients.errors'
 import { ClientNotConnectedError } from '../../../src/modules/12-customer-support/customer-support.errors'
 import type { Client } from '../../../src/db/schema/clients'
 

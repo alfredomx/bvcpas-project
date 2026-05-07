@@ -17,7 +17,7 @@ import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { Client } from '../../../db/schema/clients'
 import type { ClientTransaction } from '../../../db/schema/client-transactions'
 import { ClientsRepository } from '../../11-clients/clients.repository'
-import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import {
   ListTransactionsQueryDto,
   ListTransactionsQuerySchema,

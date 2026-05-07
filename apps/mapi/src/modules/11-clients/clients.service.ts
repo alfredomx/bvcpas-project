@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import type { Client, ClientStatus, ClientTier } from '../../db/schema/clients'
 import { EventLogService } from '../95-event-log/event-log.service'
-import { ClientNotFoundError } from '../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from './clients.errors'
 import {
   ClientsRepository,
   type ListClientsFilters,

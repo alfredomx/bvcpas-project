@@ -13,7 +13,7 @@ import {
 import { ClientPublicLinksService } from '../public-links/client-public-links.service'
 import { ClientTransactionResponsesService } from '../responses/client-transaction-responses.service'
 import { ClientTransactionsRepository } from '../transactions/client-transactions.repository'
-import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import {
   PublicLinkInvalidError,
   TransactionNotFoundInSnapshotError,

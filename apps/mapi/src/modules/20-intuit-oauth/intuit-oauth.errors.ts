@@ -39,9 +39,8 @@ export class IntuitStateInvalidError extends DomainError {
   }
 }
 
-export class ClientNotFoundError extends DomainError {
-  readonly code = 'CLIENT_NOT_FOUND'
-  constructor(clientId: string) {
-    super(`Cliente no encontrado: ${clientId}`)
-  }
-}
+// ClientNotFoundError migró a `11-clients/clients.errors.ts` en v0.8.0
+// (su dueño semántico es el módulo de clients). Se re-exporta aquí
+// para no romper imports legacy hasta que este módulo se borre por
+// completo en v0.8.0 (Intuit migra a 21-connections).
+export { ClientNotFoundError } from '../11-clients/clients.errors'

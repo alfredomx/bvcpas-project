@@ -1,7 +1,7 @@
 import { ClientsService } from '../../../src/modules/11-clients/clients.service'
 import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
-import { ClientNotFoundError } from '../../../src/modules/20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../../src/modules/11-clients/clients.errors'
 import type { Client } from '../../../src/db/schema/clients'
 
 /**
