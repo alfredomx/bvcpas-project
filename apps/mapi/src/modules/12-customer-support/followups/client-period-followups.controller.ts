@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { z } from 'zod'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { FollowupDto, UpdateFollowupDto, UpdateFollowupSchema } from '../dto/customer-support.dto'
@@ -26,6 +27,7 @@ function serialize(v: FollowupView): FollowupDto {
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/followups')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientPeriodFollowupsController {
   constructor(private readonly service: ClientPeriodFollowupsService) {}
 

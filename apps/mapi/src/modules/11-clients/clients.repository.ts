@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, count, eq, ilike, type SQL } from 'drizzle-orm'
+import { and, asc, count, eq, ilike, inArray, type SQL } from 'drizzle-orm'
 import { DB, type DrizzleDb } from '../../core/db/db.module'
 import {
   CLIENT_STATUSES,
@@ -40,6 +40,13 @@ export interface ListClientsFilters {
   status?: ClientStatus
   tier?: ClientTier
   search?: string
+  /**
+   * Filtro de seguridad: si está presente, solo devuelve clientes
+   * cuyo id está en este array. Para listas filtradas por permisos
+   * (user_client_access) sin que el caller arme el WHERE.
+   * Si está presente y vacío, la lista devuelve [] sin tocar DB.
+   */
+  allowedClientIds?: readonly string[]
 }
 
 export interface ListClientsResult {
@@ -98,6 +105,9 @@ export class ClientsRepository {
   }
 
   async list(filters: ListClientsFilters): Promise<ListClientsResult> {
+    if (filters.allowedClientIds?.length === 0) {
+      return { items: [], total: 0 }
+    }
     const conditions: SQL[] = []
     if (filters.status) {
       conditions.push(eq(clients.status, filters.status))
@@ -107,6 +117,9 @@ export class ClientsRepository {
     }
     if (filters.search) {
       conditions.push(ilike(clients.legalName, `%${filters.search}%`))
+    }
+    if (filters.allowedClientIds !== undefined) {
+      conditions.push(inArray(clients.id, filters.allowedClientIds as string[]))
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined
 

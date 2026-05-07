@@ -1,5 +1,6 @@
-import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common'
+import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
 import { TransactionResponseDto, TransactionResponsesListDto } from '../dto/customer-support.dto'
@@ -28,6 +29,7 @@ function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/transactions/responses')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientTransactionResponsesController {
   constructor(private readonly service: ClientTransactionResponsesService) {}
 

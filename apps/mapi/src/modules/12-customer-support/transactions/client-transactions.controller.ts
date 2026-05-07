@@ -10,10 +10,12 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { Client } from '../../../db/schema/clients'
@@ -70,6 +72,7 @@ function applyClientFilter(
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/transactions')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientTransactionsController {
   constructor(
     private readonly syncService: TransactionsSyncService,

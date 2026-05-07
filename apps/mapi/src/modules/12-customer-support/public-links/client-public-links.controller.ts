@@ -7,10 +7,12 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { ClientPublicLink } from '../../../db/schema/client-public-links'
@@ -43,6 +45,7 @@ function serialize(l: ClientPublicLink): PublicLinkDto {
 @ApiBearerAuth('bearer')
 @Roles('admin')
 @Controller('clients/:id/public-links')
+@UseGuards(ClientAccessGuard)
 export class ClientPublicLinksController {
   constructor(private readonly service: ClientPublicLinksService) {}
 

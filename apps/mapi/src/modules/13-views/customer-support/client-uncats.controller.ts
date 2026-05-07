@@ -1,6 +1,7 @@
-import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common'
+import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import {
   CustomerSupportDetailResponseDto,
@@ -20,6 +21,7 @@ import { CustomerSupportDashboardService } from './customer-support-dashboard.se
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/uncats')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientUncatsController {
   constructor(private readonly service: CustomerSupportDashboardService) {}
 

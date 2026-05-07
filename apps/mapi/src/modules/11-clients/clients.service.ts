@@ -14,6 +14,12 @@ export interface ListClientsParams {
   status?: ClientStatus
   tier?: ClientTier
   search?: string
+  /**
+   * Filtro de seguridad. Si se pasa, solo se devuelven clientes cuyo
+   * id está en este array (típicamente, los user_client_access del
+   * usuario actual). Si está presente y vacío → respuesta vacía.
+   */
+  allowedClientIds?: readonly string[]
 }
 
 export interface ListClientsResponse {
@@ -66,6 +72,9 @@ export class ClientsService {
       ...(params.status ? { status: params.status } : {}),
       ...(params.tier ? { tier: params.tier } : {}),
       ...(params.search ? { search: params.search } : {}),
+      ...(params.allowedClientIds !== undefined
+        ? { allowedClientIds: params.allowedClientIds }
+        : {}),
     }
     const { items, total } = await this.repo.list(filters)
     return { items, total, page: params.page, pageSize: params.pageSize }

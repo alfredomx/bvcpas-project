@@ -1,6 +1,7 @@
-import { Controller, Delete, HttpCode, HttpStatus, Param, Post } from '@nestjs/common'
+import { Controller, Delete, HttpCode, HttpStatus, Param, Post, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
 import { Roles } from '../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import { ClientsRepository } from '../11-clients/clients.repository'
@@ -29,6 +30,7 @@ import { IntuitOauthService } from './oauth/intuit-oauth.service'
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/intuit')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientIntuitController {
   constructor(
     private readonly oauth: IntuitOauthService,
