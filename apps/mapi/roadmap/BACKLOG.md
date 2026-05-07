@@ -8,6 +8,28 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 
 ## Por trigger
 
+### Trigger: cuando v0.8.0 lleve ≥2 semanas estable en prod (v0.8.1)
+
+> v0.8.0 cerró el refactor URLs + Intuit a Connections. Estos items se
+> difieren al patch siguiente para reducir el tamaño del cambio en prod
+> y permitir rollback rápido durante el periodo de validación.
+
+- **Drop tabla `intuit_tokens_deprecated`**. Renombrada en migration 0007. Confirmar que `user_connections WHERE provider='intuit'`
+  funciona en prod sin issues durante 2 semanas, después drop.
+- **Mover controllers Intuit a `21-connections/providers/intuit/`**.
+  Hoy `IntuitOauthController`, `IntuitAdminController`,
+  `ClientIntuitController`, `IntuitOauthService`, `IntuitApiService`,
+  `IntuitOauthClientFactory` y `IntuitTokensMetricsCron` viven en
+  `20-intuit-oauth/` por simplicidad del refactor v0.8.0. Las URLs ya
+  están en su path final (Forma C); el move es solo organización
+  interna (file system + imports). Cuando se borre la carpeta vieja,
+  también borrar `roadmap/20-intuit-oauth/` (pero conservar el
+  histórico v0.3.0/v0.3.1/v0.3.2 en `21-connections/`).
+- **Reescribir `migrate-from-v0x.ts` + su e2e spec**. Hoy escribe a
+  `intuit_tokens` (legacy). Reescribir para escribir a
+  `user_connections` con `provider='intuit'`. El spec está en
+  `describe.skip`.
+
 ### Trigger: cuando los 77 clientes lleven ≥3 días estables en bvcpas-project prod
 
 > Migración v0.3.1 cerrada el 2026-05-03. Tokens migrados, refresh transparente verificado. mapi v0.x prod sigue corriendo en paralelo durante el periodo de validación.

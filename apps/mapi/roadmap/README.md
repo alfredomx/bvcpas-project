@@ -17,17 +17,17 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Módulos activos:**
 
-- `21-connections` ✅ (v0.7.0 cerrada — módulo genérico multi-cuenta + multi-provider, Microsoft implementado, Google/Dropbox pre-declarados).
-- `13-dashboards` 🚧 (v0.6.1 cerrada — dashboard customer-support con lista maestra + detalle).
-- `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links).
-- `11-clients` 🚧 (v0.4.0 + v0.5.0 cerradas).
-- `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2.
+- `21-connections` ✅ (v0.8.0 cerrada — Forma C URLs + Intuit unificado + scope_type + user_client_access).
+- `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
+- `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
+- `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
+- `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2; en v0.8.0 sus tokens migran a `user_connections`. La carpeta se mueve a `21-connections/providers/intuit/` en v0.8.1.
 
 **Próximas versiones planeadas:**
 
-- v0.7.1 — Provider Google (Gmail + Drive) en `21-connections`.
-- v0.7.2 — Provider Dropbox en `21-connections`.
-- v0.6.3 — Writeback de respuestas a QBO (escribir notas al campo Memo).
+- v0.8.1 — Drop `intuit_tokens_deprecated` + mover Intuit controllers a `21-connections/providers/intuit/` + reescribir migrate-from-v0x.
+- v0.7.1 / v0.7.2 — Providers Google y Dropbox.
+- v0.6.3 — Writeback de respuestas a QBO.
 - v0.6.4 — Integración del envío de followups (módulo 12) usando conexiones del módulo 21.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
@@ -247,42 +247,43 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                     |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------------------- |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)             |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)              |
-| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                               |
-| 12-customer-support             | 🚧     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0                                        |
-| 13-dashboards                   | 🚧     | M1+     | [README.md](13-dashboards/README.md)                   | v0.6.1                                        |
-| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                      |
-| 21-connections                  | 🚧     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 (Microsoft; Google/Dropbox pendientes) |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                             |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                             |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                             |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                             |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                             |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                             |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                             |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                             |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                             |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                       |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                               |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                                |
+| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                                 |
+| 12-customer-support             | 🚧     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0                                                          |
+| 13-dashboards                   | 🚧     | M1+     | [README.md](13-dashboards/README.md)                   | v0.6.1                                                          |
+| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                                        |
+| 21-connections                  | ✅     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 + v0.8.0 (Microsoft + Intuit; Google/Dropbox pendientes) |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                               |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                               |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                               |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                               |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                               |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                               |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                               |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                               |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                               |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo              | Estado | Tema                                                                          | Tag         | Archivo                                                        |
-| ------- | ------------------- | ------ | ----------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------- |
-| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify         | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
-| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                         | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
-| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas | mapi-v0.3.0 | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)         |
-| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)          | mapi-v0.3.1 | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)         |
-| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B        | mapi-v0.3.2 | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)         |
-| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests             | mapi-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
-| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=     | mapi-v0.5.0 | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
-| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links      | mapi-v0.6.0 | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
-| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente               | mapi-v0.6.1 | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
-| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                | mapi-v0.6.2 | (carpeta y archivo borrados en v0.7.0)                         |
-| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)          | mapi-v0.7.0 | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
+| Versión | Módulo              | Estado | Tema                                                                           | Tag         | Archivo                                                        |
+| ------- | ------------------- | ------ | ------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
+| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify          | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
+| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                          | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
+| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas  | mapi-v0.3.0 | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)         |
+| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)           | mapi-v0.3.1 | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)         |
+| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B         | mapi-v0.3.2 | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)         |
+| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests              | mapi-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
+| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=      | mapi-v0.5.0 | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
+| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links       | mapi-v0.6.0 | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
+| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                | mapi-v0.6.1 | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
+| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2 | (carpeta y archivo borrados en v0.7.0)                         |
+| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0 | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
+| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0 | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
 
 ---
 
@@ -307,6 +308,16 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-mapi-015 | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)            | 0.7.0   | No           |
 | D-mapi-016 | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa       | 0.7.0   | No           |
 | D-mapi-017 | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main) | 0.7.0   | Sí (proceso) |
+| D-mapi-018 | `<provider>/oauth/*` para todos los providers (Microsoft + Intuit + futuros)                               | 0.8.0   | Sí (URLs)    |
+| D-mapi-019 | Forma C de URLs: sub-recursos del cliente bajo `/v1/clients/:id/*`, vistas globales bajo `/v1/views/*`     | 0.8.0   | Sí (URLs)    |
+| D-mapi-020 | `realms/:realmId/call` con prefijo explícito (no `:realmId/call` plano)                                    | 0.8.0   | No           |
+| D-mapi-021 | `client_id` nullable en `user_connections` (solo Intuit lo usa)                                            | 0.8.0   | Sí (schema)  |
+| D-mapi-022 | UNIQUE compuesto `(user_id, provider, external_account_id)` en user_connections (multi-user mismo realm)   | 0.8.0   | Sí (schema)  |
+| D-mapi-023 | Sin endpoint admin para `user_client_access` (manual SQL hasta UI admin)                                   | 0.8.0   | No           |
+| D-mapi-024 | `ClientAccessGuard` devuelve 404 (no 403) — no leak de existencia                                          | 0.8.0   | No           |
+| D-mapi-025 | Error `INTUIT_PERSONAL_CONNECTION_REQUIRED` (HTTP 403) cuando write no encuentra personal full             | 0.8.0   | No           |
+| D-mapi-026 | 77 conexiones Intuit migradas como `scope_type='full'` (no `'readonly'` aún)                               | 0.8.0   | No           |
+| D-mapi-027 | `intuit_tokens` se renombra a `intuit_tokens_deprecated`, drop en v0.8.1 (reversibilidad)                  | 0.8.0   | No           |
 
 ---
 
