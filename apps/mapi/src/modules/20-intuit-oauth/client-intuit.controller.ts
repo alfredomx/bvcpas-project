@@ -26,7 +26,7 @@ import { IntuitOauthService } from './oauth/intuit-oauth.service'
  * - Disconnect borra todas las rows de user_connections del cliente
  *   con provider='intuit', sin importar qué user las creó.
  */
-@ApiTags('Clients')
+@ApiTags('Clients - Intuit')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/intuit')
 @Roles('admin')

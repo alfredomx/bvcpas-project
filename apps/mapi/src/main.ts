@@ -18,30 +18,116 @@ import { APP_NAME, APP_VERSION } from './common/version'
  * Aplica patch a swagger para que entienda zod schemas vía nestjs-zod.
  */
 /**
- * Orden lógico de tags en la sidebar de Scalar (no alfabético).
- * Empieza con autenticación (entrada al sistema), sigue con entidades
- * raíz (users, clients), después vistas globales, integraciones OAuth,
- * y al final público + health.
+ * Tags de Scalar/OpenAPI con su displayName (lo que se ve en sidebar).
+ *
+ * Los nombres internos de tag son únicos a nivel API (`Clients - Admin`,
+ * `Clients - Intuit`, etc.) para evitar colisión con tags top-level
+ * (`Intuit` solo del proxy V3 vive en otro grupo).
+ *
+ * `x-displayName` (extensión Scalar/Redoc) permite mostrar el tag con
+ * un nombre más corto y limpio en la sidebar:
+ *   tag interno = 'Clients - Intuit', visible = 'Intuit'
  *
  * Cuando se agregue un tag nuevo en código, también agregarlo aquí
- * en su lugar lógico. Si falta agregarlo, OpenAPI lo deja al final
- * por orden de descubrimiento — funciona pero queda fuera del flujo.
+ * en su lugar lógico. Si falta, OpenAPI lo deja al final por orden de
+ * descubrimiento — funciona pero queda fuera del flujo.
  */
-const TAG_ORDER: { name: string; description?: string }[] = [
+const TAG_ORDER: { name: string; displayName?: string; description?: string }[] = [
+  // Access Management
   { name: 'Auth', description: 'Login, sesión, password change' },
   { name: 'Users', description: 'CRUD admin de usuarios del sistema' },
+
+  // Client Management — sub-tags con displayName corto (el grupo padre
+  // 'Client Management' ya da el contexto en sidebar de Scalar).
+  { name: 'Clients - Clients', displayName: 'Clients', description: 'CRUD del cliente' },
   {
-    name: 'Clients',
-    description:
-      'Clientes contables y todos sus sub-recursos (transactions, followups, responses, public-links, intuit, uncats)',
+    name: 'Clients - Transactions',
+    displayName: 'Transactions',
+    description: 'Snapshot de transacciones del cliente',
   },
+  {
+    name: 'Clients - Responses',
+    displayName: 'Responses',
+    description: 'Respuestas del cliente sobre uncats',
+  },
+  {
+    name: 'Clients - Followups',
+    displayName: 'Followups',
+    description: 'Status de followups por (cliente × periodo)',
+  },
+  {
+    name: 'Clients - Public Links',
+    displayName: 'Public Links',
+    description: 'Tokens públicos para que el cliente final responda',
+  },
+  {
+    name: 'Clients - Intuit',
+    displayName: 'Intuit',
+    description: 'Acciones Intuit sobre el cliente (reconnect, disconnect)',
+  },
+  {
+    name: 'Clients - Uncats',
+    displayName: 'Uncats',
+    description: 'Detalle de uncats del cliente para el dashboard',
+  },
+
+  // Views (sin grupo: solo 1 tag por ahora; cuando entren recon/w-9
+  // se agrupan en su propia sección).
   { name: 'Views', description: 'Vistas globales agregadas cross-cliente' },
-  { name: 'OAuth - Intuit', description: 'Flow OAuth con QuickBooks Online' },
-  { name: 'OAuth - Microsoft', description: 'Flow OAuth con Microsoft Graph (Outlook)' },
-  { name: 'Intuit', description: 'Admin: proxy V3, listado de tokens' },
+
+  // OAuth flows — displayName corto bajo el grupo 'OAuth'.
+  {
+    name: 'OAuth - Intuit',
+    displayName: 'Intuit',
+    description: 'Flow OAuth con QuickBooks Online',
+  },
+  {
+    name: 'OAuth - Microsoft',
+    displayName: 'Microsoft',
+    description: 'Flow OAuth con Microsoft Graph (Outlook)',
+  },
+
+  // Providers (acciones admin/uso de la conexión, distinto del flow OAuth).
+  { name: 'Intuit API', description: 'Admin: proxy V3 + listado de tokens (sin OAuth)' },
   { name: 'Connections', description: 'Mis conexiones a servicios externos (cross-provider)' },
+
+  // Utils
   { name: 'Public', description: 'Endpoints sin auth (acceso por token)' },
   { name: 'Health', description: 'Liveness check' },
+]
+
+/**
+ * Agrupación de tags en secciones colapsables de Scalar (extensión
+ * `x-tagGroups`). Cada grupo encierra varios tags. Combinado con
+ * `x-displayName` por tag, permite jerarquía visual de 2 niveles:
+ *
+ *   ▾ Clients               (grupo)
+ *      ├─ Admin              (tag 'Clients - Admin' con displayName 'Admin')
+ *      ├─ Transactions
+ *      └─ Intuit
+ *
+ * Cuando entren más providers (Google, Dropbox) o más sub-recursos
+ * del cliente, se agregan a los grupos correspondientes.
+ */
+const TAG_GROUPS: { name: string; tags: string[] }[] = [
+  { name: 'Access Management', tags: ['Auth', 'Users'] },
+  {
+    name: 'Client Management',
+    tags: [
+      'Clients - Clients',
+      'Clients - Transactions',
+      'Clients - Responses',
+      'Clients - Followups',
+      'Clients - Public Links',
+      'Clients - Intuit',
+      'Clients - Uncats',
+    ],
+  },
+  // 'Views' queda como tag plano — todavía no se le crea grupo porque
+  // tiene un solo tag. Se agrupa cuando entren más vistas (recon, w-9).
+  { name: 'OAuth', tags: ['OAuth - Intuit', 'OAuth - Microsoft'] },
+  { name: 'Providers', tags: ['Intuit API', 'Connections'] },
+  { name: 'Utils', tags: ['Public', 'Health'] },
 ]
 
 function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
@@ -65,6 +151,22 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
   const config = builder.build()
   const rawDocument = SwaggerModule.createDocument(app, config)
   const document = cleanupOpenApiDoc(rawDocument)
+
+  // Inyecta `x-displayName` en los tags que lo necesitan (los sub-tags
+  // del cliente se ven como 'Admin', 'Transactions', etc. dentro del
+  // grupo 'Clients' en lugar de 'Clients - Admin', 'Clients - Transactions').
+  if (document.tags) {
+    for (const tag of document.tags) {
+      const meta = TAG_ORDER.find((t) => t.name === tag.name)
+      if (meta?.displayName) {
+        ;(tag as unknown as Record<string, unknown>)['x-displayName'] = meta.displayName
+      }
+    }
+  }
+
+  // Scalar respeta `x-tagGroups` para mostrar la sidebar en secciones
+  // colapsables (extensión OpenAPI no estándar pero soportada por Scalar/Redoc).
+  ;(document as unknown as Record<string, unknown>)['x-tagGroups'] = TAG_GROUPS
 
   const httpAdapter = app.getHttpAdapter()
   const expressApp = httpAdapter.getInstance() as Express

@@ -19,7 +19,7 @@ const MS_PER_DAY = 24 * 3600 * 1000
  * El DELETE de conexión por cliente vivía aquí en v0.7.x; en v0.8.0 se
  * movió a `client-intuit.controller.ts` (Forma C: bajo /v1/clients/:id/...).
  */
-@ApiTags('Intuit')
+@ApiTags('Intuit API')
 @ApiBearerAuth('bearer')
 @Controller('intuit')
 @Roles('admin')

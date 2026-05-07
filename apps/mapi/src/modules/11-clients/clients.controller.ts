@@ -52,7 +52,7 @@ function serialize(c: Client): ClientDto {
   }
 }
 
-@ApiTags('Clients')
+@ApiTags('Clients - Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients')
 @Roles('admin')

@@ -41,7 +41,7 @@ function serialize(l: ClientPublicLink): PublicLinkDto {
   }
 }
 
-@ApiTags('Clients')
+@ApiTags('Clients - Public Links')
 @ApiBearerAuth('bearer')
 @Roles('admin')
 @Controller('clients/:id/public-links')
