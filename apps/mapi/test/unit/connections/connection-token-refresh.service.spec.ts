@@ -109,7 +109,9 @@ describe('ConnectionTokenRefreshService', () => {
 
       expect(token).toBe('access-new')
       expect(m.registry.get).toHaveBeenCalledWith('microsoft')
-      expect(m.provider.refresh).toHaveBeenCalledWith('refresh-current')
+      expect(m.provider.refresh).toHaveBeenCalledWith(
+        expect.objectContaining({ refreshToken: 'refresh-current' }),
+      )
       expect(m.connections.upsert).toHaveBeenCalledTimes(1)
       const saved = m.connections.upsert.mock.calls[0]?.[0]
       expect(saved).toMatchObject({
