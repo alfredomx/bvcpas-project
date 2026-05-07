@@ -321,10 +321,42 @@ Sigue el patrón de mapi adaptado al frontend:
 - Cierre de versión: `release(bvcpas): vX.Y.Z — <título>`
 - Bug fix puntual: `fix(bvcpas): ...`
 
-### Tags git
+### Branches y tags git (D-bvcpas-019)
 
-- Prefijo `bvcpas-`: `bvcpas-vX.Y.Z`. Evita choque con tags de mapi
-  (`mapi-vX.Y.Z`) y otras apps.
+Convención unificada con mapi:
+
+- **Branch por módulo:** `<app>/<NN-modulo>` (sin versión en el nombre).
+  - `bvcpas/15-app-shell`, `bvcpas/11-clients`, `mapi/21-microsoft-oauth`.
+  - Si el módulo se trabaja en varias versiones, el branch se **reusa**.
+  - Slash (`/`) válido en Git; GitHub lo agrupa visualmente como
+    namespace.
+- **Tag por versión:** `<app>-vX.Y.Z` (con guión).
+  - `bvcpas-v0.3.0`, `mapi-v0.7.0`.
+  - No colisiona con branches (slash vs guión).
+
+### Flujo de trabajo por versión
+
+```bash
+# Abrir versión
+git checkout main && git pull
+git checkout -b <app>/<NN-modulo>
+
+# Trabajar (commits granulares por bloque del TDD)
+# ...
+
+# Push remoto (primera vez, backup)
+git push -u origin <app>/<NN-modulo>
+
+# Cerrar versión
+git checkout main && git pull
+git merge --no-ff <app>/<NN-modulo>
+git tag <app>-vX.Y.Z
+git push origin main && git push origin <tag>
+git branch -d <app>/<NN-modulo>
+git push origin --delete <app>/<NN-modulo>
+```
+
+`--no-ff` preserva la historia del feature como un sub-grafo en main.
 
 ### Reglas duras
 
@@ -332,12 +364,22 @@ Sigue el patrón de mapi adaptado al frontend:
 2. **No bumpear `package.json` hasta cerrar.**
 3. **No mezclar features y fixes mayores en la misma versión.**
 4. **El TDD manda salvo decisión documentada como `D-bvcpas-NNN`.**
-5. **Tags git con prefijo `bvcpas-`.**
+5. **Branches `<app>/<NN-modulo>`, tags `<app>-vX.Y.Z`.**
 6. **Cada commit toca un solo app** y solo cosas relacionadas con la
    versión activa. No mezclar fixes "de paso" en otros apps.
 7. **El frontend solo consume mapi, no emite eventos ni errores propios.**
    Las secciones de event_log y errores de dominio en cada `vX.Y.Z.md`
    se llenan con "Ninguno" + tabla de mapeo, pero no se omiten.
+8. **Trabajar siempre en branch del módulo, nunca commits directos a
+   main.** Excepción: hotfix urgente sigue su propio flujo (ver §7
+   "Cómo manejar fixes" y abrir branch igual).
+9. **Naming de campos: snake_case 1:1 con el backend** (D-bvcpas-020).
+   Los `types.ts` y `*.api.ts` del frontend reflejan exactamente las
+   keys del response de mapi (que serializa en snake_case). No hay
+   adapters ni renames camelCase. JSX consume `client.legal_name`,
+   `client.qbo_realm_id`, `stats.uncats_count`. Excepciones legacy
+   (`accessToken`, `fullName` en auth) se mantienen porque ese
+   endpoint específico de mapi sí devuelve camelCase.
 
 ---
 

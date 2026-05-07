@@ -1,40 +1,25 @@
 'use client'
 
-// Placeholder mínimo de /dashboard para v0.2.0.
-// Solo confirma que el flujo de login funciona end-to-end.
-// La pantalla real (sidebar + tabs + customer support) entra en v0.3.0.
+// /dashboard sin clientId. Empty state que invita a seleccionar un
+// cliente desde la sidebar (D-bvcpas-017: sin auto-select).
 
-import { useSession } from '@/modules/10-core-auth/hooks/use-session'
+import { Users } from 'lucide-react'
 
-export default function DashboardPlaceholderPage() {
-  const { user, logout } = useSession()
-
-  if (!user) return null // El layout ya cubre splash/redirect.
-
+export default function DashboardEmptyStatePage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-2xl flex-col items-start gap-6 px-6 py-12">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-brand-navy">Hello {user.fullName}</h1>
-        <p className="mt-1 text-sm text-text-muted">
-          You are logged in as <span className="font-semibold">{user.role}</span>.
-        </p>
-        <p className="mt-1 text-xs text-text-tertiary">
-          Email: <span className="font-mono">{user.email}</span>
-        </p>
+    <section className="flex h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+      <div className="flex size-14 items-center justify-center rounded-full bg-surface-lavender">
+        <Users className="size-6 text-brand-navy-soft" aria-hidden />
       </div>
-
-      <div className="rounded-lg border border-border-default bg-surface-soft p-4 text-xs text-text-muted">
-        This is a placeholder for v0.2.0. The real dashboard (sidebar with clients, topbar with
-        avatar menu, tabs per client, Customer Support view) lands in v0.3.0.
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-brand-navy-soft">
+          No client selected
+        </p>
+        <h2 className="text-[22px] font-bold tracking-tight text-brand-navy">Select a client</h2>
       </div>
-
-      <button
-        type="button"
-        onClick={logout}
-        className="rounded-full bg-brand-navy px-5 py-2 text-sm font-semibold text-text-inverse shadow-[0_2px_8px_rgba(26,34,68,0.25)] transition hover:bg-brand-navy-soft hover:shadow-[0_4px_14px_rgba(26,34,68,0.35)]"
-      >
-        Logout
-      </button>
-    </main>
+      <p className="max-w-sm text-[13px] leading-relaxed text-text-muted">
+        Pick a client from the sidebar to see their tabs and details.
+      </p>
+    </section>
   )
 }

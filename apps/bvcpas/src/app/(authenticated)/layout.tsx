@@ -1,15 +1,13 @@
 'use client'
 
-// Group route layout: protege todas las rutas autenticadas.
+// Group route layout: protege todas las rutas autenticadas + monta el
+// AppShell visual.
 //
 // Responsabilidades:
 // - Mientras useSession hidrata: muestra splash.
 // - Sin sesión: redirect a /.
-// - Con sesión: renderiza children.
+// - Con sesión: renderiza <AppShell>{children}</AppShell>.
 // - Listener auth:unauthorized: cierra sesión local + redirect + toast.
-//
-// El AppShell visual (sidebar, topbar, avatar) NO entra en v0.2.0 — eso
-// es v0.3.0 (módulo 15-app-shell).
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -17,6 +15,7 @@ import { toast } from 'sonner'
 
 import { useSession } from '@/modules/10-core-auth/hooks/use-session'
 import { clearSession } from '@/modules/10-core-auth/lib/session-storage'
+import { AppShell } from '@/modules/15-app-shell/components/app-shell'
 
 export default function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -48,5 +47,5 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
     )
   }
 
-  return <>{children}</>
+  return <AppShell>{children}</AppShell>
 }

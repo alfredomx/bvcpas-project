@@ -82,18 +82,13 @@ export function LoginForm() {
         <div className="absolute inset-x-0 top-0 h-[3px] bg-brand-accent" />
 
         {/* Brand */}
-        <div className="flex items-center gap-2.5">
-          <div className="relative grid size-8 place-items-center rounded-lg bg-gradient-to-br from-brand-navy to-brand-navy-soft text-[14px] font-bold tracking-tight text-text-inverse shadow-[0_2px_6px_rgba(26,34,68,0.18)]">
-            QB
-            <span className="absolute inset-x-0 -bottom-[3px] h-[3px] rounded-b-lg bg-brand-accent" />
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-sm font-semibold tracking-tight text-brand-navy">QB&apos;s</span>
-            <span className="text-[11px] font-medium tracking-wide text-text-muted">
-              · Internal · BrightPath CPA
-            </span>
-          </div>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/brand/logo.png"
+          alt="bvcpas"
+          className="h-auto max-h-16 w-auto max-w-50 select-none object-contain"
+          draggable={false}
+        />
 
         {/* Body */}
         <div className="flex w-full flex-col pt-7">

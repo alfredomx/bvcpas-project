@@ -26,19 +26,22 @@ falta.
 
 **Módulos activos:**
 
-- `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
 - `00-foundation` ✅ (v0.1.0 cerrada — scaffold base).
-- `15-app-shell` 📅 (planeado para v0.3.0).
+- `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
+- `11-clients` 🚧 (mínimo en v0.3.0 — solo tipos).
+- `13-dashboards` 🚧 (v0.3.0 cerrada — api+hook customer-support).
+- `15-app-shell` ✅ (v0.3.0 cerrada — AppShell + sidebar + tabs + 8 placeholders).
+- `12-customer-support` 📅 (planeado para v0.4.0 — pantalla real Customer Support).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
-- v0.3.0 — AppShell autenticado (sidebar + topbar + avatar) + tabs
-  cliente + Customer Support con datos reales.
-- v0.4.0 — Sidebar consume `GET /v1/clients` real (lista plana de
-  clientes con stats agregados).
+- v0.4.0 — Pantalla Customer Support real (consume
+  `GET /v1/dashboards/customer-support/:clientId`): header con
+  status + urgencia, stats grid, suggested action, activity timeline,
+  quick links, tabla uncats/AMAs.
 - v0.5.0+ — Tabs adicionales conforme mapi exponga datos
   (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR Payroll,
   Property Tax).
@@ -262,44 +265,53 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta             | Status | TDD                                  | Versiones                         |
-| ------------------- | ------ | ------------------------------------ | --------------------------------- |
-| 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
-| 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md)  |
-| 11-clients          | 📅     | (futuro)                             | —                                 |
-| 12-customer-support | 📅     | (futuro)                             | —                                 |
-| 13-dashboards       | 📅     | (futuro)                             | —                                 |
-| 15-app-shell        | 📅     | [README.md](15-app-shell/README.md)  | —                                 |
+| Carpeta             | Status | TDD                                  | Versiones                                                           |
+| ------------------- | ------ | ------------------------------------ | ------------------------------------------------------------------- |
+| 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md)                                   |
+| 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md) |
+| 11-clients          | 🚧     | [README.md](11-clients/README.md)    | (mínimo en v0.3.0)                                                  |
+| 12-customer-support | 📅     | (futuro)                             | —                                                                   |
+| 13-dashboards       | 🚧     | [README.md](13-dashboards/README.md) | (api+hook en v0.3.0)                                                |
+| 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md)                                    |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo        | Estado | Tema                                             | Tag           | Archivo                                            |
-| ------- | ------------- | ------ | ------------------------------------------------ | ------------- | -------------------------------------------------- |
-| 0.1.0   | 00-foundation | ✅     | Scaffold base (Tailwind v4, shadcn, alias `@/*`) | bvcpas-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
-| 0.2.0   | 10-core-auth  | ✅     | Login real contra mapi + sesión + guard          | bvcpas-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
-| 0.2.1   | 10-core-auth  | ✅     | Tests retroactivos (Vitest + Testing Library)    | bvcpas-v0.2.1 | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)   |
+| Versión | Módulo        | Estado | Tema                                                                         | Tag           | Archivo                                            |
+| ------- | ------------- | ------ | ---------------------------------------------------------------------------- | ------------- | -------------------------------------------------- |
+| 0.1.0   | 00-foundation | ✅     | Scaffold base (Tailwind v4, shadcn, alias `@/*`)                             | bvcpas-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
+| 0.2.0   | 10-core-auth  | ✅     | Login real contra mapi + sesión + guard                                      | bvcpas-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
+| 0.2.1   | 10-core-auth  | ✅     | Tests retroactivos (Vitest + Testing Library)                                | bvcpas-v0.2.1 | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)   |
+| 0.3.0   | 15-app-shell  | ✅     | AppShell visual + sidebar + tabs + 8 placeholders + diseño 1:1 con prototipo | bvcpas-v0.3.0 | [15-app-shell/v0.3.0.md](15-app-shell/v0.3.0.md)   |
 
 ---
 
 ## Decisiones acumuladas (`D-bvcpas-NNN`)
 
-| ID           | Decisión                                                                                              | Versión | Diverge TDD |
-| ------------ | ----------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| D-bvcpas-001 | Cliente HTTP propio (~50 líneas sobre `fetch`), sin `ofetch`/`ky`/`axios`                             | 0.2.0   | No          |
-| D-bvcpas-002 | `sessionStorage` (no `localStorage` ni cookie); checkbox "Keep me signed in" eliminado                | 0.2.0   | No          |
-| D-bvcpas-003 | Validar sesión con `GET /v1/auth/me` al montar `(authenticated)/`                                     | 0.2.0   | No          |
-| D-bvcpas-004 | `ApiError` como clase JS, no objetos planos ni Result types                                           | 0.2.0   | No          |
-| D-bvcpas-005 | Form con `react-hook-form` + `zod` + shadcn `<Form>`                                                  | 0.2.0   | No          |
-| D-bvcpas-006 | Evento DOM `auth:unauthorized` para cerrar sesión global ante 401                                     | 0.2.0   | No          |
-| D-bvcpas-007 | ~~Sin tests automatizados~~ — REVERTIDA por D-bvcpas-011                                              | 0.2.0   | No          |
-| D-bvcpas-008 | Login vive en `/` (`src/app/page.tsx`), no en `/login`. La ruta `/login` no existe                    | 0.2.0   | Sí          |
-| D-bvcpas-009 | Sistema de tokens semánticos centralizado en `globals.css`; prohibido usar colores literales          | 0.2.0   | Sí          |
-| D-bvcpas-010 | `useSession` como Context global (`<SessionProvider>`), no hook con estado local por instancia        | 0.2.0   | Sí          |
-| D-bvcpas-011 | Adopción de testing (Vitest + Testing Library + JSDOM); TDD-first desde v0.3.0. Revierte D-bvcpas-007 | 0.2.1   | Sí          |
-| D-bvcpas-012 | Extracción de `mapErrorMessage` a `lib/map-error-message.ts` para testabilidad                        | 0.2.1   | Sí          |
-| D-bvcpas-013 | `vitest.config.mts` (no `.ts`) por compat ESM con `vite-tsconfig-paths`; `esbuild.jsx='automatic'`    | 0.2.1   | No          |
+| ID           | Decisión                                                                                                 | Versión | Diverge TDD |
+| ------------ | -------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| D-bvcpas-001 | Cliente HTTP propio (~50 líneas sobre `fetch`), sin `ofetch`/`ky`/`axios`                                | 0.2.0   | No          |
+| D-bvcpas-002 | `sessionStorage` (no `localStorage` ni cookie); checkbox "Keep me signed in" eliminado                   | 0.2.0   | No          |
+| D-bvcpas-003 | Validar sesión con `GET /v1/auth/me` al montar `(authenticated)/`                                        | 0.2.0   | No          |
+| D-bvcpas-004 | `ApiError` como clase JS, no objetos planos ni Result types                                              | 0.2.0   | No          |
+| D-bvcpas-005 | Form con `react-hook-form` + `zod` + shadcn `<Form>`                                                     | 0.2.0   | No          |
+| D-bvcpas-006 | Evento DOM `auth:unauthorized` para cerrar sesión global ante 401                                        | 0.2.0   | No          |
+| D-bvcpas-007 | ~~Sin tests automatizados~~ — REVERTIDA por D-bvcpas-011                                                 | 0.2.0   | No          |
+| D-bvcpas-008 | Login vive en `/` (`src/app/page.tsx`), no en `/login`. La ruta `/login` no existe                       | 0.2.0   | Sí          |
+| D-bvcpas-009 | Sistema de tokens semánticos centralizado en `globals.css`; prohibido usar colores literales             | 0.2.0   | Sí          |
+| D-bvcpas-010 | `useSession` como Context global (`<SessionProvider>`), no hook con estado local por instancia           | 0.2.0   | Sí          |
+| D-bvcpas-011 | Adopción de testing (Vitest + Testing Library + JSDOM); TDD-first desde v0.3.0. Revierte D-bvcpas-007    | 0.2.1   | Sí          |
+| D-bvcpas-012 | Extracción de `mapErrorMessage` a `lib/map-error-message.ts` para testabilidad                           | 0.2.1   | Sí          |
+| D-bvcpas-013 | `vitest.config.mts` (no `.ts`) por compat ESM con `vite-tsconfig-paths`; `esbuild.jsx='automatic'`       | 0.2.1   | No          |
+| D-bvcpas-014 | Adopción de React Query (`@tanstack/react-query`); `<QueryProvider>` en root layout                      | 0.3.0   | Sí          |
+| D-bvcpas-015 | Sidebar consume `GET /v1/dashboards/customer-support` (no `GET /v1/clients`) por tener stats             | 0.3.0   | Sí          |
+| D-bvcpas-016 | Virtualización con `@tanstack/react-virtual` desde día 1, aunque sean <100 clientes                      | 0.3.0   | No          |
+| D-bvcpas-017 | `/dashboard` muestra empty state, NO auto-select del primer cliente                                      | 0.3.0   | No          |
+| D-bvcpas-018 | Customer Support tab también es placeholder en v0.3.0; pantalla real entra en v0.4.0                     | 0.3.0   | Sí          |
+| D-bvcpas-019 | Política de branches: `<app>/<NN-modulo>` sin versión; tag `<app>-vX.Y.Z`. Convención unificada con mapi | 0.3.0   | Sí          |
+| D-bvcpas-020 | Naming campos: snake_case 1:1 con backend; sin adapters camelCase                                        | 0.3.0   | Sí          |
+| D-bvcpas-021 | Aliases shadcn dentro de `@theme` con prefijo `--color-*` (no en `:root` plano) — Tailwind v4            | 0.3.0   | Sí          |
 
 ---
 
