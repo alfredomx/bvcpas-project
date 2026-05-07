@@ -66,9 +66,9 @@ function applyClientFilter(
   return items
 }
 
-@ApiTags('Transactions')
+@ApiTags('Clients - Transactions')
 @ApiBearerAuth('bearer')
-@Controller('transactions')
+@Controller('clients/:id/transactions')
 @Roles('admin')
 export class ClientTransactionsController {
   constructor(
@@ -80,18 +80,19 @@ export class ClientTransactionsController {
   @Post('sync')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/transactions/sync',
+    summary: 'POST /v1/clients/:id/transactions/sync',
     description:
-      'Pulla TransactionList de Intuit para un cliente y reescribe el snapshot dentro del rango. Borrón total + INSERT.',
+      'Pulla TransactionList de Intuit para el cliente y reescribe el snapshot dentro del rango. Borrón total + INSERT.',
   })
   @ApiResponse({ status: 200, type: SyncResultDto })
   @ApiResponse({ status: 400, description: 'Cliente sin QBO conectado' })
   async sync(
+    @Param('id', ParseUUIDPipe) clientId: string,
     @Body(new ZodValidationPipe(SyncTransactionsBodySchema)) body: SyncTransactionsBodyDto,
     @CurrentUser() user: SessionContext,
   ): Promise<SyncResultDto> {
     const result = await this.syncService.syncFromQbo(
-      body.clientId,
+      clientId,
       body.startDate,
       body.endDate,
       user.userId,
@@ -108,19 +109,20 @@ export class ClientTransactionsController {
 
   @Get()
   @ApiOperation({
-    summary: '/v1/transactions',
+    summary: 'GET /v1/clients/:id/transactions',
     description:
-      'Listado de transacciones del snapshot. Requiere `?clientId=`. Filtros opcionales: category, filter (all/income/expense), startDate/endDate.',
+      'Listado de transacciones del snapshot del cliente. Filtros opcionales: category, filter (all/income/expense), startDate/endDate.',
   })
   @ApiResponse({ status: 200, type: TransactionsListResponseDto })
   async list(
+    @Param('id', ParseUUIDPipe) clientId: string,
     @Query(new ZodValidationPipe(ListTransactionsQuerySchema)) query: ListTransactionsQueryDto,
   ): Promise<TransactionsListResponseDto> {
-    const client = await this.clientsRepo.findById(query.clientId)
-    if (!client) throw new ClientNotFoundError(query.clientId)
+    const client = await this.clientsRepo.findById(clientId)
+    if (!client) throw new ClientNotFoundError(clientId)
 
     const items = await this.txnRepo.list({
-      clientId: query.clientId,
+      clientId,
       ...(query.category ? { category: query.category } : {}),
       ...(query.startDate ? { startDate: query.startDate } : {}),
       ...(query.endDate ? { endDate: query.endDate } : {}),
@@ -132,17 +134,20 @@ export class ClientTransactionsController {
     }
   }
 
-  @Delete(':id')
+  @Delete(':txId')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: '/v1/transactions/:id',
+    summary: 'DELETE /v1/clients/:id/transactions/:txId',
     description:
       'Borra una transacción individual del snapshot por su id UUID. La respuesta del cliente (si la había) se preserva en client_transaction_responses.',
   })
   @ApiResponse({ status: 204, description: 'Transacción borrada' })
   @ApiResponse({ status: 404, description: 'Transacción no encontrada' })
-  async deleteOne(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
-    const removed = await this.txnRepo.deleteById(id)
+  async deleteOne(
+    @Param('id', ParseUUIDPipe) _clientId: string,
+    @Param('txId', ParseUUIDPipe) txId: string,
+  ): Promise<void> {
+    const removed = await this.txnRepo.deleteById(txId)
     if (!removed) throw new NotFoundException('Transacción no encontrada')
   }
 }
