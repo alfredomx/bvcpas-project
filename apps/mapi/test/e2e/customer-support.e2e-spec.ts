@@ -81,16 +81,24 @@ describe('Customer Support E2E (Tipo B)', () => {
     const client = postgres(databaseUrl, { max: 1 })
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
-      await client`
+      const [admin] = (await client`
         INSERT INTO users (email, password_hash, full_name, role, status)
         VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin CS', 'admin', 'active')
-      `
+        RETURNING id
+      `) as unknown as { id: string }[]
+      const adminId = admin.id
       const [c] = (await client`
         INSERT INTO clients (legal_name, qbo_realm_id, status, tier, transactions_filter)
         VALUES ('Acme CS', ${realmId}, 'active', 'silver', 'all')
         RETURNING id
       `) as unknown as { id: string }[]
       clientId = c.id
+
+      // Seed access para que ClientAccessGuard deje pasar al admin user.
+      await client`
+        INSERT INTO user_client_access (user_id, client_id)
+        VALUES (${adminId}, ${clientId})
+      `
 
       // Seed transacciones directamente
       const inserted = (await client`
@@ -122,7 +130,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-001 — GET /transactions admin', () => {
     it('lista 3 transacciones', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/transactions?clientId=${clientId}`)
+        .get(`/v1/clients/${clientId}/transactions`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -133,7 +141,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-003 — filtros category + filter', () => {
     it('?category=ask_my_accountant retorna solo el AMA', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/transactions?clientId=${clientId}&category=ask_my_accountant`)
+        .get(`/v1/clients/${clientId}/transactions?category=ask_my_accountant`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -143,7 +151,7 @@ describe('Customer Support E2E (Tipo B)', () => {
 
     it('?filter=expense excluye income (admin)', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/transactions?clientId=${clientId}&filter=expense`)
+        .get(`/v1/clients/${clientId}/transactions?filter=expense`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       const body = res.body as TransactionsListShape
@@ -154,16 +162,16 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-004 — public-links idempotente', () => {
     it('segunda llamada retorna mismo token', async () => {
       const first = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats' })
+        .send({ purpose: 'uncats' })
         .expect(200)
       const tokenFirst = (first.body as PublicLinkShape).token
 
       const second = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats' })
+        .send({ purpose: 'uncats' })
         .expect(200)
       expect((second.body as PublicLinkShape).token).toBe(tokenFirst)
     })
@@ -172,9 +180,9 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-007 — GET público excluye AMAs', () => {
     it('cliente con tier=all ve uncats expense + income, sin AMA', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats' })
+        .send({ purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
@@ -191,9 +199,9 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-008 — PATCH público guarda nota', () => {
     it('upsert response y verificable vía admin endpoint', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats' })
+        .send({ purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
@@ -235,9 +243,9 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-009 — PATCH público con txn inexistente → 404', () => {
     it('TRANSACTION_NOT_FOUND_IN_SNAPSHOT', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats' })
+        .send({ purpose: 'uncats' })
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
@@ -253,15 +261,15 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-010 — GET público con token revocado → 410', () => {
     it('después de revoke devuelve 410', async () => {
       const link = await request(app.getHttpServer())
-        .post('/v1/public/links')
+        .post(`/v1/clients/${clientId}/public-links`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ clientId, purpose: 'uncats', force: true })
+        .send({ purpose: 'uncats', force: true })
         .expect(200)
       const linkId = (link.body as PublicLinkShape).id
       const token = (link.body as PublicLinkShape).token
 
       await request(app.getHttpServer())
-        .post(`/v1/public/links/${linkId}/revoke`)
+        .post(`/v1/clients/${clientId}/public-links/${linkId}/revoke`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(204)
 
@@ -275,7 +283,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-011 — GET followups default', () => {
     it('si no existe, retorna pending', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/followups?clientId=${clientId}&period=2026-04`)
+        .get(`/v1/clients/${clientId}/followups/2026-04`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
       expect((res.body as FollowupShape).status).toBe('pending')
@@ -285,7 +293,7 @@ describe('Customer Support E2E (Tipo B)', () => {
   describe('SMK-cs-012 — PATCH followups', () => {
     it('cambia status a sent + emite evento', async () => {
       await request(app.getHttpServer())
-        .patch(`/v1/followups?clientId=${clientId}&period=2026-04`)
+        .patch(`/v1/clients/${clientId}/followups/2026-04`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ status: 'sent', internalNotes: 'enviado por admin' })
         .expect(200)
@@ -309,7 +317,7 @@ describe('Customer Support E2E (Tipo B)', () => {
     it('borra del snapshot pero respuesta queda en transaction_responses', async () => {
       // Pre: tx-001 ya tiene response (de SMK-008). La borramos del snapshot.
       await request(app.getHttpServer())
-        .delete(`/v1/transactions/${txn001Id}`)
+        .delete(`/v1/clients/${clientId}/transactions/${txn001Id}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(204)
 
