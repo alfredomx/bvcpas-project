@@ -2,7 +2,23 @@ import { Injectable } from '@nestjs/common'
 import OAuthClient from 'intuit-oauth'
 import type { OAuthClient as OAuthClientInstance } from 'intuit-oauth'
 import { AppConfigService } from '../../core/config/config.service'
-import type { DecryptedIntuitToken } from '../../db/schema/intuit-tokens'
+
+/**
+ * Token Intuit en plaintext, listo para pasar al SDK. Independiente
+ * del schema DB (legacy DecryptedIntuitToken se eliminó en v0.8.0
+ * cuando los tokens migraron a `user_connections`).
+ *
+ * `realmId` se obtiene de `userConnection.externalAccountId` cuando
+ * `provider='intuit'`. Intuit con `offline_access` siempre devuelve
+ * refresh_token_expires_at, por eso es required (no nullable).
+ */
+export interface IntuitDecryptedToken {
+  realmId: string
+  accessToken: string
+  refreshToken: string
+  accessTokenExpiresAt: Date
+  refreshTokenExpiresAt: Date
+}
 
 /**
  * Wrapper sobre el SDK `intuit-oauth`. Crea instancias on-demand (no
@@ -27,7 +43,7 @@ export class IntuitOauthClientFactory {
     })
   }
 
-  applyToken(client: OAuthClientInstance, token: DecryptedIntuitToken): void {
+  applyToken(client: OAuthClientInstance, token: IntuitDecryptedToken): void {
     const nowMs = Date.now()
     const accessExpiresInSec = Math.max(
       0,

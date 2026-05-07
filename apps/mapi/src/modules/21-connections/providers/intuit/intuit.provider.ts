@@ -60,10 +60,6 @@ export class IntuitProvider implements IProvider {
 
     const oauthClient = this.oauthClientFactory.create()
     this.oauthClientFactory.applyToken(oauthClient, {
-      // El factory todavía espera el shape DecryptedIntuitToken legacy
-      // (incluye clientId aunque no lo usa para el SDK). Se simplificará
-      // cuando 20-intuit-oauth/ se borre por completo y movamos el factory.
-      clientId: connection.clientId ?? connection.id,
       realmId: connection.externalAccountId,
       accessToken: connection.accessToken,
       refreshToken: connection.refreshToken,

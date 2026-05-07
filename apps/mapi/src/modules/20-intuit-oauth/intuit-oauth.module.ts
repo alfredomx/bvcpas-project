@@ -11,8 +11,6 @@ import { IntuitOauthClientFactory } from './intuit-oauth-client.factory'
 import { IntuitOauthController } from './oauth/intuit-oauth.controller'
 import { IntuitOauthService } from './oauth/intuit-oauth.service'
 import { IntuitTokensMetricsCron } from './tokens/intuit-tokens.metrics-cron'
-import { IntuitTokensRepository } from './tokens/intuit-tokens.repository'
-import { IntuitTokensService } from './tokens/intuit-tokens.service'
 
 /**
  * Módulo 20-intuit-oauth: OAuth + tokens cifrados + proxy V3.
@@ -37,12 +35,10 @@ import { IntuitTokensService } from './tokens/intuit-tokens.service'
   controllers: [IntuitOauthController, IntuitAdminController],
   providers: [
     IntuitOauthClientFactory,
-    IntuitTokensRepository,
-    IntuitTokensService,
     IntuitApiService,
     IntuitOauthService,
     IntuitTokensMetricsCron,
   ],
-  exports: [IntuitTokensService, IntuitApiService],
+  exports: [IntuitApiService],
 })
 export class IntuitOauthModule {}

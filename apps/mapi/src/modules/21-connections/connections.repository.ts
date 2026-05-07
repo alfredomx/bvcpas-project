@@ -179,4 +179,51 @@ export class ConnectionsRepository {
       .returning()
     return row ?? null
   }
+
+  /**
+   * Lista TODAS las conexiones de un provider, sin filtrar por user.
+   * Solo para usos admin (cron de métricas, listado admin de tokens).
+   * NO exponer al usuario operador.
+   */
+  async listByProvider(provider: Provider): Promise<UserConnection[]> {
+    return this.db.select().from(userConnections).where(eq(userConnections.provider, provider))
+  }
+
+  /**
+   * Busca una conexión por (provider, external_account_id). Sin filtrar
+   * por user. Útil para Intuit donde external_account_id es el realm
+   * único y un proxy admin necesita resolver clientId desde el realm.
+   *
+   * Si hay múltiples (cuando varios users conectan al mismo realm),
+   * devuelve la primera. Para Intuit en producción usual solo hay una.
+   */
+  async findByProviderAndExternalAccountId(
+    provider: Provider,
+    externalAccountId: string,
+  ): Promise<UserConnection | null> {
+    const [row] = await this.db
+      .select()
+      .from(userConnections)
+      .where(
+        and(
+          eq(userConnections.provider, provider),
+          eq(userConnections.externalAccountId, externalAccountId),
+        ),
+      )
+      .limit(1)
+    return row ?? null
+  }
+
+  /**
+   * Borra TODAS las conexiones de un cliente para un provider. Usado
+   * cuando un admin desconecta a un cliente de Intuit (todos los
+   * operadores que conectaron pierden tokens al mismo tiempo).
+   */
+  async deleteByClientIdAndProvider(clientId: string, provider: Provider): Promise<number> {
+    const result = await this.db
+      .delete(userConnections)
+      .where(and(eq(userConnections.clientId, clientId), eq(userConnections.provider, provider)))
+      .returning({ id: userConnections.id })
+    return result.length
+  }
 }
