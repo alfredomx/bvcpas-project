@@ -33,8 +33,8 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
  * - PATCH  /v1/connections/:id (editar label)
  * - DELETE /v1/connections/:id
  * - POST   /v1/connections/:id/test (delega al provider)
- * - POST   /v1/connections/microsoft/connect
- * - GET    /v1/connections/microsoft/callback (@Public)
+ * - POST   /v1/microsoft/oauth/connect
+ * - GET    /v1/microsoft/oauth/callback (@Public)
  *
  * Endpoints v0.8.0 vendrán con el refactor URLs.
  */
@@ -53,6 +53,15 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     IntuitOauthClientFactory,
     IntuitProvider,
   ],
-  exports: [ConnectionsService, ConnectionTokenRefreshService, ProviderRegistry],
+  exports: [
+    ConnectionsService,
+    ConnectionTokenRefreshService,
+    ProviderRegistry,
+    // ConnectionsRepository se exporta para que el admin controller
+    // de Intuit pueda hacer operaciones bajo nivel (listByProvider,
+    // findByProviderAndExternalAccountId, deleteByClientIdAndProvider).
+    // El módulo `21-connections` controla quién accede vía esto.
+    ConnectionsRepository,
+  ],
 })
 export class ConnectionsModule {}
