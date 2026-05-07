@@ -1,25 +1,29 @@
 import { Module } from '@nestjs/common'
 import { ClientsModule } from '../11-clients/clients.module'
-import { CustomerSupportDashboardController } from './customer-support/customer-support-dashboard.controller'
+import { ClientUncatsController } from './customer-support/client-uncats.controller'
 import { CustomerSupportDashboardRepository } from './customer-support/customer-support-dashboard.repository'
 import { CustomerSupportDashboardService } from './customer-support/customer-support-dashboard.service'
+import { UncatsViewController } from './customer-support/uncats-view.controller'
 
 /**
  * Módulo 13-views: vistas globales agregadas para el operador.
  * Renombrado desde 13-dashboards en v0.8.0 (D-mapi-019).
  *
- * Las URLs cambian a `/v1/views/<nombre>` para listas globales (cross-cliente).
- * El detalle por cliente vive en `12-customer-support/clients/` bajo
- * `/v1/clients/:id/<nombre>`.
+ * Forma C de URLs:
+ * - GET /v1/views/uncats          (lista global, cross-cliente)
+ * - GET /v1/clients/:id/uncats    (detalle del cliente)
  *
- * Hoy:
- * - customer-support/ — primera tab del dashboard home (renombrado a uncats en v0.8.0).
+ * Aunque el detalle vive en este mismo módulo, su path es
+ * `/v1/clients/:id/uncats` (sub-recurso del cliente). El nombre del
+ * recurso (`uncats`) es idéntico en ambos lados — solo cambia el scope.
  *
- * Futuros: recon, w-9, 1099, mgt-report, tax-packet, qtr-payroll, property-tax.
+ * Futuras vistas siguen el mismo patrón:
+ * - /v1/views/recon, /v1/views/w9, /v1/views/1099, etc.
+ * - /v1/clients/:id/recon, /v1/clients/:id/w9, etc.
  */
 @Module({
   imports: [ClientsModule],
-  controllers: [CustomerSupportDashboardController],
+  controllers: [UncatsViewController, ClientUncatsController],
   providers: [CustomerSupportDashboardRepository, CustomerSupportDashboardService],
 })
 export class DashboardsModule {}
