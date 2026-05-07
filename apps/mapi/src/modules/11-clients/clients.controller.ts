@@ -9,13 +9,16 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
 import { Roles } from '../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import type { Client } from '../../db/schema/clients'
+import { ClientAccessRepository } from './client-access.repository'
 import { ClientsService } from './clients.service'
 import {
   ChangeStatusDto,
@@ -49,26 +52,33 @@ function serialize(c: Client): ClientDto {
   }
 }
 
-@ApiTags('Clients')
+@ApiTags('Clients - Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients')
 @Roles('admin')
+@UseGuards(ClientAccessGuard)
 export class ClientsController {
-  constructor(private readonly clients: ClientsService) {}
+  constructor(
+    private readonly clients: ClientsService,
+    private readonly accessRepo: ClientAccessRepository,
+  ) {}
 
   @Get()
   @ApiOperation({
-    summary: '/v1/clients',
+    summary: 'GET /v1/clients',
     description:
-      'Listado paginado de clientes. Filtros opcionales: `status` (active/paused/offboarded), `tier` (silver/gold/platinum) y `search` (parcial en legal_name).',
+      'Listado paginado de clientes. Filtros opcionales: `status`, `tier`, `search`. Solo devuelve clientes a los que el usuario tiene acceso (user_client_access).',
   })
   @ApiResponse({ status: 200, type: ClientsListResponseDto })
   async list(
     @Query(new ZodValidationPipe(ListClientsQuerySchema)) query: ListClientsQueryDto,
+    @CurrentUser() user: SessionContext,
   ): Promise<ClientsListResponseDto> {
+    const allowedClientIds = await this.accessRepo.listClientIdsForUser(user.userId)
     const result = await this.clients.list({
       page: query.page,
       pageSize: query.pageSize,
+      allowedClientIds,
       ...(query.status ? { status: query.status } : {}),
       ...(query.tier ? { tier: query.tier } : {}),
       ...(query.search ? { search: query.search } : {}),
@@ -83,11 +93,11 @@ export class ClientsController {
 
   @Get(':id')
   @ApiOperation({
-    summary: '/v1/clients/:id',
+    summary: 'GET /v1/clients/:id',
     description: 'Detalle completo de un cliente. Incluye metadata expandida (intuit_*).',
   })
   @ApiResponse({ status: 200, type: ClientDto })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  @ApiResponse({ status: 404, description: 'Cliente no encontrado o sin acceso' })
   async getOne(@Param('id', ParseUUIDPipe) id: string): Promise<ClientDto> {
     const client = await this.clients.getById(id)
     return serialize(client)
@@ -95,12 +105,12 @@ export class ClientsController {
 
   @Patch(':id')
   @ApiOperation({
-    summary: '/v1/clients/:id',
+    summary: 'PATCH /v1/clients/:id',
     description:
       'Edita campos operativos. NO acepta `id`, `qbo_realm_id`, `status` (este último vía /status). Emite `client.updated` en event_log con la lista de campos cambiados.',
   })
   @ApiResponse({ status: 200, type: ClientDto })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  @ApiResponse({ status: 404, description: 'Cliente no encontrado o sin acceso' })
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(UpdateClientSchema)) dto: UpdateClientDto,
@@ -113,12 +123,12 @@ export class ClientsController {
   @Post(':id/status')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/clients/:id/status',
+    summary: 'POST /v1/clients/:id/status',
     description:
       'Cambia el status del cliente. Idempotente: si el nuevo status es el actual, no hace nada. Emite `client.status_changed` en event_log.',
   })
   @ApiResponse({ status: 200, type: ClientDto })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  @ApiResponse({ status: 404, description: 'Cliente no encontrado o sin acceso' })
   async changeStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body(new ZodValidationPipe(ChangeStatusSchema)) dto: ChangeStatusDto,

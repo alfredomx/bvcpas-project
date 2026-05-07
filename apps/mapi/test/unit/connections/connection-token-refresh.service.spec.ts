@@ -22,12 +22,15 @@ function buildDecrypted(overrides: Partial<DecryptedUserConnection> = {}): Decry
     userId: 'user-1',
     provider: 'microsoft',
     externalAccountId: 'msft-uid-abc',
+    clientId: null,
+    scopeType: 'full',
     email: 'bob@example.com',
     label: null,
     scopes: 'Mail.Send User.Read offline_access',
     accessToken: 'access-current',
     refreshToken: 'refresh-current',
     accessTokenExpiresAt: new Date(NOW.getTime() + 60 * 60 * 1000), // 1h
+    refreshTokenExpiresAt: null,
     ...overrides,
   }
 }
@@ -106,7 +109,9 @@ describe('ConnectionTokenRefreshService', () => {
 
       expect(token).toBe('access-new')
       expect(m.registry.get).toHaveBeenCalledWith('microsoft')
-      expect(m.provider.refresh).toHaveBeenCalledWith('refresh-current')
+      expect(m.provider.refresh).toHaveBeenCalledWith(
+        expect.objectContaining({ refreshToken: 'refresh-current' }),
+      )
       expect(m.connections.upsert).toHaveBeenCalledTimes(1)
       const saved = m.connections.upsert.mock.calls[0]?.[0]
       expect(saved).toMatchObject({

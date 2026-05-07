@@ -38,10 +38,13 @@ export class MicrosoftProvider implements IProvider {
     @Optional() @Inject(MSFT_FETCH) private readonly fetchFn: typeof fetch = fetch,
   ) {}
 
-  async refresh(refreshToken: string): Promise<TokenRefreshResult> {
+  async refresh(connection: DecryptedUserConnection): Promise<TokenRefreshResult> {
+    if (connection.refreshToken === null) {
+      throw new ConnectionRefreshExpiredError(connection.id)
+    }
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
-      refresh_token: refreshToken,
+      refresh_token: connection.refreshToken,
       client_id: this.cfg.microsoftClientId,
       client_secret: this.cfg.microsoftClientSecret,
     })

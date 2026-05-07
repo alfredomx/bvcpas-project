@@ -47,6 +47,9 @@ const STATUS_BY_CODE: Record<string, number> = {
   CONNECTION_STATE_INVALID: 400,
   PROVIDER_NOT_SUPPORTED: 400,
   PROVIDER_API_ERROR: 502,
+
+  // 21-connections (v0.8.0)
+  INTUIT_PERSONAL_CONNECTION_REQUIRED: 403,
 }
 
 interface ErrorBody {

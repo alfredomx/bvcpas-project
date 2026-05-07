@@ -1,29 +1,24 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req, Res } from '@nestjs/common'
+import { Controller, Get, HttpCode, HttpStatus, Post, Query, Req, Res } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import type { Request, Response } from 'express'
 import { Public } from '../../../common/decorators/public.decorator'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
-import { ClientNotFoundError } from '../intuit-oauth.errors'
-import { ClientsRepository } from '../../11-clients/clients.repository'
 import { AuthorizeResponseDto, CallbackQueryDto } from './dto/intuit-oauth.dto'
 import { IntuitOauthService } from './intuit-oauth.service'
 
-@ApiTags('Intuit')
-@Controller()
+@ApiTags('OAuth - Intuit')
+@Controller('intuit/oauth')
 export class IntuitOauthController {
-  constructor(
-    private readonly oauth: IntuitOauthService,
-    private readonly clientsRepo: ClientsRepository,
-  ) {}
+  constructor(private readonly oauth: IntuitOauthService) {}
 
-  @Post('intuit/connect')
+  @Post('connect')
   @ApiBearerAuth('bearer')
   @Roles('admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/intuit/connect',
+    summary: 'POST /v1/intuit/oauth/connect',
     description:
       'Genera URL de Intuit para conectar QBO sin cliente existente. Si el realm devuelto en el callback ya pertenece a un cliente, hace silent re-auth; si no, crea cliente nuevo con datos canónicos de Intuit.',
   })
@@ -33,31 +28,10 @@ export class IntuitOauthController {
     return { authorizationUrl: url }
   }
 
-  @Post('intuit/clients/:id/reconnect')
-  @ApiBearerAuth('bearer')
-  @Roles('admin')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: '/v1/intuit/clients/:id/reconnect',
-    description:
-      'Genera URL de Intuit para reconectar QBO a un cliente existente. Diferente a /v1/intuit/connect: aquí pre-asignas el cliente target. El callback valida que el realm devuelto coincida (o asocia uno nuevo si el cliente no tenía).',
-  })
-  @ApiResponse({ status: 200, type: AuthorizeResponseDto })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
-  async reconnectTarget(
-    @Param('id') clientId: string,
-    @CurrentUser() user: SessionContext,
-  ): Promise<AuthorizeResponseDto> {
-    const client = await this.clientsRepo.findById(clientId)
-    if (!client) throw new ClientNotFoundError(clientId)
-    const url = await this.oauth.getAuthorizationUrl(user.userId, clientId)
-    return { authorizationUrl: url }
-  }
-
   @Public()
-  @Get('intuit/callback')
+  @Get('callback')
   @ApiOperation({
-    summary: '/v1/intuit/callback',
+    summary: 'GET /v1/intuit/oauth/callback',
     description:
       'Callback de Intuit tras autorización. Es @Public porque Intuit redirige al usuario sin JWT. Devuelve HTML simple con resumen del flow.',
   })

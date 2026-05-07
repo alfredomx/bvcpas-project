@@ -19,18 +19,16 @@ export class ClientIdQueryDto extends createZodDto(ClientIdQuerySchema) {}
 
 export const SyncTransactionsBodySchema = z
   .object({
-    clientId: z.string().uuid(),
     startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'startDate debe ser YYYY-MM-DD'),
     endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate debe ser YYYY-MM-DD'),
   })
   .strict()
-  .describe('Body para sync con Intuit (cliente + rango de fechas)')
+  .describe('Body para sync con Intuit (rango de fechas; clientId va en path)')
 
 export class SyncTransactionsBodyDto extends createZodDto(SyncTransactionsBodySchema) {}
 
 export const ListTransactionsQuerySchema = z
   .object({
-    clientId: z.string().uuid(),
     category: z.enum(CLIENT_TRANSACTION_CATEGORIES).optional(),
     filter: z.enum(CLIENT_TRANSACTIONS_FILTERS).optional(),
     startDate: z
@@ -42,7 +40,7 @@ export const ListTransactionsQuerySchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate debe ser YYYY-MM-DD')
       .optional(),
   })
-  .describe('Filtros para listar transacciones de un cliente')
+  .describe('Filtros para listar transacciones (clientId va en path)')
 
 export class ListTransactionsQueryDto extends createZodDto(ListTransactionsQuerySchema) {}
 
@@ -149,7 +147,6 @@ export class UpdateFollowupDto extends createZodDto(UpdateFollowupSchema) {}
 
 export const CreatePublicLinkSchema = z
   .object({
-    clientId: z.string().uuid(),
     purpose: z.enum(PUBLIC_LINK_PURPOSES),
     expiresAt: z.string().datetime().nullable().optional(),
     maxUses: z.number().int().positive().nullable().optional(),

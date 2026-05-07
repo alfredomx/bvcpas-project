@@ -51,18 +51,28 @@ describe('Clients E2E (Tipo B)', () => {
     const client = postgres(databaseUrl, { max: 1 })
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
-      await client`
+      const [admin] = (await client`
         INSERT INTO users (email, password_hash, full_name, role, status)
         VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Clients', 'admin', 'active')
-      `
+        RETURNING id
+      `) as unknown as { id: string }[]
+      const adminId = admin.id
       // Seed 3 clientes con distintos tiers
-      await client`
+      const inserted = (await client`
         INSERT INTO clients (legal_name, qbo_realm_id, status, tier)
         VALUES
           ('Acme LLC', 'r-001', 'active', 'silver'),
           ('Beta Corp', 'r-002', 'paused', 'gold'),
           ('Cascade Co', 'r-003', 'active', 'platinum')
-      `
+        RETURNING id
+      `) as unknown as { id: string }[]
+      // Seed access para que ClientAccessGuard deje pasar al admin user.
+      for (const c of inserted) {
+        await client`
+          INSERT INTO user_client_access (user_id, client_id)
+          VALUES (${adminId}, ${c.id})
+        `
+      }
     } finally {
       await client.end()
     }

@@ -98,10 +98,10 @@ describe('Connections E2E (Tipo B)', () => {
     await app.close()
   })
 
-  describe('SMK-conn-001 — POST /v1/connections/microsoft/connect', () => {
+  describe('SMK-conn-001 — POST /v1/microsoft/oauth/connect', () => {
     it('devuelve URL bien formada y guarda state en Redis', async () => {
       const res = await request(app.getHttpServer())
-        .post('/v1/connections/microsoft/connect')
+        .post('/v1/microsoft/oauth/connect')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ label: 'Mi cuenta personal' })
         .expect(200)

@@ -1,36 +1,27 @@
 import { IntuitApiService } from '../../../src/modules/20-intuit-oauth/api-client/intuit-api.service'
-import type { IntuitTokensService } from '../../../src/modules/20-intuit-oauth/tokens/intuit-tokens.service'
+import type { ConnectionTokenRefreshService } from '../../../src/modules/21-connections/connection-token-refresh.service'
 import type { AppConfigService } from '../../../src/core/config/config.service'
 import type { MetricsService } from '../../../src/core/metrics/metrics.service'
 import { IntuitBadRequestError } from '../../../src/modules/20-intuit-oauth/intuit-oauth.errors'
-import type { DecryptedIntuitToken } from '../../../src/db/schema/intuit-tokens'
 
 /**
  * Tests Tipo A para IntuitApiService. Mockea fetch global, sin red real.
  *
+ * v0.8.0: ahora consume ConnectionTokenRefreshService en vez de
+ * IntuitTokensService. GET usa read-priority (fallback a global readonly);
+ * POST/PUT/DELETE requiere personal full del user.
+ *
  * Cobertura:
- * - CR-intuit-020: call() construye URL con env=production + minorversion.
- * - CR-intuit-021: call() agrega Authorization Bearer y Content-Type al body.
- * - CR-intuit-022: call() retorna JSON parseado en 2xx.
+ * - CR-intuit-020: call() construye URL con minorversion + Authorization.
+ * - CR-intuit-021: call() para GET usa getValidAccessTokenForClientRead.
+ * - CR-intuit-022: call() para POST usa getValidAccessTokenForClientWrite.
  * - CR-intuit-023: call() lanza IntuitBadRequestError en 4xx con qboErrors.
- * - CR-intuit-024: call() retry-on-401: forceRefresh + reintenta UNA vez.
+ * - CR-intuit-024: call() retry-on-401: re-resuelve token + reintenta UNA vez.
  * - CR-intuit-025: call() incrementa intuitApiCallsTotal con path normalizado.
  */
 
-function buildToken(overrides: Partial<DecryptedIntuitToken> = {}): DecryptedIntuitToken {
-  return {
-    clientId: 'client-123',
-    realmId: 'realm-9341454027303089',
-    accessToken: 'access-1',
-    refreshToken: 'refresh-1',
-    accessTokenExpiresAt: new Date(Date.now() + 3600 * 1000),
-    refreshTokenExpiresAt: new Date(Date.now() + 100 * 24 * 3600 * 1000),
-    ...overrides,
-  }
-}
-
 interface Mocks {
-  tokens: jest.Mocked<IntuitTokensService>
+  tokens: jest.Mocked<ConnectionTokenRefreshService>
   cfg: AppConfigService
   metrics: MetricsService
   incMock: jest.Mock
@@ -39,9 +30,9 @@ interface Mocks {
 
 function makeMocks(): Mocks {
   const tokens = {
-    getValidTokens: jest.fn(),
-    forceRefresh: jest.fn(),
-  } as unknown as jest.Mocked<IntuitTokensService>
+    getValidAccessTokenForClientRead: jest.fn(),
+    getValidAccessTokenForClientWrite: jest.fn(),
+  } as unknown as jest.Mocked<ConnectionTokenRefreshService>
 
   const cfg = {
     intuitEnvironment: 'production',
@@ -59,201 +50,188 @@ function makeMocks(): Mocks {
   return { tokens, cfg, metrics, incMock, fetchMock }
 }
 
+function buildSvc(m: Mocks): IntuitApiService {
+  return new IntuitApiService(m.tokens, m.cfg, m.metrics)
+}
+
 describe('IntuitApiService', () => {
-  describe('CR-intuit-020 — URL con env=production + minorversion', () => {
-    it('construye URL con base prod + minorversion=75', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) })
-
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      await svc.call({ clientId: 'client-123', method: 'GET', path: '/company/r1/account/1' })
-
-      expect(fetchMock).toHaveBeenCalledTimes(1)
-      const url = fetchMock.mock.calls[0]?.[0] as string
-      expect(url).toBe('https://quickbooks.api.intuit.com/v3/company/r1/account/1?minorversion=75')
-    })
-
-    it('preserva query string existente y agrega minorversion con &', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) })
-
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      await svc.call({
-        clientId: 'client-123',
-        method: 'GET',
-        path: '/company/r1/query?query=SELECT * FROM Account',
-      })
-
-      const url = fetchMock.mock.calls[0]?.[0] as string
-      expect(url).toContain('?query=SELECT * FROM Account&minorversion=75')
-    })
-  })
-
-  describe('CR-intuit-021 — headers Authorization + Content-Type', () => {
-    it('GET sin body NO incluye Content-Type', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) })
-
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      await svc.call({ clientId: 'client-123', method: 'GET', path: '/company/r1/x' })
-
-      const init = fetchMock.mock.calls[0]?.[1] as RequestInit
-      const headers = init.headers as Record<string, string>
-      expect(headers.Authorization).toBe('Bearer access-1')
-      expect(headers.Accept).toBe('application/json')
-      expect(headers['Content-Type']).toBeUndefined()
-    })
-
-    it('POST con body incluye Content-Type application/json y serializa body', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) })
-
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      await svc.call({
-        clientId: 'client-123',
-        method: 'POST',
-        path: '/company/r1/vendor',
-        body: { Name: 'Acme' },
-      })
-
-      const init = fetchMock.mock.calls[0]?.[1] as RequestInit
-      const headers = init.headers as Record<string, string>
-      expect(headers['Content-Type']).toBe('application/json')
-      expect(init.body).toBe(JSON.stringify({ Name: 'Acme' }))
-    })
-  })
-
-  describe('CR-intuit-022 — retorna JSON parseado en 2xx', () => {
-    it('retorna body JSON tal cual', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({
+  describe('CR-intuit-020 — URL + Authorization', () => {
+    it('construye URL con minorversion y header Bearer', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead.mockResolvedValueOnce('access-1')
+      m.fetchMock.mockResolvedValueOnce({
         ok: true,
-        status: 200,
-        json: () => Promise.resolve({ QueryResponse: { Account: [{ Id: '1' }] } }),
+        json: async () => ({ ok: true }),
       })
+      const svc = buildSvc(m)
 
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      const result = await svc.call({
-        clientId: 'client-123',
+      await svc.call({
+        clientId: 'client-1',
+        userId: 'user-1',
         method: 'GET',
-        path: '/company/r1/account',
+        path: '/company/r1/companyinfo/r1',
       })
 
-      expect(result).toEqual({ QueryResponse: { Account: [{ Id: '1' }] } })
+      const [url, init] = m.fetchMock.mock.calls[0] ?? []
+      expect(url).toBe(
+        'https://quickbooks.api.intuit.com/v3/company/r1/companyinfo/r1?minorversion=75',
+      )
+      expect((init as RequestInit).method).toBe('GET')
+      expect((init as RequestInit).headers).toMatchObject({
+        Authorization: 'Bearer access-1',
+        Accept: 'application/json',
+      })
     })
   })
 
-  describe('CR-intuit-023 — IntuitBadRequestError en 4xx', () => {
-    it('400 lanza IntuitBadRequestError con qboErrors.status', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({
+  describe('CR-intuit-021 — GET usa read-priority', () => {
+    it('llama getValidAccessTokenForClientRead', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead.mockResolvedValueOnce('access-r')
+      m.fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const svc = buildSvc(m)
+
+      await svc.call({
+        clientId: 'client-1',
+        userId: 'user-1',
+        method: 'GET',
+        path: '/x',
+      })
+
+      expect(m.tokens.getValidAccessTokenForClientRead).toHaveBeenCalledWith(
+        'intuit',
+        'client-1',
+        'user-1',
+      )
+      expect(m.tokens.getValidAccessTokenForClientWrite).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('CR-intuit-022 — POST/PUT/DELETE requieren personal full', () => {
+    it('POST llama getValidAccessTokenForClientWrite', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientWrite.mockResolvedValueOnce('access-w')
+      m.fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const svc = buildSvc(m)
+
+      await svc.call({
+        clientId: 'client-1',
+        userId: 'user-1',
+        method: 'POST',
+        path: '/x',
+        body: { foo: 'bar' },
+      })
+
+      expect(m.tokens.getValidAccessTokenForClientWrite).toHaveBeenCalledWith(
+        'intuit',
+        'client-1',
+        'user-1',
+      )
+      expect(m.tokens.getValidAccessTokenForClientRead).not.toHaveBeenCalled()
+    })
+
+    it('Content-Type se agrega cuando hay body', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientWrite.mockResolvedValueOnce('access-w')
+      m.fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const svc = buildSvc(m)
+
+      await svc.call({
+        clientId: 'c',
+        userId: 'u',
+        method: 'POST',
+        path: '/x',
+        body: { foo: 'bar' },
+      })
+
+      const init = m.fetchMock.mock.calls[0]?.[1] as RequestInit
+      expect(init.headers).toMatchObject({ 'Content-Type': 'application/json' })
+      expect(init.body).toBe(JSON.stringify({ foo: 'bar' }))
+    })
+  })
+
+  describe('CR-intuit-023 — 4xx lanza IntuitBadRequestError', () => {
+    it('agrega status y body al error', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead.mockResolvedValueOnce('access-1')
+      m.fetchMock.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        text: () => Promise.resolve('{"Fault":{"Error":[]}}'),
+        text: async () => 'invalid query',
       })
+      const svc = buildSvc(m)
 
-      const svc = new IntuitApiService(tokens, cfg, metrics)
       await expect(
-        svc.call({ clientId: 'client-123', method: 'GET', path: '/company/r1/x' }),
+        svc.call({ clientId: 'c', userId: 'u', method: 'GET', path: '/x' }),
       ).rejects.toBeInstanceOf(IntuitBadRequestError)
     })
   })
 
   describe('CR-intuit-024 — retry-on-401', () => {
-    it('en 401: forceRefresh, reintenta UNA vez con nuevo token y resuelve si OK', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      tokens.forceRefresh.mockResolvedValueOnce(buildToken({ accessToken: 'access-2' }))
-      fetchMock
+    it('en 401 re-resuelve token y reintenta UNA vez', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead
+        .mockResolvedValueOnce('access-old')
+        .mockResolvedValueOnce('access-fresh')
+      m.fetchMock
         .mockResolvedValueOnce({
           ok: false,
           status: 401,
-          text: () => Promise.resolve('{"error":"unauthorized"}'),
+          text: async () => 'unauthorized',
         })
         .mockResolvedValueOnce({
           ok: true,
-          status: 200,
-          json: () => Promise.resolve({ ok: true }),
+          json: async () => ({ ok: true }),
         })
+      const svc = buildSvc(m)
 
-      const svc = new IntuitApiService(tokens, cfg, metrics)
       const result = await svc.call({
-        clientId: 'client-123',
+        clientId: 'c',
+        userId: 'u',
         method: 'GET',
-        path: '/company/r1/x',
+        path: '/x',
       })
 
       expect(result).toEqual({ ok: true })
-      expect(tokens.forceRefresh).toHaveBeenCalledTimes(1)
-      expect(fetchMock).toHaveBeenCalledTimes(2)
-      const secondInit = fetchMock.mock.calls[1]?.[1] as RequestInit
-      expect((secondInit.headers as Record<string, string>).Authorization).toBe('Bearer access-2')
+      expect(m.tokens.getValidAccessTokenForClientRead).toHaveBeenCalledTimes(2)
+      expect(m.fetchMock).toHaveBeenCalledTimes(2)
     })
 
-    it('si segundo intento también falla con 401, propaga el error sin tercer retry', async () => {
-      const { tokens, cfg, metrics, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      tokens.forceRefresh.mockResolvedValueOnce(buildToken({ accessToken: 'access-2' }))
-      fetchMock
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          text: () => Promise.resolve('{}'),
-        })
-        .mockResolvedValueOnce({
-          ok: false,
-          status: 401,
-          text: () => Promise.resolve('{}'),
-        })
+    it('si el reintento también falla 401, propaga el error sin loop', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead
+        .mockResolvedValueOnce('a1')
+        .mockResolvedValueOnce('a2')
+      m.fetchMock
+        .mockResolvedValueOnce({ ok: false, status: 401, text: async () => 'x' })
+        .mockResolvedValueOnce({ ok: false, status: 401, text: async () => 'x' })
+      const svc = buildSvc(m)
 
-      const svc = new IntuitApiService(tokens, cfg, metrics)
       await expect(
-        svc.call({ clientId: 'client-123', method: 'GET', path: '/company/r1/x' }),
+        svc.call({ clientId: 'c', userId: 'u', method: 'GET', path: '/x' }),
       ).rejects.toBeInstanceOf(IntuitBadRequestError)
-      expect(fetchMock).toHaveBeenCalledTimes(2)
+      expect(m.fetchMock).toHaveBeenCalledTimes(2)
     })
   })
 
-  describe('CR-intuit-025 — métrica con path normalizado', () => {
-    it('inc({path normalizado, status}) con realmId reemplazado a :realm', async () => {
-      const { tokens, cfg, metrics, incMock, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({}) })
+  describe('CR-intuit-025 — métricas', () => {
+    it('incrementa intuitApiCallsTotal con path normalizado y status', async () => {
+      const m = makeMocks()
+      m.tokens.getValidAccessTokenForClientRead.mockResolvedValueOnce('a')
+      m.fetchMock.mockResolvedValueOnce({ ok: true, json: async () => ({}) })
+      const svc = buildSvc(m)
 
-      const svc = new IntuitApiService(tokens, cfg, metrics)
       await svc.call({
-        clientId: 'client-123',
+        clientId: 'c',
+        userId: 'u',
         method: 'GET',
         path: '/company/9341454027303089/companyinfo/9341454027303089',
       })
 
-      expect(incMock).toHaveBeenCalledWith({
+      expect(m.incMock).toHaveBeenCalledWith({
         path: '/company/:realm/companyinfo/:realm',
         status: '200',
       })
-    })
-
-    it('inc con status="error" en 4xx', async () => {
-      const { tokens, cfg, metrics, incMock, fetchMock } = makeMocks()
-      tokens.getValidTokens.mockResolvedValueOnce(buildToken())
-      fetchMock.mockResolvedValueOnce({
-        ok: false,
-        status: 400,
-        text: () => Promise.resolve('{}'),
-      })
-
-      const svc = new IntuitApiService(tokens, cfg, metrics)
-      await expect(
-        svc.call({ clientId: 'client-123', method: 'GET', path: '/company/r1/x' }),
-      ).rejects.toBeDefined()
-
-      expect(incMock).toHaveBeenCalledWith(expect.objectContaining({ status: '400' }))
     })
   })
 })

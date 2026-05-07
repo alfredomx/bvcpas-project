@@ -63,16 +63,24 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
     const c = postgres(databaseUrl, { max: 1 })
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
-      await c`
+      const [admin] = (await c`
         INSERT INTO users (email, password_hash, full_name, role, status)
         VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Dash', 'admin', 'active')
-      `
+        RETURNING id
+      `) as unknown as { id: string }[]
+      const adminId = admin.id
       const [client] = (await c`
         INSERT INTO clients (legal_name, qbo_realm_id, status, tier, transactions_filter)
         VALUES ('Dash Co', 'realm-dash', 'active', 'gold', 'all')
         RETURNING id
       `) as unknown as { id: string }[]
       clientId = client.id
+
+      // Seed access para que ClientAccessGuard deje pasar al admin user.
+      await c`
+        INSERT INTO user_client_access (user_id, client_id)
+        VALUES (${adminId}, ${clientId})
+      `
 
       // Seed transacciones: 5 uncats abril 2026, 2 amas abril, 2 uncats enero 2026, 3 uncats año 2025
       await c`
@@ -118,10 +126,10 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
     await app.close()
   })
 
-  describe('SMK-dash-001/002/003/004 — GET /v1/dashboards/customer-support', () => {
+  describe('SMK-dash-001/002/003/004 — GET /v1/views/uncats', () => {
     it('retorna shape correcto con counts y monthly', async () => {
       const res = await request(app.getHttpServer())
-        .get('/v1/dashboards/customer-support?from=2025-01-01&to=2026-04-30')
+        .get('/v1/views/uncats?from=2025-01-01&to=2026-04-30')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
@@ -161,7 +169,7 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
   describe('SMK-dash-005 — GET detail con clientId válido', () => {
     it('retorna detalle con silent_streak_days y followup', async () => {
       const res = await request(app.getHttpServer())
-        .get(`/v1/dashboards/customer-support/${clientId}?from=2025-01-01&to=2026-04-30`)
+        .get(`/v1/clients/${clientId}/uncats?from=2025-01-01&to=2026-04-30`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
@@ -178,7 +186,7 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
     it('CLIENT_NOT_FOUND', async () => {
       const fakeUuid = '00000000-0000-0000-0000-000000000000'
       const res = await request(app.getHttpServer())
-        .get(`/v1/dashboards/customer-support/${fakeUuid}?from=2025-01-01&to=2026-04-30`)
+        .get(`/v1/clients/${fakeUuid}/uncats?from=2025-01-01&to=2026-04-30`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404)
       expect((res.body as { code: string }).code).toBe('CLIENT_NOT_FOUND')
@@ -188,7 +196,7 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
   describe('SMK-dash-007 — query sin from/to → 400', () => {
     it('Zod rechaza', async () => {
       await request(app.getHttpServer())
-        .get('/v1/dashboards/customer-support')
+        .get('/v1/views/uncats')
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(400)
     })

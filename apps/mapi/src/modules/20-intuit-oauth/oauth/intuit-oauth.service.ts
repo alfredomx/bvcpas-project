@@ -2,13 +2,12 @@ import { randomBytes } from 'node:crypto'
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import type Redis from 'ioredis'
 import { AppConfigService } from '../../../core/config/config.service'
-import { EncryptionService } from '../../../core/encryption/encryption.service'
 import { REDIS_CLIENT } from '../../../core/auth/redis.module'
 import { EventLogService } from '../../95-event-log/event-log.service'
 import { ClientsRepository, type CreateClientData } from '../../11-clients/clients.repository'
+import { ConnectionsService } from '../../21-connections/connections.service'
 import { IntuitOauthClientFactory } from '../intuit-oauth-client.factory'
 import { IntuitAuthorizationError, IntuitStateInvalidError } from '../intuit-oauth.errors'
-import { IntuitTokensRepository } from '../tokens/intuit-tokens.repository'
 
 const STATE_TTL_SECONDS = 600
 const STATE_PREFIX = 'oauth:state:'
@@ -92,9 +91,8 @@ export class IntuitOauthService {
 
   constructor(
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
-    private readonly tokensRepo: IntuitTokensRepository,
+    private readonly connections: ConnectionsService,
     private readonly clientsRepo: ClientsRepository,
-    private readonly encryption: EncryptionService,
     private readonly oauthClientFactory: IntuitOauthClientFactory,
     private readonly cfg: AppConfigService,
     private readonly events: EventLogService,
@@ -184,11 +182,22 @@ export class IntuitOauthService {
       eventType = 'intuit.client.reauth_target'
     }
 
-    await this.tokensRepo.upsert({
+    // v0.8.0: persiste en user_connections (provider='intuit') vía
+    // ConnectionsService. Reemplaza el viejo IntuitTokensRepository.upsert.
+    // user_id es el operador que está haciendo el OAuth. scope_type='full'
+    // por default — la cuenta global readonly se conecta aparte por
+    // customer-service@bv-cpas.com con scope_type='readonly' después.
+    await this.connections.upsert({
+      userId: payload.user_id,
+      provider: 'intuit',
+      externalAccountId: realmId,
       clientId: resolvedClientId,
-      realmId,
-      accessTokenEncrypted: this.encryption.encrypt(access_token),
-      refreshTokenEncrypted: this.encryption.encrypt(refresh_token),
+      scopeType: 'full',
+      email: null,
+      label: null,
+      scopes: 'com.intuit.quickbooks.accounting openid',
+      accessToken: access_token,
+      refreshToken: refresh_token,
       accessTokenExpiresAt,
       refreshTokenExpiresAt,
     })

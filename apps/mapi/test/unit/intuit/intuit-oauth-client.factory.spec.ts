@@ -1,7 +1,9 @@
-import { IntuitOauthClientFactory } from '../../../src/modules/20-intuit-oauth/intuit-oauth-client.factory'
+import {
+  IntuitOauthClientFactory,
+  type IntuitDecryptedToken,
+} from '../../../src/modules/20-intuit-oauth/intuit-oauth-client.factory'
 import type { AppConfigService } from '../../../src/core/config/config.service'
 import type { OAuthClient } from 'intuit-oauth'
-import type { DecryptedIntuitToken } from '../../../src/db/schema/intuit-tokens'
 
 /**
  * Tests Tipo A para IntuitOauthClientFactory. Sin DB ni red.
@@ -24,10 +26,9 @@ function buildCfg(): AppConfigService {
   } as unknown as AppConfigService
 }
 
-function buildToken(overrides: Partial<DecryptedIntuitToken> = {}): DecryptedIntuitToken {
+function buildToken(overrides: Partial<IntuitDecryptedToken> = {}): IntuitDecryptedToken {
   const now = Date.now()
   return {
-    clientId: 'client-123',
     realmId: 'realm-abc',
     accessToken: 'access-xyz',
     refreshToken: 'refresh-xyz',

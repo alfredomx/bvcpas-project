@@ -42,7 +42,7 @@ function makeMocks(): Mocks {
   const cfg = {
     microsoftClientId: 'msft-client-id',
     microsoftClientSecret: 'msft-secret',
-    microsoftRedirectUri: 'https://dev.alfredo.mx/v1/connections/microsoft/callback',
+    microsoftRedirectUri: 'https://dev.alfredo.mx/v1/microsoft/oauth/callback',
   } as unknown as AppConfigService
 
   return {
@@ -79,7 +79,7 @@ describe('MicrosoftConnectionService', () => {
       expect(parsed.searchParams.get('client_id')).toBe('msft-client-id')
       expect(parsed.searchParams.get('response_type')).toBe('code')
       expect(parsed.searchParams.get('redirect_uri')).toBe(
-        'https://dev.alfredo.mx/v1/connections/microsoft/callback',
+        'https://dev.alfredo.mx/v1/microsoft/oauth/callback',
       )
       expect(parsed.searchParams.get('response_mode')).toBe('query')
       expect(parsed.searchParams.get('scope')).toBe('Mail.Send User.Read offline_access')

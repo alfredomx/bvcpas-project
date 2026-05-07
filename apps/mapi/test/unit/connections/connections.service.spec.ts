@@ -24,12 +24,15 @@ function buildConnection(overrides: Partial<UserConnection> = {}): UserConnectio
     userId: 'user-1',
     provider: 'microsoft',
     externalAccountId: 'msft-uid-abc',
+    clientId: null,
+    scopeType: 'full',
     email: 'bob@example.com',
     label: null,
     scopes: 'Mail.Send User.Read offline_access',
     accessTokenEncrypted: 'enc:access-plain',
     refreshTokenEncrypted: 'enc:refresh-plain',
     accessTokenExpiresAt: FUTURE,
+    refreshTokenExpiresAt: null,
     lastRefreshedAt: null,
     metadata: null,
     createdAt: NOW,
@@ -50,7 +53,8 @@ function makeMocks(): Mocks {
     upsert: jest.fn().mockImplementation(async (data) => buildConnection({ ...data })),
     deleteByIdForUser: jest.fn().mockResolvedValue(true),
     updateLabelForUser: jest.fn(),
-    updateRefreshed: jest.fn(),
+    findActiveForRead: jest.fn(),
+    findActiveForWrite: jest.fn(),
   } as unknown as jest.Mocked<ConnectionsRepository>
 
   const enc = {
@@ -137,12 +141,15 @@ describe('ConnectionsService', () => {
         userId: 'user-1',
         provider: 'microsoft',
         externalAccountId: 'msft-uid-abc',
+        clientId: null,
+        scopeType: 'full',
         email: 'bob@example.com',
         label: null,
         scopes: 'Mail.Send User.Read offline_access',
         accessToken: 'access-plain',
         refreshToken: 'refresh-plain',
         accessTokenExpiresAt: FUTURE,
+        refreshTokenExpiresAt: null,
       })
       expect(m.enc.decrypt).toHaveBeenCalledWith('enc:access-plain')
       expect(m.enc.decrypt).toHaveBeenCalledWith('enc:refresh-plain')
@@ -215,6 +222,103 @@ describe('ConnectionsService', () => {
       await expect(svc.deleteByIdForUser('conn-other', 'user-1')).rejects.toBeInstanceOf(
         ConnectionNotFoundError,
       )
+    })
+  })
+
+  describe('CR-conn-029 — findActiveForRead delega al repo y descifra', () => {
+    it('devuelve plaintext cuando hay row', async () => {
+      const m = makeMocks()
+      m.repo.findActiveForRead.mockResolvedValueOnce(
+        buildConnection({
+          id: 'c-read',
+          clientId: 'client-x',
+          scopeType: 'readonly',
+          provider: 'intuit',
+        }),
+      )
+      const svc = buildService(m)
+
+      const result = await svc.findActiveForRead('intuit', 'client-x', 'user-1')
+
+      expect(m.repo.findActiveForRead).toHaveBeenCalledWith('intuit', 'client-x', 'user-1')
+      expect(result?.id).toBe('c-read')
+      expect(result?.scopeType).toBe('readonly')
+      expect(result?.accessToken).toBe('access-plain')
+    })
+
+    it('devuelve null cuando no hay row', async () => {
+      const m = makeMocks()
+      m.repo.findActiveForRead.mockResolvedValueOnce(null)
+      const svc = buildService(m)
+
+      const result = await svc.findActiveForRead('intuit', 'client-x', 'user-1')
+
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('CR-conn-031 — findActiveForWriteOrThrow delega y descifra', () => {
+    it('devuelve plaintext cuando hay row personal full', async () => {
+      const m = makeMocks()
+      m.repo.findActiveForWrite.mockResolvedValueOnce(
+        buildConnection({
+          id: 'c-write',
+          clientId: 'client-x',
+          scopeType: 'full',
+          provider: 'intuit',
+        }),
+      )
+      const svc = buildService(m)
+
+      const result = await svc.findActiveForWriteOrThrow('intuit', 'client-x', 'user-1')
+
+      expect(m.repo.findActiveForWrite).toHaveBeenCalledWith('intuit', 'client-x', 'user-1')
+      expect(result.scopeType).toBe('full')
+      expect(result.accessToken).toBe('access-plain')
+    })
+  })
+
+  describe('CR-conn-032 — findActiveForWriteOrThrow lanza si no hay personal full', () => {
+    it('IntuitPersonalConnectionRequiredError (HTTP 403)', async () => {
+      const m = makeMocks()
+      m.repo.findActiveForWrite.mockResolvedValueOnce(null)
+      const svc = buildService(m)
+
+      await expect(
+        svc.findActiveForWriteOrThrow('intuit', 'client-x', 'user-1'),
+      ).rejects.toMatchObject({ code: 'INTUIT_PERSONAL_CONNECTION_REQUIRED' })
+    })
+  })
+
+  describe('CR-conn-033 — upsert con clientId y scopeType', () => {
+    it('persiste correctamente clientId y scopeType al repo', async () => {
+      const m = makeMocks()
+      const svc = buildService(m)
+
+      await svc.upsert({
+        userId: 'user-1',
+        provider: 'intuit',
+        externalAccountId: 'realm-9341',
+        clientId: 'client-elite',
+        scopeType: 'full',
+        email: null,
+        label: null,
+        scopes: 'com.intuit.quickbooks.accounting openid',
+        accessToken: 'access-plain',
+        refreshToken: 'refresh-plain',
+        accessTokenExpiresAt: FUTURE,
+        refreshTokenExpiresAt: new Date(FUTURE.getTime() + 100 * 24 * 60 * 60 * 1000),
+      })
+
+      const saved = m.repo.upsert.mock.calls[0]?.[0]
+      expect(saved).toMatchObject({
+        userId: 'user-1',
+        provider: 'intuit',
+        externalAccountId: 'realm-9341',
+        clientId: 'client-elite',
+        scopeType: 'full',
+      })
+      expect(saved?.refreshTokenExpiresAt).toBeInstanceOf(Date)
     })
   })
 })

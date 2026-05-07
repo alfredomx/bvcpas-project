@@ -11,8 +11,8 @@ import {
 } from './dto/microsoft.dto'
 import { MicrosoftConnectionService } from './microsoft.service'
 
-@ApiTags('Connections - Microsoft')
-@Controller('connections/microsoft')
+@ApiTags('OAuth - Microsoft')
+@Controller('microsoft/oauth')
 export class MicrosoftConnectionController {
   constructor(private readonly oauth: MicrosoftConnectionService) {}
 
@@ -20,7 +20,7 @@ export class MicrosoftConnectionController {
   @ApiBearerAuth('bearer')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'POST /v1/connections/microsoft/connect',
+    summary: 'POST /v1/microsoft/oauth/connect',
     description:
       'Devuelve URL de consent de Microsoft. El frontend la abre en pestaña/popup; al aprobar, el callback persiste la conexión.',
   })
@@ -36,7 +36,7 @@ export class MicrosoftConnectionController {
   @Public()
   @Get('callback')
   @ApiOperation({
-    summary: 'GET /v1/connections/microsoft/callback',
+    summary: 'GET /v1/microsoft/oauth/callback',
     description:
       'Callback de Microsoft tras autorización. @Public porque Microsoft redirige sin JWT. Devuelve HTML simple de confirmación.',
   })

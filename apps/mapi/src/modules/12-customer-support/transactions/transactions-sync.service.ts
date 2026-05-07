@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ClientsRepository } from '../../11-clients/clients.repository'
-import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import { IntuitApiService } from '../../20-intuit-oauth/api-client/intuit-api.service'
 import { EventLogService } from '../../95-event-log/event-log.service'
 import type {
@@ -57,7 +57,12 @@ export class TransactionsSyncService {
     private readonly events: EventLogService,
   ) {}
 
-  async syncFromQbo(clientId: string, startDate: string, endDate: string): Promise<SyncResult> {
+  async syncFromQbo(
+    clientId: string,
+    startDate: string,
+    endDate: string,
+    userId: string,
+  ): Promise<SyncResult> {
     const startedAt = Date.now()
     const client = await this.clientsRepo.findById(clientId)
     if (!client) throw new ClientNotFoundError(clientId)
@@ -71,6 +76,7 @@ export class TransactionsSyncService {
     this.logger.log(`Syncing transactions for client=${clientId} ${startDate}..${endDate}`)
     const response = await this.api.call<QBTransactionListResponse>({
       clientId,
+      userId,
       method: 'GET',
       path,
     })

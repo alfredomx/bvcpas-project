@@ -7,17 +7,16 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
-  Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
+import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
 import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { ClientPublicLink } from '../../../db/schema/client-public-links'
 import {
-  ClientIdQueryDto,
-  ClientIdQuerySchema,
   CreatePublicLinkDto,
   CreatePublicLinkSchema,
   PublicLinkDto,
@@ -42,26 +41,28 @@ function serialize(l: ClientPublicLink): PublicLinkDto {
   }
 }
 
-@ApiTags('Public')
+@ApiTags('Clients - Public Links')
 @ApiBearerAuth('bearer')
 @Roles('admin')
-@Controller('public/links')
+@Controller('clients/:id/public-links')
+@UseGuards(ClientAccessGuard)
 export class ClientPublicLinksController {
   constructor(private readonly service: ClientPublicLinksService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: '/v1/public/links',
+    summary: 'POST /v1/clients/:id/public-links',
     description:
-      'Crea (o devuelve, idempotente) un link público para un cliente. Pasa `force: true` para revocar el activo y crear uno nuevo. Body: `{clientId, purpose, expiresAt?, maxUses?, metadata?, force?}`.',
+      'Crea (o devuelve, idempotente) un link público para el cliente. Pasa `force: true` para revocar el activo y crear uno nuevo. Body: `{purpose, expiresAt?, maxUses?, metadata?, force?}`.',
   })
   @ApiResponse({ status: 200, type: PublicLinkDto })
   async createOrGet(
+    @Param('id', ParseUUIDPipe) clientId: string,
     @Body(new ZodValidationPipe(CreatePublicLinkSchema)) dto: CreatePublicLinkDto,
     @CurrentUser() actor: SessionContext,
   ): Promise<PublicLinkDto> {
-    const link = await this.service.createOrGet(dto.clientId, dto.purpose, actor.userId, {
+    const link = await this.service.createOrGet(clientId, dto.purpose, actor.userId, {
       ...(dto.expiresAt !== undefined
         ? { expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null }
         : {}),
@@ -74,27 +75,25 @@ export class ClientPublicLinksController {
 
   @Get()
   @ApiOperation({
-    summary: '/v1/public/links',
-    description:
-      'Lista todos los links de un cliente (activos y revocados). Requiere `?clientId=`.',
+    summary: 'GET /v1/clients/:id/public-links',
+    description: 'Lista todos los links del cliente (activos y revocados).',
   })
   @ApiResponse({ status: 200, type: PublicLinksListDto })
-  async list(
-    @Query(new ZodValidationPipe(ClientIdQuerySchema)) query: ClientIdQueryDto,
-  ): Promise<PublicLinksListDto> {
-    const items = await this.service.listByClient(query.clientId)
+  async list(@Param('id', ParseUUIDPipe) clientId: string): Promise<PublicLinksListDto> {
+    const items = await this.service.listByClient(clientId)
     return { items: items.map(serialize) }
   }
 
-  @Post(':id/revoke')
+  @Post(':linkId/revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
-    summary: '/v1/public/links/:id/revoke',
+    summary: 'POST /v1/clients/:id/public-links/:linkId/revoke',
     description: 'Revoca el link inmediatamente. El cliente que lo use recibe 410.',
   })
   @ApiResponse({ status: 204, description: 'Link revocado' })
   async revoke(
-    @Param('id', ParseUUIDPipe) linkId: string,
+    @Param('id', ParseUUIDPipe) _clientId: string,
+    @Param('linkId', ParseUUIDPipe) linkId: string,
     @CurrentUser() actor: SessionContext,
   ): Promise<void> {
     await this.service.revoke(linkId, actor.userId)

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'
 import { ClientsRepository } from '../../11-clients/clients.repository'
-import { ClientNotFoundError } from '../../20-intuit-oauth/intuit-oauth.errors'
+import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import {
   type ClientStatsRow,
   CustomerSupportDashboardRepository,

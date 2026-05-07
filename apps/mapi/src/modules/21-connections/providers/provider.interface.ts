@@ -7,11 +7,15 @@ import type { DecryptedUserConnection, Provider } from '../../../db/schema/user-
  *
  * `refreshToken` puede ser null si el provider no rota o no incluye
  * uno nuevo en la respuesta. Microsoft rota siempre.
+ *
+ * `refreshTokenExpiresIn` es opcional — Intuit lo expone (~100 días),
+ * Microsoft no lo expone explícitamente.
  */
 export interface TokenRefreshResult {
   accessToken: string
   refreshToken: string | null
   expiresIn: number // segundos hasta expirar
+  refreshTokenExpiresIn?: number // opcional, segundos hasta expirar refresh
   scopes: string // space-separated, lo que el provider devolvió
 }
 
@@ -42,10 +46,15 @@ export interface TestResult {
  * Contrato que cada provider implementa. El core del módulo
  * 21-connections solo conoce esta interfaz; nunca llama directo a una
  * API específica.
+ *
+ * `refresh` recibe la conexión completa (no solo el refreshToken)
+ * porque algunos providers (Intuit) necesitan más contexto: realmId,
+ * timestamps de expiración para que el SDK valide internamente, etc.
+ * Microsoft solo usa `refreshToken`; Intuit usa más campos.
  */
 export interface IProvider {
   readonly name: Provider
-  refresh(refreshToken: string): Promise<TokenRefreshResult>
+  refresh(connection: DecryptedUserConnection): Promise<TokenRefreshResult>
   getProfile(accessToken: string): Promise<ProviderProfile>
   test(connection: DecryptedUserConnection): Promise<TestResult>
 }
