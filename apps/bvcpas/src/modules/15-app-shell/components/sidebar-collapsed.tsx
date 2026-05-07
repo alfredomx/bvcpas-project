@@ -19,8 +19,8 @@ export function SidebarCollapsed({ onExpand }: SidebarCollapsedProps) {
         onClick={onExpand}
         aria-label="Expand sidebar"
         className={cn(
-          'flex size-9 items-center justify-center rounded-md text-text-secondary transition-colors',
-          'hover:bg-surface-hover hover:text-brand-navy',
+          'flex size-8 items-center justify-center rounded text-text-tertiary transition-colors',
+          'hover:bg-surface-muted hover:text-brand-navy',
         )}
       >
         <ChevronsRight className="size-4" />

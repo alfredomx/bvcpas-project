@@ -3,7 +3,8 @@
 // Barra horizontal con los 8 tabs del cliente. Click navega + guarda
 // la tab seleccionada como "última" para ese clientId.
 //
-// Detecta tab activa por el último segmento del pathname.
+// Diseño 1:1 con reference/cs-navy2.css (.st-tab): texto secundario
+// con peso 500, activa en navy con underline naranja 2.5px.
 
 import { usePathname, useRouter } from 'next/navigation'
 
@@ -33,7 +34,10 @@ export function ClientTabs({ clientId }: ClientTabsProps) {
   }
 
   return (
-    <div role="tablist" className="flex items-center gap-1 border-b border-border-default px-4">
+    <div
+      role="tablist"
+      className="flex items-end gap-0.5 border-b border-border-default bg-surface-soft px-4"
+    >
       {TABS.map((tab) => {
         const active = tab.slug === activeSlug
         return (
@@ -44,17 +48,18 @@ export function ClientTabs({ clientId }: ClientTabsProps) {
             aria-selected={active}
             onClick={() => handleClick(tab.slug)}
             className={cn(
-              'relative h-10 px-3 text-sm font-medium transition-colors',
-              active ? 'text-brand-navy' : 'text-text-muted hover:text-brand-navy',
+              // h-10.75 (43px) = altura final del bar. El -mb-px mete el
+              // button 1px sobre el border-b del contenedor, así el
+              // border no suma a la altura total. Resultado: 43px
+              // alineado con el header de la sidebar.
+              // font-size 11.5px = match con .st-tab del prototipo.
+              'relative -mb-px h-10.75 border-b-[2.5px] px-3.5 text-[11.5px] font-medium transition-colors',
+              active
+                ? 'border-brand-accent text-brand-navy'
+                : 'border-transparent text-text-muted hover:text-brand-navy',
             )}
           >
             {tab.label}
-            {active && (
-              <span
-                aria-hidden
-                className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-brand-accent"
-              />
-            )}
           </button>
         )
       })}

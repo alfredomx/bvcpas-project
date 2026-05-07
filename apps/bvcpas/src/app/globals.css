@@ -71,44 +71,32 @@
   --color-status-info-bg: rgba(30, 42, 82, 0.08);
   --color-status-special-bg: rgba(75, 58, 120, 0.1);
 
+  /* shadcn/ui aliases — los tokens semánticos de shadcn (bg-popover,
+     bg-primary, text-foreground, etc.) DEBEN vivir dentro de @theme
+     con prefijo --color-* para que Tailwind v4 los genere como utility
+     classes. Se mapean a los tokens bvcpas. */
+  --color-background: var(--color-surface-canvas);
+  --color-foreground: var(--color-text-primary);
+  --color-card: var(--color-surface-canvas);
+  --color-card-foreground: var(--color-text-primary);
+  --color-popover: var(--color-surface-canvas);
+  --color-popover-foreground: var(--color-text-primary);
+  --color-primary: var(--color-brand-navy);
+  --color-primary-foreground: var(--color-text-inverse);
+  --color-secondary: var(--color-surface-muted);
+  --color-secondary-foreground: var(--color-text-primary);
+  --color-muted: var(--color-surface-soft);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-accent: var(--color-surface-muted);
+  --color-accent-foreground: var(--color-text-primary);
+  --color-destructive: var(--color-status-danger);
+  --color-destructive-foreground: var(--color-text-inverse);
+  --color-border: var(--color-border-default);
+  --color-input: var(--color-border-default);
+  --color-ring: var(--color-brand-navy);
+
   /* Radio base */
   --radius: 0.5rem;
-}
-
-/* ============================================================================
-   Aliases shadcn/ui — mapean los nombres semánticos de shadcn a los tokens
-   bvcpas. shadcn los espera como variables CSS sin prefijo `--color-`, por
-   eso se redeclaran aquí en :root.
-   ============================================================================ */
-
-:root {
-  --background: var(--color-surface-canvas);
-  --foreground: var(--color-text-primary);
-
-  --card: var(--color-surface-canvas);
-  --card-foreground: var(--color-text-primary);
-
-  --popover: var(--color-surface-canvas);
-  --popover-foreground: var(--color-text-primary);
-
-  --primary: var(--color-brand-navy);
-  --primary-foreground: var(--color-text-inverse);
-
-  --secondary: var(--color-surface-muted);
-  --secondary-foreground: var(--color-text-primary);
-
-  --muted: var(--color-surface-soft);
-  --muted-foreground: var(--color-text-muted);
-
-  --accent: var(--color-surface-muted);
-  --accent-foreground: var(--color-text-primary);
-
-  --destructive: var(--color-status-danger);
-  --destructive-foreground: var(--color-text-inverse);
-
-  --border: var(--color-border-default);
-  --input: var(--color-border-default);
-  --ring: var(--color-brand-navy);
 }
 
 html,
@@ -122,5 +110,12 @@ body {
   background: var(--color-surface-canvas);
   color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
+  /* Font features de Inter usados en reference/cs-styles.css para
+     glifos alternativos ('a', 'g', 'l') que dan el look del prototipo. */
+  font-feature-settings:
+    'cv11',
+    'ss01',
+    'ss03';
+  -webkit-font-smoothing: antialiased;
   line-height: 1.5;
 }

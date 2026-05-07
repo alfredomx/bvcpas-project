@@ -44,10 +44,17 @@ export default function ClientLayout({
 
   if (!exists) {
     return (
-      <section className="flex h-full flex-col items-center justify-center gap-3 px-6 py-12 text-center">
-        <FileQuestion className="size-10 text-text-tertiary" aria-hidden />
-        <h2 className="text-lg font-semibold text-brand-navy">Client not found</h2>
-        <p className="max-w-sm text-sm text-text-muted">
+      <section className="flex h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-status-danger-bg">
+          <FileQuestion className="size-6 text-status-danger" aria-hidden />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-status-danger">
+            Not found
+          </p>
+          <h2 className="text-[22px] font-bold tracking-tight text-brand-navy">Client not found</h2>
+        </div>
+        <p className="max-w-sm text-[13px] leading-relaxed text-text-muted">
           The client in the URL does not exist or you do not have access. Pick another from the
           sidebar.
         </p>
