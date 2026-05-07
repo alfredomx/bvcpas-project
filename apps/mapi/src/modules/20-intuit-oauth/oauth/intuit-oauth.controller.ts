@@ -8,7 +8,7 @@ import type { SessionContext } from '../../../core/auth/sessions.service'
 import { AuthorizeResponseDto, CallbackQueryDto } from './dto/intuit-oauth.dto'
 import { IntuitOauthService } from './intuit-oauth.service'
 
-@ApiTags('Intuit OAuth')
+@ApiTags('OAuth - Intuit')
 @Controller('intuit/oauth')
 export class IntuitOauthController {
   constructor(private readonly oauth: IntuitOauthService) {}

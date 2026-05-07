@@ -23,7 +23,7 @@ function serialize(v: FollowupView): FollowupDto {
   }
 }
 
-@ApiTags('Clients - Followups')
+@ApiTags('Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/followups')
 @Roles('admin')

@@ -17,6 +17,33 @@ import { APP_NAME, APP_VERSION } from './common/version'
  *
  * Aplica patch a swagger para que entienda zod schemas vía nestjs-zod.
  */
+/**
+ * Orden lógico de tags en la sidebar de Scalar (no alfabético).
+ * Empieza con autenticación (entrada al sistema), sigue con entidades
+ * raíz (users, clients), después vistas globales, integraciones OAuth,
+ * y al final público + health.
+ *
+ * Cuando se agregue un tag nuevo en código, también agregarlo aquí
+ * en su lugar lógico. Si falta agregarlo, OpenAPI lo deja al final
+ * por orden de descubrimiento — funciona pero queda fuera del flujo.
+ */
+const TAG_ORDER: { name: string; description?: string }[] = [
+  { name: 'Auth', description: 'Login, sesión, password change' },
+  { name: 'Users', description: 'CRUD admin de usuarios del sistema' },
+  {
+    name: 'Clients',
+    description:
+      'Clientes contables y todos sus sub-recursos (transactions, followups, responses, public-links, intuit, uncats)',
+  },
+  { name: 'Views', description: 'Vistas globales agregadas cross-cliente' },
+  { name: 'OAuth - Intuit', description: 'Flow OAuth con QuickBooks Online' },
+  { name: 'OAuth - Microsoft', description: 'Flow OAuth con Microsoft Graph (Outlook)' },
+  { name: 'Intuit', description: 'Admin: proxy V3, listado de tokens' },
+  { name: 'Connections', description: 'Mis conexiones a servicios externos (cross-provider)' },
+  { name: 'Public', description: 'Endpoints sin auth (acceso por token)' },
+  { name: 'Health', description: 'Liveness check' },
+]
+
 function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
   const builder = new DocumentBuilder()
     .setTitle('mapi API')
@@ -26,6 +53,11 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT', description: 'JWT obtenido al login' },
       'bearer',
     )
+
+  // Forzar orden de tags en sidebar.
+  for (const tag of TAG_ORDER) {
+    builder.addTag(tag.name, tag.description ?? '')
+  }
 
   if (cfg.publicUrl) builder.addServer(cfg.publicUrl, 'Tunnel')
   builder.addServer(`http://localhost:${cfg.port}`, 'Local nativo')

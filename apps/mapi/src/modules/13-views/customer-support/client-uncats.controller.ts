@@ -17,7 +17,7 @@ import { CustomerSupportDashboardService } from './customer-support-dashboard.se
  * Aunque el archivo y módulo son `13-views/`, este controller expone
  * un sub-recurso del cliente — D-mapi-019.
  */
-@ApiTags('Clients - Uncats')
+@ApiTags('Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/uncats')
 @Roles('admin')

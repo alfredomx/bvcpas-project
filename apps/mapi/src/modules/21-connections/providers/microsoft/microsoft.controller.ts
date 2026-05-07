@@ -11,7 +11,7 @@ import {
 } from './dto/microsoft.dto'
 import { MicrosoftConnectionService } from './microsoft.service'
 
-@ApiTags('Microsoft OAuth')
+@ApiTags('OAuth - Microsoft')
 @Controller('microsoft/oauth')
 export class MicrosoftConnectionController {
   constructor(private readonly oauth: MicrosoftConnectionService) {}

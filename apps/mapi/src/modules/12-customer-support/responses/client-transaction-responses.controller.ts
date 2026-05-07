@@ -25,7 +25,7 @@ function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
   }
 }
 
-@ApiTags('Clients - Responses')
+@ApiTags('Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/transactions/responses')
 @Roles('admin')
