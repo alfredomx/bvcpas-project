@@ -8,7 +8,7 @@ import { clients } from './clients'
  * intuit_tokens). Cuando entre Google/Dropbox se agrega su
  * `<X>Provider` al `ProviderRegistry` sin tocar este enum.
  */
-export const PROVIDERS = ['intuit', 'microsoft', 'google', 'dropbox', 'clover'] as const
+export const PROVIDERS = ['intuit', 'microsoft', 'google', 'dropbox', 'clover', 'square'] as const
 export type Provider = (typeof PROVIDERS)[number]
 
 /**

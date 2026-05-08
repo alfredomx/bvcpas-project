@@ -120,4 +120,16 @@ export class AppConfigService {
   get googleRedirectUri(): string {
     return this.cfg.GOOGLE_REDIRECT_URI
   }
+
+  get squareClientId(): string {
+    return this.cfg.SQUARE_CLIENT_ID
+  }
+
+  get squareClientSecret(): string {
+    return this.cfg.SQUARE_CLIENT_SECRET
+  }
+
+  get squareRedirectUri(): string {
+    return this.cfg.SQUARE_REDIRECT_URI
+  }
 }

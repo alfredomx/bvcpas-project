@@ -3,6 +3,7 @@ import type { DropboxProvider } from '../../../src/modules/21-connections/provid
 import type { GoogleProvider } from '../../../src/modules/21-connections/providers/google/google.provider'
 import type { IntuitProvider } from '../../../src/modules/21-connections/providers/intuit/intuit.provider'
 import type { MicrosoftProvider } from '../../../src/modules/21-connections/providers/microsoft/microsoft.provider'
+import type { SquareProvider } from '../../../src/modules/21-connections/providers/square/square.provider'
 import { ProviderNotSupportedError } from '../../../src/modules/21-connections/connection.errors'
 
 /**
@@ -20,9 +21,10 @@ const microsoftFake = { name: 'microsoft' } as unknown as MicrosoftProvider
 const intuitFake = { name: 'intuit' } as unknown as IntuitProvider
 const dropboxFake = { name: 'dropbox' } as unknown as DropboxProvider
 const googleFake = { name: 'google' } as unknown as GoogleProvider
+const squareFake = { name: 'square' } as unknown as SquareProvider
 
 function buildRegistry(): ProviderRegistry {
-  return new ProviderRegistry(microsoftFake, intuitFake, dropboxFake, googleFake)
+  return new ProviderRegistry(microsoftFake, intuitFake, dropboxFake, googleFake, squareFake)
 }
 
 describe('ProviderRegistry', () => {
@@ -47,6 +49,12 @@ describe('ProviderRegistry', () => {
   describe('CR-conn-053 — google registrado (v0.9.0)', () => {
     it('get("google") devuelve la instancia de GoogleProvider', () => {
       expect(buildRegistry().get('google')).toBe(googleFake)
+    })
+  })
+
+  describe('CR-conn-086 — square registrado (v0.12.0)', () => {
+    it('get("square") devuelve la instancia de SquareProvider', () => {
+      expect(buildRegistry().get('square')).toBe(squareFake)
     })
   })
 
