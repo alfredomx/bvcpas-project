@@ -102,6 +102,13 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     ConnectionTokenRefreshService,
     ProviderRegistry,
     ConnectionsRepository,
+    // Exportados para que el dev-oauth shortcut controller (en
+    // 20-intuit-oauth) pueda inyectarlos. Temporal mientras dev shortcut
+    // exista.
+    MicrosoftConnectionService,
+    DropboxConnectionService,
+    GoogleConnectionService,
+    SquareConnectionService,
   ],
 })
 export class ConnectionsModule {}
