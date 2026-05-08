@@ -132,4 +132,8 @@ export class AppConfigService {
   get squareRedirectUri(): string {
     return this.cfg.SQUARE_REDIRECT_URI
   }
+
+  get initialAdminEmail(): string | undefined {
+    return this.cfg.INITIAL_ADMIN_EMAIL
+  }
 }

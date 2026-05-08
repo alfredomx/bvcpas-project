@@ -8,6 +8,7 @@ import { EventLogModule } from '../95-event-log/event-log.module'
 import { IntuitAdminController } from './admin/intuit-admin.controller'
 import { IntuitApiService } from './api-client/intuit-api.service'
 import { ClientIntuitController } from './client-intuit.controller'
+import { DevOauthShortcutsController } from './dev-oauth.controller'
 import { IntuitOauthClientFactory } from './intuit-oauth-client.factory'
 import { IntuitOauthController } from './oauth/intuit-oauth.controller'
 import { IntuitOauthService } from './oauth/intuit-oauth.service'
@@ -33,7 +34,13 @@ import { IntuitTokensMetricsCron } from './tokens/intuit-tokens.metrics-cron'
     EventLogModule,
     ScheduleModule.forRoot(),
   ],
-  controllers: [IntuitOauthController, IntuitAdminController, ClientIntuitController],
+  controllers: [
+    IntuitOauthController,
+    IntuitAdminController,
+    ClientIntuitController,
+    // TEMPORAL: dev-only OAuth shortcuts. Comentar antes de subir a prod.
+    DevOauthShortcutsController,
+  ],
   providers: [
     IntuitOauthClientFactory,
     IntuitApiService,
