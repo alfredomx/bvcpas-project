@@ -63,6 +63,11 @@ export const configSchema = z.object({
   GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID requerido'),
   GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET requerido'),
   GOOGLE_REDIRECT_URI: z.string().url('GOOGLE_REDIRECT_URI debe ser URL válida'),
+
+  // 21-connections / providers — Square (v0.12.0)
+  SQUARE_CLIENT_ID: z.string().min(1, 'SQUARE_CLIENT_ID requerido'),
+  SQUARE_CLIENT_SECRET: z.string().min(1, 'SQUARE_CLIENT_SECRET requerido'),
+  SQUARE_REDIRECT_URI: z.string().url('SQUARE_REDIRECT_URI debe ser URL válida'),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

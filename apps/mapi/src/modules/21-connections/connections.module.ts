@@ -18,6 +18,10 @@ import { ConnectionsService } from './connections.service'
 import { ProviderRegistry } from './provider-registry.service'
 import { CloverApiKeyProvider } from './providers/clover/clover-api-key.provider'
 import { CloverReportController } from './providers/clover/clover-report.controller'
+import { SquareReportController } from './providers/square/square-report.controller'
+import { SquareConnectionController } from './providers/square/square.controller'
+import { SquareProvider } from './providers/square/square.provider'
+import { SquareConnectionService } from './providers/square/square.service'
 import { DropboxFilesController } from './providers/dropbox/dropbox-files.controller'
 import { DropboxFilesService } from './providers/dropbox/dropbox-files.service'
 import { DropboxConnectionController } from './providers/dropbox/dropbox.controller'
@@ -63,6 +67,8 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     GoogleConnectionController,
     GoogleFilesController,
     CloverReportController,
+    SquareConnectionController,
+    SquareReportController,
   ],
   providers: [
     ConnectionsRepository,
@@ -87,6 +93,9 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     GoogleFilesService,
     // Clover api_key (v0.11.0)
     CloverApiKeyProvider,
+    // Square OAuth (v0.12.0)
+    SquareProvider,
+    SquareConnectionService,
   ],
   exports: [
     ConnectionsService,
