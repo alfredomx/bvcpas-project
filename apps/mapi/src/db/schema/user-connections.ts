@@ -8,8 +8,19 @@ import { clients } from './clients'
  * intuit_tokens). Cuando entre Google/Dropbox se agrega su
  * `<X>Provider` al `ProviderRegistry` sin tocar este enum.
  */
-export const PROVIDERS = ['intuit', 'microsoft', 'google', 'dropbox'] as const
+export const PROVIDERS = ['intuit', 'microsoft', 'google', 'dropbox', 'clover'] as const
 export type Provider = (typeof PROVIDERS)[number]
+
+/**
+ * Mecanismo de autenticación de la conexión:
+ * - 'oauth': flow estándar con access_token + refresh_token (Microsoft,
+ *   Intuit, Dropbox, Google).
+ * - 'api_key': credenciales estáticas que el merchant genera manualmente
+ *   en su dashboard del provider. Sin refresh — el token vive hasta que
+ *   el merchant lo revoque. Ej: Clover api_token + merchant_id.
+ */
+export const AUTH_TYPES = ['oauth', 'api_key'] as const
+export type AuthType = (typeof AUTH_TYPES)[number]
 
 /**
  * `scope_type` distingue conexiones globales (compartidas, solo lectura)
@@ -57,13 +68,20 @@ export const userConnections = pgTable(
     externalAccountId: text('external_account_id').notNull(),
     clientId: uuid('client_id').references(() => clients.id, { onDelete: 'cascade' }),
     scopeType: text('scope_type').notNull().default('full'),
+    // v0.11.0: distingue OAuth de api_key. Default 'oauth' para retrocompat
+    // con las 8 conexiones existentes (Microsoft, Intuit, Dropbox, Google).
+    authType: text('auth_type').notNull().default('oauth'),
     email: text('email'),
     label: text('label'),
-    scopes: text('scopes').notNull(),
-    accessTokenEncrypted: text('access_token_encrypted').notNull(),
+    // OAuth fields — nullable cuando auth_type='api_key'.
+    scopes: text('scopes'),
+    accessTokenEncrypted: text('access_token_encrypted'),
     refreshTokenEncrypted: text('refresh_token_encrypted'),
-    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }).notNull(),
+    accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
     refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+    // api_key field — JSON cifrado con la shape específica del provider
+    // (ej. Clover: `{api_token, merchant_id}`).
+    credentialsEncrypted: text('credentials_encrypted'),
     lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }),
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at', { withTimezone: true })
@@ -86,7 +104,12 @@ export type UserConnection = typeof userConnections.$inferSelect
 export type NewUserConnection = typeof userConnections.$inferInsert
 
 /**
- * Conexión con plaintext, después de descifrar. Solo vive en memoria.
+ * Conexión OAuth descifrada (Microsoft, Intuit, Dropbox, Google, etc.).
+ * Es lo que `IProvider.refresh/test/getProfile` reciben. Plaintext en
+ * memoria — nunca se persiste.
+ *
+ * Las conexiones api_key NO usan este tipo; tienen su propio
+ * `DecryptedApiKeyConnection` (nombre del campo `credentials`).
  */
 export interface DecryptedUserConnection {
   id: string
@@ -102,4 +125,24 @@ export interface DecryptedUserConnection {
   refreshToken: string | null
   accessTokenExpiresAt: Date
   refreshTokenExpiresAt: Date | null
+}
+
+/**
+ * Conexión api_key descifrada (Clover token-manual, Gemini, etc.).
+ * `credentials` es JSON con shape específico del provider:
+ *  - Clover: `{ api_token: string, merchant_id: string }`
+ *  - Gemini (futuro): `{ api_key: string }`
+ *
+ * No tiene refresh_token ni access_token — es credencial estática.
+ */
+export interface DecryptedApiKeyConnection {
+  id: string
+  userId: string
+  provider: Provider
+  externalAccountId: string
+  clientId: string | null
+  scopeType: ScopeType
+  email: string | null
+  label: string | null
+  credentials: Record<string, unknown>
 }

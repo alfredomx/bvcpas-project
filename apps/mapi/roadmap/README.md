@@ -17,7 +17,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Módulos activos:**
 
-- `21-connections` ✅ (v0.8.0 + v0.9.0 + v0.10.0 — Microsoft, Intuit, Dropbox, Google + sharing por conexión).
+- `21-connections` ✅ (v0.8.0 + v0.9.0 + v0.10.0 + v0.11.0 — OAuth providers + sharing + auth_type=api_key + Clover via api_token).
 - `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
 - `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
 - `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
@@ -286,6 +286,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
 | 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)           |
 | 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)         |
+| 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar           | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)         |
 
 ---
 
@@ -332,6 +333,12 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-mapi-037 | `POST /v1/connections/:id/test` acepta cualquier shared (read alcanza para verificar)                        | 0.10.0  | No           |
 | D-mapi-038 | `accessRole` derivado por user (no columna persistida) en `PublicConnection`                                 | 0.10.0  | No           |
 | D-mapi-039 | Validar `userExists` antes de insert share para evitar 500 por FK violation                                  | 0.10.0  | No           |
+| D-mapi-040 | Re-scope v0.11.0: de Clover OAuth a Clover api_key (cuenta dev rejected, app DRAFT no instalable a externos) | 0.11.0  | Sí (alcance) |
+| D-mapi-041 | `auth_type` y `credentials_encrypted` viven en `user_connections` (no tabla nueva) con CHECK constraint      | 0.11.0  | No           |
+| D-mapi-042 | `DecryptedUserConnection` (OAuth) y `DecryptedApiKeyConnection` (api_key) son TIPOS SEPARADOS, no union      | 0.11.0  | No           |
+| D-mapi-043 | `credentials` JSON libre por provider; cada provider valida shape (Clover: `{api_token, merchant_id}`)       | 0.11.0  | No           |
+| D-mapi-044 | Path `/v1/clients/:id/merchants/<provider>/...` con segmento `merchants` para grupo Scalar coherente         | 0.11.0  | No           |
+| D-mapi-045 | Sharing api_key reusa `connection_access` de v0.10.0 sin cambios                                             | 0.11.0  | No           |
 
 ---
 

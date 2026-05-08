@@ -120,3 +120,15 @@ export class ConnectionShareTargetUserNotFoundError extends DomainError {
     super(`El user ${userId} no existe`)
   }
 }
+
+/**
+ * v0.11.0 — Lanzado cuando se intenta crear/actualizar una conexión
+ * api_key con credentials que no cumplen el shape esperado por el
+ * provider concreto. Ej. Clover requiere `{api_token, merchant_id}`.
+ */
+export class CredentialsShapeError extends DomainError {
+  readonly code = 'CREDENTIALS_SHAPE_INVALID'
+  constructor(provider: string, missingField: string) {
+    super(`credentials inválido para provider ${provider}: falta o vacío ${missingField}`)
+  }
+}

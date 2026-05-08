@@ -43,14 +43,8 @@ export interface TestResult {
 }
 
 /**
- * Contrato que cada provider implementa. El core del módulo
- * 21-connections solo conoce esta interfaz; nunca llama directo a una
- * API específica.
- *
- * `refresh` recibe la conexión completa (no solo el refreshToken)
- * porque algunos providers (Intuit) necesitan más contexto: realmId,
- * timestamps de expiración para que el SDK valide internamente, etc.
- * Microsoft solo usa `refreshToken`; Intuit usa más campos.
+ * Contrato que cada provider OAuth implementa. Para providers api_key
+ * (Clover token, Gemini, etc.) ver `IApiKeyProvider`.
  */
 export interface IProvider {
   readonly name: Provider

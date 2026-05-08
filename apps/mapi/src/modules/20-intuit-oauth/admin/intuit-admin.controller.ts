@@ -67,11 +67,16 @@ export class IntuitAdminController {
     const now = Date.now()
     return {
       items: rows
-        .filter((r) => r.clientId !== null && r.refreshTokenExpiresAt !== null)
+        .filter(
+          (r) =>
+            r.clientId !== null &&
+            r.refreshTokenExpiresAt !== null &&
+            r.accessTokenExpiresAt !== null,
+        )
         .map((r) => ({
           client_id: r.clientId!,
           realm_id: r.externalAccountId,
-          access_token_expires_at: r.accessTokenExpiresAt.toISOString(),
+          access_token_expires_at: r.accessTokenExpiresAt!.toISOString(),
           refresh_token_expires_at: r.refreshTokenExpiresAt!.toISOString(),
           last_refreshed_at: r.lastRefreshedAt ? r.lastRefreshedAt.toISOString() : null,
           days_until_refresh_expiry: Math.max(

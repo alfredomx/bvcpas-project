@@ -4,16 +4,20 @@ import { RedisModule } from '../../core/auth/redis.module'
 import { EncryptionModule } from '../../core/encryption/encryption.module'
 import { EventLogModule } from '../95-event-log/event-log.module'
 import { IntuitOauthClientFactory } from '../20-intuit-oauth/intuit-oauth-client.factory'
+import { ClientsModule } from '../11-clients/clients.module'
 import { ConnectionAccessRepository } from './connection-access.repository'
 import {
   ConnectionShareController,
   ConnectionShareListController,
 } from './connection-shares.controller'
 import { ConnectionTokenRefreshService } from './connection-token-refresh.service'
+import { ConnectionsApiKeyController } from './connections-api-key.controller'
 import { ConnectionsController } from './connections.controller'
 import { ConnectionsRepository } from './connections.repository'
 import { ConnectionsService } from './connections.service'
 import { ProviderRegistry } from './provider-registry.service'
+import { CloverApiKeyProvider } from './providers/clover/clover-api-key.provider'
+import { CloverReportController } from './providers/clover/clover-report.controller'
 import { DropboxFilesController } from './providers/dropbox/dropbox-files.controller'
 import { DropboxFilesService } from './providers/dropbox/dropbox-files.service'
 import { DropboxConnectionController } from './providers/dropbox/dropbox.controller'
@@ -47,16 +51,18 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
  * factory se mueve a `21-connections/providers/intuit/`.
  */
 @Module({
-  imports: [AppConfigModule, RedisModule, EncryptionModule, EventLogModule],
+  imports: [AppConfigModule, RedisModule, EncryptionModule, EventLogModule, ClientsModule],
   controllers: [
     ConnectionsController,
     ConnectionShareController,
     ConnectionShareListController,
+    ConnectionsApiKeyController,
     MicrosoftConnectionController,
     DropboxConnectionController,
     DropboxFilesController,
     GoogleConnectionController,
     GoogleFilesController,
+    CloverReportController,
   ],
   providers: [
     ConnectionsRepository,
@@ -79,6 +85,8 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     GoogleProvider,
     GoogleConnectionService,
     GoogleFilesService,
+    // Clover api_key (v0.11.0)
+    CloverApiKeyProvider,
   ],
   exports: [
     ConnectionsService,

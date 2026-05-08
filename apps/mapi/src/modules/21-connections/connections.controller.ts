@@ -13,6 +13,8 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
+import { ConnectionsRepository } from './connections.repository'
+import { ConnectionNotFoundError } from './connection.errors'
 import { ConnectionTokenRefreshService } from './connection-token-refresh.service'
 import { ConnectionsService, type PublicConnection } from './connections.service'
 import {
@@ -23,17 +25,19 @@ import {
   UpdateLabelDto,
 } from './dto/connections.dto'
 import { ProviderRegistry } from './provider-registry.service'
+import { CloverApiKeyProvider } from './providers/clover/clover-api-key.provider'
 
 function toJson(c: PublicConnection): ConnectionItemDto {
   return {
     id: c.id,
     provider: c.provider,
     externalAccountId: c.externalAccountId,
+    authType: c.authType,
     email: c.email,
     label: c.label,
     scopes: c.scopes,
     accessRole: c.accessRole,
-    accessTokenExpiresAt: c.accessTokenExpiresAt.toISOString(),
+    accessTokenExpiresAt: c.accessTokenExpiresAt ? c.accessTokenExpiresAt.toISOString() : null,
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
   }
@@ -46,6 +50,8 @@ export class ConnectionsController {
     private readonly connections: ConnectionsService,
     private readonly refresh: ConnectionTokenRefreshService,
     private readonly registry: ProviderRegistry,
+    private readonly repo: ConnectionsRepository,
+    private readonly cloverApiKey: CloverApiKeyProvider,
   ) {}
 
   @Get()
@@ -100,14 +106,26 @@ export class ConnectionsController {
   @ApiOperation({
     summary: 'POST /v1/connections/:id/test',
     description:
-      'Prueba la conexión. Cada provider implementa su propio test (Microsoft = sendMail; Google = list root; etc.).',
+      'Prueba la conexión. Para OAuth: refresca + delega al provider. Para api_key: descifra credentials + delega al provider api-key correspondiente.',
   })
   @ApiResponse({ status: 200, type: TestConnectionResponseDto })
   async test(
     @CurrentUser() user: SessionContext,
     @Param('id') id: string,
   ): Promise<TestConnectionResponseDto> {
-    // Refresh + decrypt antes de pasar al provider.
+    // Detectar auth_type para ramificar.
+    const row = await this.repo.findById(id)
+    if (!row) throw new ConnectionNotFoundError(id)
+
+    if (row.authType === 'api_key') {
+      const decrypted = await this.connections.getDecryptedApiKeyByIdForUser(id, user.userId)
+      if (decrypted.provider === 'clover') {
+        return this.cloverApiKey.test(decrypted)
+      }
+      throw new ConnectionNotFoundError(`api_key provider ${decrypted.provider} sin test impl`)
+    }
+
+    // OAuth path: refresca + delega al provider OAuth.
     await this.refresh.getValidAccessToken(id, user.userId)
     const decrypted = await this.connections.getDecryptedByIdForUser(id, user.userId)
     const provider = this.registry.get(decrypted.provider)
