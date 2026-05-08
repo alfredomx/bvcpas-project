@@ -1,5 +1,6 @@
 import { ConnectionsService } from '../../../src/modules/21-connections/connections.service'
 import type { ConnectionsRepository } from '../../../src/modules/21-connections/connections.repository'
+import type { ConnectionAccessRepository } from '../../../src/modules/21-connections/connection-access.repository'
 import type { EncryptionService } from '../../../src/core/encryption/encryption.service'
 import { ConnectionNotFoundError } from '../../../src/modules/21-connections/connection.errors'
 import type { UserConnection } from '../../../src/db/schema/user-connections'
@@ -43,13 +44,16 @@ function buildConnection(overrides: Partial<UserConnection> = {}): UserConnectio
 
 interface Mocks {
   repo: jest.Mocked<ConnectionsRepository>
+  accessRepo: jest.Mocked<ConnectionAccessRepository>
   enc: jest.Mocked<EncryptionService>
 }
 
 function makeMocks(): Mocks {
   const repo = {
     findByIdForUser: jest.fn(),
+    findById: jest.fn(),
     listByUser: jest.fn().mockResolvedValue([]),
+    listVisibleByUser: jest.fn().mockResolvedValue([]),
     upsert: jest.fn().mockImplementation(async (data) => buildConnection({ ...data })),
     deleteByIdForUser: jest.fn().mockResolvedValue(true),
     updateLabelForUser: jest.fn(),
@@ -57,16 +61,26 @@ function makeMocks(): Mocks {
     findActiveForWrite: jest.fn(),
   } as unknown as jest.Mocked<ConnectionsRepository>
 
+  const accessRepo = {
+    findByConnectionAndUser: jest.fn().mockResolvedValue(null),
+    listByConnection: jest.fn().mockResolvedValue([]),
+    listConnectionIdsForSharedUser: jest.fn().mockResolvedValue([]),
+    insert: jest.fn(),
+    updatePermission: jest.fn(),
+    delete: jest.fn(),
+    userExists: jest.fn().mockResolvedValue(true),
+  } as unknown as jest.Mocked<ConnectionAccessRepository>
+
   const enc = {
     encrypt: jest.fn((s: string) => `enc:${s}`),
     decrypt: jest.fn((s: string) => s.replace(/^enc:/, '')),
   } as unknown as jest.Mocked<EncryptionService>
 
-  return { repo, enc }
+  return { repo, accessRepo, enc }
 }
 
 function buildService(m: Mocks): ConnectionsService {
-  return new ConnectionsService(m.repo, m.enc)
+  return new ConnectionsService(m.repo, m.accessRepo, m.enc)
 }
 
 describe('ConnectionsService', () => {
@@ -128,14 +142,14 @@ describe('ConnectionsService', () => {
   })
 
   describe('CR-conn-002 — getDecryptedById descifra', () => {
-    it('devuelve plaintext en memoria respetando ownership', async () => {
+    it('devuelve plaintext en memoria si el user es dueño', async () => {
       const m = makeMocks()
-      m.repo.findByIdForUser.mockResolvedValueOnce(buildConnection())
+      m.repo.findById.mockResolvedValueOnce(buildConnection())
       const svc = buildService(m)
 
       const result = await svc.getDecryptedByIdForUser('conn-1', 'user-1')
 
-      expect(m.repo.findByIdForUser).toHaveBeenCalledWith('conn-1', 'user-1')
+      expect(m.repo.findById).toHaveBeenCalledWith('conn-1')
       expect(result).toEqual({
         id: 'conn-1',
         userId: 'user-1',
@@ -157,7 +171,7 @@ describe('ConnectionsService', () => {
 
     it('refresh_token_encrypted null → refreshToken null sin llamar decrypt extra', async () => {
       const m = makeMocks()
-      m.repo.findByIdForUser.mockResolvedValueOnce(buildConnection({ refreshTokenEncrypted: null }))
+      m.repo.findById.mockResolvedValueOnce(buildConnection({ refreshTokenEncrypted: null }))
       const svc = buildService(m)
 
       const result = await svc.getDecryptedByIdForUser('conn-1', 'user-1')
@@ -168,21 +182,32 @@ describe('ConnectionsService', () => {
   })
 
   describe('CR-conn-003 — ownership scoping', () => {
-    it('lanza CONNECTION_NOT_FOUND si la connection no es del user', async () => {
+    it('lanza CONNECTION_NOT_FOUND si la connection no existe', async () => {
       const m = makeMocks()
-      m.repo.findByIdForUser.mockResolvedValueOnce(null)
+      m.repo.findById.mockResolvedValueOnce(null)
       const svc = buildService(m)
 
       await expect(svc.getDecryptedByIdForUser('conn-other', 'user-1')).rejects.toBeInstanceOf(
         ConnectionNotFoundError,
       )
     })
+
+    it('lanza CONNECTION_NOT_FOUND si user no es dueño y no tiene share row', async () => {
+      const m = makeMocks()
+      m.repo.findById.mockResolvedValueOnce(buildConnection({ userId: 'other-user' }))
+      m.accessRepo.findByConnectionAndUser.mockResolvedValueOnce(null)
+      const svc = buildService(m)
+
+      await expect(svc.getDecryptedByIdForUser('conn-1', 'user-1')).rejects.toBeInstanceOf(
+        ConnectionNotFoundError,
+      )
+    })
   })
 
   describe('CR-conn-004 — listByUser', () => {
-    it('filtra por provider y NO devuelve tokens', async () => {
+    it('filtra por provider y NO devuelve tokens; marca propias como owner', async () => {
       const m = makeMocks()
-      m.repo.listByUser.mockResolvedValueOnce([
+      m.repo.listVisibleByUser.mockResolvedValueOnce([
         buildConnection({ id: 'c1', label: 'Personal' }),
         buildConnection({ id: 'c2', externalAccountId: 'msft-uid-2', label: 'Trabajo' }),
       ])
@@ -190,7 +215,7 @@ describe('ConnectionsService', () => {
 
       const result = await svc.listByUser('user-1', { provider: 'microsoft' })
 
-      expect(m.repo.listByUser).toHaveBeenCalledWith('user-1', { provider: 'microsoft' })
+      expect(m.repo.listVisibleByUser).toHaveBeenCalledWith('user-1', { provider: 'microsoft' })
       expect(result).toHaveLength(2)
       // No tokens leakeados
       const first = result[0] as unknown as Record<string, unknown>
@@ -198,8 +223,33 @@ describe('ConnectionsService', () => {
       expect(first).not.toHaveProperty('refreshTokenEncrypted')
       expect(first).not.toHaveProperty('accessToken')
       expect(first).not.toHaveProperty('refreshToken')
-      // Sí campos públicos
-      expect(first).toMatchObject({ id: 'c1', provider: 'microsoft', label: 'Personal' })
+      // Sí campos públicos + accessRole='owner' (las dos son del user-1)
+      expect(first).toMatchObject({
+        id: 'c1',
+        provider: 'microsoft',
+        label: 'Personal',
+        accessRole: 'owner',
+      })
+    })
+
+    it('marca rows ajenas como shared-read o shared-write según connection_access', async () => {
+      const m = makeMocks()
+      m.repo.listVisibleByUser.mockResolvedValueOnce([
+        buildConnection({ id: 'c-mine', userId: 'user-1' }),
+        buildConnection({ id: 'c-shared-r', userId: 'other-user' }),
+        buildConnection({ id: 'c-shared-w', userId: 'other-user' }),
+      ])
+      m.accessRepo.listConnectionIdsForSharedUser.mockResolvedValueOnce([
+        { connectionId: 'c-shared-r', permission: 'read' },
+        { connectionId: 'c-shared-w', permission: 'write' },
+      ])
+      const svc = buildService(m)
+
+      const result = await svc.listByUser('user-1')
+
+      expect(result.find((r) => r.id === 'c-mine')?.accessRole).toBe('owner')
+      expect(result.find((r) => r.id === 'c-shared-r')?.accessRole).toBe('shared-read')
+      expect(result.find((r) => r.id === 'c-shared-w')?.accessRole).toBe('shared-write')
     })
   })
 

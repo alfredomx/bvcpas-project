@@ -32,6 +32,7 @@ function toJson(c: PublicConnection): ConnectionItemDto {
     email: c.email,
     label: c.label,
     scopes: c.scopes,
+    accessRole: c.accessRole,
     accessTokenExpiresAt: c.accessTokenExpiresAt.toISOString(),
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),

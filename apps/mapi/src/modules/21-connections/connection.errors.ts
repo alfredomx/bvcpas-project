@@ -63,3 +63,60 @@ export class IntuitPersonalConnectionRequiredError extends DomainError {
     )
   }
 }
+
+/**
+ * v0.10.0 — Sharing.
+ * Lanzado cuando un user que NO es dueño de la conexión intenta
+ * gestionar shares (POST/PATCH/DELETE/GET shared list).
+ */
+export class ConnectionNotOwnerError extends DomainError {
+  readonly code = 'CONNECTION_NOT_OWNER'
+  constructor(connectionId: string) {
+    super(`Solo el dueño de la conexión ${connectionId} puede gestionar accesos compartidos`)
+  }
+}
+
+/**
+ * Lanzado en PATCH/DELETE share cuando el (connection_id, user_id) no
+ * existe en `connection_access`.
+ */
+export class ConnectionShareNotFoundError extends DomainError {
+  readonly code = 'CONNECTION_SHARE_NOT_FOUND'
+  constructor(connectionId: string, userId: string) {
+    super(`No existe share para conexión ${connectionId} y user ${userId}`)
+  }
+}
+
+/**
+ * Lanzado cuando el dueño intenta compartirse consigo mismo.
+ */
+export class ConnectionShareSelfError extends DomainError {
+  readonly code = 'CONNECTION_SHARE_SELF'
+  constructor() {
+    super('No puedes compartir una conexión contigo mismo (ya eres el dueño)')
+  }
+}
+
+/**
+ * Lanzado en POST share cuando el target_user_id ya tiene una row en
+ * `connection_access`. Sugerir PATCH para cambiar permission.
+ */
+export class ConnectionShareDuplicateError extends DomainError {
+  readonly code = 'CONNECTION_SHARE_DUPLICATE'
+  constructor(connectionId: string, userId: string) {
+    super(
+      `El user ${userId} ya tiene acceso compartido a la conexión ${connectionId}. Usa PATCH para cambiar permission.`,
+    )
+  }
+}
+
+/**
+ * Lanzado en POST share cuando el target_user_id no existe en `users`.
+ * Evita 500 por FK violation y devuelve un 404 amigable.
+ */
+export class ConnectionShareTargetUserNotFoundError extends DomainError {
+  readonly code = 'CONNECTION_SHARE_TARGET_USER_NOT_FOUND'
+  constructor(userId: string) {
+    super(`El user ${userId} no existe`)
+  }
+}

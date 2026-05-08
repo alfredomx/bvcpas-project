@@ -18,11 +18,14 @@ const ConnectionItemSchema = z
     email: z.string().email().nullable(),
     label: z.string().nullable(),
     scopes: z.string(),
+    accessRole: z
+      .enum(['owner', 'shared-read', 'shared-write'])
+      .describe('Rol del user actual sobre esta conexión'),
     accessTokenExpiresAt: z.string().datetime(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })
-  .describe('Conexión pública (sin tokens)')
+  .describe('Conexión pública (sin tokens) con rol del user actual')
 
 const ListResponseSchema = z
   .object({

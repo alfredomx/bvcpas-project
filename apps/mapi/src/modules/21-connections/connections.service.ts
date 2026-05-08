@@ -1,12 +1,22 @@
 import { Injectable } from '@nestjs/common'
 import { EncryptionService } from '../../core/encryption/encryption.service'
+import type { ConnectionPermission } from '../../db/schema/connection-access'
 import type {
   DecryptedUserConnection,
   Provider,
   ScopeType,
   UserConnection,
 } from '../../db/schema/user-connections'
-import { ConnectionNotFoundError, IntuitPersonalConnectionRequiredError } from './connection.errors'
+import { ConnectionAccessRepository, type ShareWithUser } from './connection-access.repository'
+import {
+  ConnectionNotFoundError,
+  ConnectionNotOwnerError,
+  ConnectionShareDuplicateError,
+  ConnectionShareNotFoundError,
+  ConnectionShareSelfError,
+  ConnectionShareTargetUserNotFoundError,
+  IntuitPersonalConnectionRequiredError,
+} from './connection.errors'
 import { ConnectionsRepository, type ListByUserFilters } from './connections.repository'
 
 export interface UpsertPlainConnection {
@@ -28,7 +38,17 @@ export interface UpsertPlainConnection {
 /**
  * Vista pública de una conexión (sin tokens cifrados ni metadata
  * interna). Es lo que se devuelve al frontend en GET /v1/connections.
+ *
+ * `accessRole` (v0.10.0): rol del user actual sobre la conexión.
+ *   - 'owner'        → la creó él (`user_connections.user_id = userId`).
+ *   - 'shared-write' → invitado con permission='write' en connection_access.
+ *   - 'shared-read'  → invitado con permission='read'.
+ *
+ * Es derivado por user que consulta — la misma row puede ser 'owner' para
+ * Pepe y 'shared-write' para María. NO se persiste.
  */
+export type ConnectionAccessRole = 'owner' | 'shared-read' | 'shared-write'
+
 export interface PublicConnection {
   id: string
   userId: string
@@ -40,12 +60,17 @@ export interface PublicConnection {
   label: string | null
   scopes: string
   accessTokenExpiresAt: Date
+  accessRole: ConnectionAccessRole
   createdAt: Date
   updatedAt: Date
 }
 
-function toPublic(row: UserConnection): PublicConnection {
+function toPublic(
+  row: UserConnection,
+  accessRole: ConnectionAccessRole = 'owner',
+): PublicConnection {
   return {
+    accessRole,
     id: row.id,
     userId: row.userId,
     provider: row.provider as Provider,
@@ -84,6 +109,7 @@ function toDecrypted(row: UserConnection, encryption: EncryptionService): Decryp
 export class ConnectionsService {
   constructor(
     private readonly repo: ConnectionsRepository,
+    private readonly accessRepo: ConnectionAccessRepository,
     private readonly encryption: EncryptionService,
   ) {}
 
@@ -107,12 +133,47 @@ export class ConnectionsService {
     return toPublic(row)
   }
 
+  /**
+   * v0.10.0 — Devuelve la conexión descifrada si el user tiene acceso
+   * (dueño O shared con cualquier permission). Para acciones que sí
+   * requieren escritura, usar `getDecryptedForWriteByIdForUser`.
+   *
+   * Throws ConnectionNotFoundError si no existe o el user no tiene acceso.
+   */
   async getDecryptedByIdForUser(
     connectionId: string,
     userId: string,
   ): Promise<DecryptedUserConnection> {
-    const row = await this.repo.findByIdForUser(connectionId, userId)
+    const row = await this.repo.findById(connectionId)
     if (!row) throw new ConnectionNotFoundError(connectionId)
+
+    if (row.userId !== userId) {
+      // No es dueño — verificar que tenga share row (cualquier permission).
+      const share = await this.accessRepo.findByConnectionAndUser(connectionId, userId)
+      if (!share) throw new ConnectionNotFoundError(connectionId)
+    }
+
+    return toDecrypted(row, this.encryption)
+  }
+
+  /**
+   * v0.10.0 — Solo permite acceso si el user es dueño O shared con
+   * permission='write'. Lanza ConnectionNotFoundError si no.
+   */
+  async getDecryptedForWriteByIdForUser(
+    connectionId: string,
+    userId: string,
+  ): Promise<DecryptedUserConnection> {
+    const row = await this.repo.findById(connectionId)
+    if (!row) throw new ConnectionNotFoundError(connectionId)
+
+    if (row.userId !== userId) {
+      const share = await this.accessRepo.findByConnectionAndUser(connectionId, userId)
+      if (share?.permission !== 'write') {
+        throw new ConnectionNotFoundError(connectionId)
+      }
+    }
+
     return toDecrypted(row, this.encryption)
   }
 
@@ -149,9 +210,28 @@ export class ConnectionsService {
     return toDecrypted(row, this.encryption)
   }
 
+  /**
+   * v0.10.0 — Lista TODAS las conexiones visibles para el user:
+   * propias + compartidas con él. Cada item lleva su `accessRole`.
+   */
   async listByUser(userId: string, filters: ListByUserFilters = {}): Promise<PublicConnection[]> {
-    const rows = await this.repo.listByUser(userId, filters)
-    return rows.map(toPublic)
+    const rows = await this.repo.listVisibleByUser(userId, filters)
+    if (rows.length === 0) return []
+
+    // Resolver roles para las que NO son del user actual.
+    const sharedRows = rows.filter((r) => r.userId !== userId)
+    let permissionsByConn = new Map<string, ConnectionPermission>()
+    if (sharedRows.length > 0) {
+      const accessRows = await this.accessRepo.listConnectionIdsForSharedUser(userId)
+      permissionsByConn = new Map(accessRows.map((r) => [r.connectionId, r.permission]))
+    }
+
+    return rows.map((row) => {
+      if (row.userId === userId) return toPublic(row, 'owner')
+      const perm = permissionsByConn.get(row.id)
+      const role: ConnectionAccessRole = perm === 'write' ? 'shared-write' : 'shared-read'
+      return toPublic(row, role)
+    })
   }
 
   async deleteByIdForUser(connectionId: string, userId: string): Promise<void> {
@@ -167,5 +247,88 @@ export class ConnectionsService {
     const row = await this.repo.updateLabelForUser(connectionId, userId, label)
     if (!row) throw new ConnectionNotFoundError(connectionId)
     return toPublic(row)
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // v0.10.0 — Sharing
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Verifica que el user es DUEÑO de la conexión.
+   * Lanza ConnectionNotFoundError si no existe; ConnectionNotOwnerError
+   * si existe pero no es del user.
+   */
+  private async assertOwner(connectionId: string, userId: string): Promise<UserConnection> {
+    const row = await this.repo.findById(connectionId)
+    if (!row) throw new ConnectionNotFoundError(connectionId)
+    if (row.userId !== userId) throw new ConnectionNotOwnerError(connectionId)
+    return row
+  }
+
+  /**
+   * Comparte una conexión con un user. Solo el dueño puede llamarlo.
+   */
+  async share(
+    connectionId: string,
+    actorUserId: string,
+    targetUserId: string,
+    permission: ConnectionPermission,
+  ): Promise<ShareWithUser> {
+    await this.assertOwner(connectionId, actorUserId)
+    if (targetUserId === actorUserId) throw new ConnectionShareSelfError()
+
+    const targetExists = await this.accessRepo.userExists(targetUserId)
+    if (!targetExists) throw new ConnectionShareTargetUserNotFoundError(targetUserId)
+
+    const existing = await this.accessRepo.findByConnectionAndUser(connectionId, targetUserId)
+    if (existing) throw new ConnectionShareDuplicateError(connectionId, targetUserId)
+
+    await this.accessRepo.insert(connectionId, targetUserId, permission)
+
+    // Re-leer con join a users para devolver info completa.
+    const all = await this.accessRepo.listByConnection(connectionId)
+    const created = all.find((s) => s.userId === targetUserId)
+    if (!created) throw new Error('Share insertado pero no encontrado al releer')
+    return created
+  }
+
+  /**
+   * Cambia permission de un share existente. Solo dueño.
+   */
+  async updateSharePermission(
+    connectionId: string,
+    actorUserId: string,
+    targetUserId: string,
+    permission: ConnectionPermission,
+  ): Promise<ShareWithUser> {
+    await this.assertOwner(connectionId, actorUserId)
+    const updated = await this.accessRepo.updatePermission(connectionId, targetUserId, permission)
+    if (!updated) throw new ConnectionShareNotFoundError(connectionId, targetUserId)
+
+    const all = await this.accessRepo.listByConnection(connectionId)
+    const row = all.find((s) => s.userId === targetUserId)
+    if (!row) throw new Error('Share actualizado pero no encontrado al releer')
+    return row
+  }
+
+  /**
+   * Borra un share. Solo dueño.
+   */
+  async revokeShare(
+    connectionId: string,
+    actorUserId: string,
+    targetUserId: string,
+  ): Promise<void> {
+    await this.assertOwner(connectionId, actorUserId)
+    const deleted = await this.accessRepo.delete(connectionId, targetUserId)
+    if (!deleted) throw new ConnectionShareNotFoundError(connectionId, targetUserId)
+  }
+
+  /**
+   * Lista los shares de una conexión. Solo dueño.
+   */
+  async listShares(connectionId: string, actorUserId: string): Promise<ShareWithUser[]> {
+    await this.assertOwner(connectionId, actorUserId)
+    return this.accessRepo.listByConnection(connectionId)
   }
 }

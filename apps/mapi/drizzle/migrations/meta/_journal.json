@@ -57,6 +57,13 @@
       "when": 1778125891522,
       "tag": "0007_redundant_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778215770995,
+      "tag": "0008_connection_access",
+      "breakpoints": true
     }
   ]
 }
