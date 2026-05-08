@@ -1,4 +1,6 @@
 import { ProviderRegistry } from '../../../src/modules/21-connections/provider-registry.service'
+import type { DropboxProvider } from '../../../src/modules/21-connections/providers/dropbox/dropbox.provider'
+import type { GoogleProvider } from '../../../src/modules/21-connections/providers/google/google.provider'
 import type { IntuitProvider } from '../../../src/modules/21-connections/providers/intuit/intuit.provider'
 import type { MicrosoftProvider } from '../../../src/modules/21-connections/providers/microsoft/microsoft.provider'
 import { ProviderNotSupportedError } from '../../../src/modules/21-connections/connection.errors'
@@ -8,15 +10,19 @@ import { ProviderNotSupportedError } from '../../../src/modules/21-connections/c
  *
  * Cobertura:
  * - CR-conn-009: get('microsoft') devuelve MicrosoftProvider.
- * - CR-conn-010: get('google') lanza PROVIDER_NOT_SUPPORTED.
  * - CR-conn-040: get('intuit') devuelve IntuitProvider (v0.8.0).
+ * - CR-conn-052: get('dropbox') devuelve DropboxProvider (v0.9.0).
+ * - CR-conn-053: get('google')  devuelve GoogleProvider  (v0.9.0).
+ * - CR-conn-010: get(<unknown>) lanza PROVIDER_NOT_SUPPORTED.
  */
 
 const microsoftFake = { name: 'microsoft' } as unknown as MicrosoftProvider
 const intuitFake = { name: 'intuit' } as unknown as IntuitProvider
+const dropboxFake = { name: 'dropbox' } as unknown as DropboxProvider
+const googleFake = { name: 'google' } as unknown as GoogleProvider
 
 function buildRegistry(): ProviderRegistry {
-  return new ProviderRegistry(microsoftFake, intuitFake)
+  return new ProviderRegistry(microsoftFake, intuitFake, dropboxFake, googleFake)
 }
 
 describe('ProviderRegistry', () => {
@@ -32,13 +38,21 @@ describe('ProviderRegistry', () => {
     })
   })
 
-  describe('CR-conn-010 — providers no implementados', () => {
-    it('get("google") lanza ProviderNotSupportedError', () => {
-      expect(() => buildRegistry().get('google')).toThrow(ProviderNotSupportedError)
+  describe('CR-conn-052 — dropbox registrado (v0.9.0)', () => {
+    it('get("dropbox") devuelve la instancia de DropboxProvider', () => {
+      expect(buildRegistry().get('dropbox')).toBe(dropboxFake)
     })
+  })
 
-    it('get("dropbox") también lanza', () => {
-      expect(() => buildRegistry().get('dropbox')).toThrow(ProviderNotSupportedError)
+  describe('CR-conn-053 — google registrado (v0.9.0)', () => {
+    it('get("google") devuelve la instancia de GoogleProvider', () => {
+      expect(buildRegistry().get('google')).toBe(googleFake)
+    })
+  })
+
+  describe('CR-conn-010 — providers no implementados', () => {
+    it('get("foobar") lanza ProviderNotSupportedError', () => {
+      expect(() => buildRegistry().get('foobar')).toThrow(ProviderNotSupportedError)
     })
   })
 })

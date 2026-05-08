@@ -17,7 +17,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Módulos activos:**
 
-- `21-connections` ✅ (v0.8.0 cerrada — Forma C URLs + Intuit unificado + scope_type + user_client_access).
+- `21-connections` ✅ (v0.8.0 + v0.9.0 — Microsoft, Intuit, Dropbox, Google).
 - `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
 - `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
 - `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
@@ -284,40 +284,47 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2 | (carpeta y archivo borrados en v0.7.0)                         |
 | 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0 | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
 | 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0 | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
+| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0 | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)           |
 
 ---
 
 ## Decisiones acumuladas (`D-mapi-NNN`)
 
-| ID         | Decisión                                                                                                   | Versión | Diverge TDD  |
-| ---------- | ---------------------------------------------------------------------------------------------------------- | ------- | ------------ |
-| D-mapi-001 | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                                  | 0.1.0   | No           |
-| D-mapi-002 | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                        | 0.1.0   | No           |
-| D-mapi-003 | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                   | 0.1.0   | No           |
-| D-mapi-004 | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                               | 0.1.0   | No           |
-| D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)          | 0.1.0   | No           |
-| D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s        | 0.1.0   | No           |
-| D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición)    | 0.1.0   | No           |
-| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)         | —       | No           |
-| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)               | 0.2.0   | No           |
-| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.     | 0.2.0   | No           |
-| D-mapi-011 | SCOPES Microsoft reducidos a `Mail.Send User.Read offline_access` (tenant bv-cpas.com bloquea ReadWrite)   | 0.6.2   | No           |
-| D-mapi-012 | Solo `User.Read` declarado en Azure API permissions; resto via runtime scopes (dynamic consent)            | 0.6.2   | No           |
-| D-mapi-013 | Tabla genérica `user_connections` con `provider` text en vez de tablas separadas por provider              | 0.7.0   | Sí (nuevo)   |
-| D-mapi-014 | Plugin pattern `IProvider` para providers (Microsoft / Google / Dropbox) en lugar de módulos hermanos      | 0.7.0   | No           |
-| D-mapi-015 | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)            | 0.7.0   | No           |
-| D-mapi-016 | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa       | 0.7.0   | No           |
-| D-mapi-017 | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main) | 0.7.0   | Sí (proceso) |
-| D-mapi-018 | `<provider>/oauth/*` para todos los providers (Microsoft + Intuit + futuros)                               | 0.8.0   | Sí (URLs)    |
-| D-mapi-019 | Forma C de URLs: sub-recursos del cliente bajo `/v1/clients/:id/*`, vistas globales bajo `/v1/views/*`     | 0.8.0   | Sí (URLs)    |
-| D-mapi-020 | `realms/:realmId/call` con prefijo explícito (no `:realmId/call` plano)                                    | 0.8.0   | No           |
-| D-mapi-021 | `client_id` nullable en `user_connections` (solo Intuit lo usa)                                            | 0.8.0   | Sí (schema)  |
-| D-mapi-022 | UNIQUE compuesto `(user_id, provider, external_account_id)` en user_connections (multi-user mismo realm)   | 0.8.0   | Sí (schema)  |
-| D-mapi-023 | Sin endpoint admin para `user_client_access` (manual SQL hasta UI admin)                                   | 0.8.0   | No           |
-| D-mapi-024 | `ClientAccessGuard` devuelve 404 (no 403) — no leak de existencia                                          | 0.8.0   | No           |
-| D-mapi-025 | Error `INTUIT_PERSONAL_CONNECTION_REQUIRED` (HTTP 403) cuando write no encuentra personal full             | 0.8.0   | No           |
-| D-mapi-026 | 77 conexiones Intuit migradas como `scope_type='full'` (no `'readonly'` aún)                               | 0.8.0   | No           |
-| D-mapi-027 | `intuit_tokens` se renombra a `intuit_tokens_deprecated`, drop en v0.8.1 (reversibilidad)                  | 0.8.0   | No           |
+| ID         | Decisión                                                                                                     | Versión | Diverge TDD  |
+| ---------- | ------------------------------------------------------------------------------------------------------------ | ------- | ------------ |
+| D-mapi-001 | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                                    | 0.1.0   | No           |
+| D-mapi-002 | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                          | 0.1.0   | No           |
+| D-mapi-003 | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                     | 0.1.0   | No           |
+| D-mapi-004 | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                                 | 0.1.0   | No           |
+| D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)            | 0.1.0   | No           |
+| D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s          | 0.1.0   | No           |
+| D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición)      | 0.1.0   | No           |
+| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)           | —       | No           |
+| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)                 | 0.2.0   | No           |
+| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.       | 0.2.0   | No           |
+| D-mapi-011 | SCOPES Microsoft reducidos a `Mail.Send User.Read offline_access` (tenant bv-cpas.com bloquea ReadWrite)     | 0.6.2   | No           |
+| D-mapi-012 | Solo `User.Read` declarado en Azure API permissions; resto via runtime scopes (dynamic consent)              | 0.6.2   | No           |
+| D-mapi-013 | Tabla genérica `user_connections` con `provider` text en vez de tablas separadas por provider                | 0.7.0   | Sí (nuevo)   |
+| D-mapi-014 | Plugin pattern `IProvider` para providers (Microsoft / Google / Dropbox) en lugar de módulos hermanos        | 0.7.0   | No           |
+| D-mapi-015 | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)              | 0.7.0   | No           |
+| D-mapi-016 | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa         | 0.7.0   | No           |
+| D-mapi-017 | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main)   | 0.7.0   | Sí (proceso) |
+| D-mapi-018 | `<provider>/oauth/*` para todos los providers (Microsoft + Intuit + futuros)                                 | 0.8.0   | Sí (URLs)    |
+| D-mapi-019 | Forma C de URLs: sub-recursos del cliente bajo `/v1/clients/:id/*`, vistas globales bajo `/v1/views/*`       | 0.8.0   | Sí (URLs)    |
+| D-mapi-020 | `realms/:realmId/call` con prefijo explícito (no `:realmId/call` plano)                                      | 0.8.0   | No           |
+| D-mapi-021 | `client_id` nullable en `user_connections` (solo Intuit lo usa)                                              | 0.8.0   | Sí (schema)  |
+| D-mapi-022 | UNIQUE compuesto `(user_id, provider, external_account_id)` en user_connections (multi-user mismo realm)     | 0.8.0   | Sí (schema)  |
+| D-mapi-023 | Sin endpoint admin para `user_client_access` (manual SQL hasta UI admin)                                     | 0.8.0   | No           |
+| D-mapi-024 | `ClientAccessGuard` devuelve 404 (no 403) — no leak de existencia                                            | 0.8.0   | No           |
+| D-mapi-025 | Error `INTUIT_PERSONAL_CONNECTION_REQUIRED` (HTTP 403) cuando write no encuentra personal full               | 0.8.0   | No           |
+| D-mapi-026 | 77 conexiones Intuit migradas como `scope_type='full'` (no `'readonly'` aún)                                 | 0.8.0   | No           |
+| D-mapi-027 | `intuit_tokens` se renombra a `intuit_tokens_deprecated`, drop en v0.8.1 (reversibilidad)                    | 0.8.0   | No           |
+| D-mapi-028 | Listing on-demand con controllers separados por provider (`DropboxFilesController`, `GoogleFilesController`) | 0.9.0   | No           |
+| D-mapi-029 | Google Drive scope `drive.readonly` (no `drive.file` ni `drive.metadata.readonly`)                           | 0.9.0   | No           |
+| D-mapi-030 | Dropbox: pedimos subset de scopes (`account_info.read files.metadata.read files.content.read sharing.read`)  | 0.9.0   | No           |
+| D-mapi-031 | Dropbox `account_id` como `external_account_id` (no email; estable a cambios de email)                       | 0.9.0   | No           |
+| D-mapi-032 | `test()` de Dropbox/Google = `getProfile()` (read-only providers, no acción de escritura barata)             | 0.9.0   | No           |
+| D-mapi-033 | Dropbox `get_current_account`: POST sin body ni Content-Type (responde 400 si los mandas)                    | 0.9.0   | No           |
 
 ---
 

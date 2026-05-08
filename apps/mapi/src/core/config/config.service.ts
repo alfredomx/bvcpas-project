@@ -96,4 +96,28 @@ export class AppConfigService {
   get microsoftRedirectUri(): string {
     return this.cfg.MICROSOFT_REDIRECT_URI
   }
+
+  get dropboxClientId(): string {
+    return this.cfg.DROPBOX_CLIENT_ID
+  }
+
+  get dropboxClientSecret(): string {
+    return this.cfg.DROPBOX_CLIENT_SECRET
+  }
+
+  get dropboxRedirectUri(): string {
+    return this.cfg.DROPBOX_REDIRECT_URI
+  }
+
+  get googleClientId(): string {
+    return this.cfg.GOOGLE_CLIENT_ID
+  }
+
+  get googleClientSecret(): string {
+    return this.cfg.GOOGLE_CLIENT_SECRET
+  }
+
+  get googleRedirectUri(): string {
+    return this.cfg.GOOGLE_REDIRECT_URI
+  }
 }
