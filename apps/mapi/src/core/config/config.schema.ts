@@ -53,6 +53,16 @@ export const configSchema = z.object({
   MICROSOFT_CLIENT_ID: z.string().min(1, 'MICROSOFT_CLIENT_ID requerido'),
   MICROSOFT_CLIENT_SECRET: z.string().min(20, 'MICROSOFT_CLIENT_SECRET requerido (≥20 chars)'),
   MICROSOFT_REDIRECT_URI: z.string().url('MICROSOFT_REDIRECT_URI debe ser URL válida'),
+
+  // 21-connections / providers — Dropbox (v0.9.0)
+  DROPBOX_CLIENT_ID: z.string().min(1, 'DROPBOX_CLIENT_ID requerido'),
+  DROPBOX_CLIENT_SECRET: z.string().min(1, 'DROPBOX_CLIENT_SECRET requerido'),
+  DROPBOX_REDIRECT_URI: z.string().url('DROPBOX_REDIRECT_URI debe ser URL válida'),
+
+  // 21-connections / providers — Google (v0.9.0)
+  GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID requerido'),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET requerido'),
+  GOOGLE_REDIRECT_URI: z.string().url('GOOGLE_REDIRECT_URI debe ser URL válida'),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

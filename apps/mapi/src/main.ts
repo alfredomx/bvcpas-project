@@ -86,6 +86,16 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     displayName: 'Microsoft',
     description: 'Flow OAuth con Microsoft Graph (Outlook)',
   },
+  {
+    name: 'OAuth - Dropbox',
+    displayName: 'Dropbox',
+    description: 'Flow OAuth con Dropbox + listing on-demand de archivos',
+  },
+  {
+    name: 'OAuth - Google',
+    displayName: 'Google',
+    description: 'Flow OAuth con Google + listing on-demand de Drive',
+  },
 
   // Providers (acciones admin/uso de la conexión, distinto del flow OAuth).
   { name: 'Intuit API', description: 'Admin: proxy V3 + listado de tokens (sin OAuth)' },
@@ -125,7 +135,10 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
   },
   // 'Views' queda como tag plano — todavía no se le crea grupo porque
   // tiene un solo tag. Se agrupa cuando entren más vistas (recon, w-9).
-  { name: 'OAuth', tags: ['OAuth - Intuit', 'OAuth - Microsoft'] },
+  {
+    name: 'OAuth',
+    tags: ['OAuth - Intuit', 'OAuth - Microsoft', 'OAuth - Dropbox', 'OAuth - Google'],
+  },
   { name: 'Providers', tags: ['Intuit API', 'Connections'] },
   { name: 'Utils', tags: ['Public', 'Health'] },
 ]
