@@ -17,7 +17,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 **Módulos activos:**
 
-- `21-connections` ✅ (v0.8.0 + v0.9.0 — Microsoft, Intuit, Dropbox, Google).
+- `21-connections` ✅ (v0.8.0 + v0.9.0 + v0.10.0 — Microsoft, Intuit, Dropbox, Google + sharing por conexión).
 - `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
 - `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
 - `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
@@ -270,21 +270,22 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo              | Estado | Tema                                                                           | Tag         | Archivo                                                        |
-| ------- | ------------------- | ------ | ------------------------------------------------------------------------------ | ----------- | -------------------------------------------------------------- |
-| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify          | mapi-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
-| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                          | mapi-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
-| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas  | mapi-v0.3.0 | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)         |
-| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)           | mapi-v0.3.1 | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)         |
-| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B         | mapi-v0.3.2 | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)         |
-| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests              | mapi-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
-| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=      | mapi-v0.5.0 | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
-| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links       | mapi-v0.6.0 | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
-| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                | mapi-v0.6.1 | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
-| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2 | (carpeta y archivo borrados en v0.7.0)                         |
-| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0 | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
-| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0 | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
-| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0 | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)           |
+| Versión | Módulo              | Estado | Tema                                                                           | Tag          | Archivo                                                        |
+| ------- | ------------------- | ------ | ------------------------------------------------------------------------------ | ------------ | -------------------------------------------------------------- |
+| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify          | mapi-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
+| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                          | mapi-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
+| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas  | mapi-v0.3.0  | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)         |
+| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)           | mapi-v0.3.1  | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)         |
+| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B         | mapi-v0.3.2  | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)         |
+| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests              | mapi-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
+| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=      | mapi-v0.5.0  | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
+| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links       | mapi-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
+| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                | mapi-v0.6.1  | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
+| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2  | (carpeta y archivo borrados en v0.7.0)                         |
+| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0  | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
+| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
+| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)           |
+| 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)         |
 
 ---
 
@@ -325,6 +326,12 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-mapi-031 | Dropbox `account_id` como `external_account_id` (no email; estable a cambios de email)                       | 0.9.0   | No           |
 | D-mapi-032 | `test()` de Dropbox/Google = `getProfile()` (read-only providers, no acción de escritura barata)             | 0.9.0   | No           |
 | D-mapi-033 | Dropbox `get_current_account`: POST sin body ni Content-Type (responde 400 si los mandas)                    | 0.9.0   | No           |
+| D-mapi-034 | `connection_access` tabla separada (no flag `is_shared`); granularidad por user                              | 0.10.0  | No           |
+| D-mapi-035 | El dueño NO aparece en `connection_access`; ownership viene de `user_connections.user_id`                    | 0.10.0  | No           |
+| D-mapi-036 | `permission` enum `'read'\|'write'` (sin `'admin'`)                                                          | 0.10.0  | No           |
+| D-mapi-037 | `POST /v1/connections/:id/test` acepta cualquier shared (read alcanza para verificar)                        | 0.10.0  | No           |
+| D-mapi-038 | `accessRole` derivado por user (no columna persistida) en `PublicConnection`                                 | 0.10.0  | No           |
+| D-mapi-039 | Validar `userExists` antes de insert share para evitar 500 por FK violation                                  | 0.10.0  | No           |
 
 ---
 

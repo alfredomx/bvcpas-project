@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common'
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm'
 import { DB, type DrizzleDb } from '../../core/db/db.module'
 import {
   type Provider,
@@ -7,6 +7,7 @@ import {
   type UserConnection,
   userConnections,
 } from '../../db/schema/user-connections'
+import { connectionAccess } from '../../db/schema/connection-access'
 
 export interface UpsertConnectionData {
   userId: string
@@ -48,6 +49,47 @@ export class ConnectionsRepository {
       .select()
       .from(userConnections)
       .where(and(...conditions))
+  }
+
+  /**
+   * v0.10.0 — Lista conexiones VISIBLES para un user:
+   * - propias (`user_connections.user_id = userId`), O
+   * - compartidas con él (existe row en `connection_access` con su userId).
+   *
+   * Devuelve UserConnection rows; el caller (service) calcula el rol.
+   */
+  async listVisibleByUser(
+    userId: string,
+    filters: ListByUserFilters = {},
+  ): Promise<UserConnection[]> {
+    const sharedSubquery = this.db
+      .select({ id: connectionAccess.connectionId })
+      .from(connectionAccess)
+      .where(eq(connectionAccess.userId, userId))
+
+    const conditions = [
+      or(eq(userConnections.userId, userId), inArray(userConnections.id, sharedSubquery)),
+    ]
+    if (filters.provider) conditions.push(eq(userConnections.provider, filters.provider))
+
+    return this.db
+      .select()
+      .from(userConnections)
+      .where(and(...conditions))
+      .orderBy(desc(userConnections.createdAt))
+  }
+
+  /**
+   * Solo busca por id (sin filtrar por dueño). Usado para verificar
+   * pertenencia o resolver acceso compartido.
+   */
+  async findById(connectionId: string): Promise<UserConnection | null> {
+    const [row] = await this.db
+      .select()
+      .from(userConnections)
+      .where(eq(userConnections.id, connectionId))
+      .limit(1)
+    return row ?? null
   }
 
   /**

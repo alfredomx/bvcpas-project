@@ -4,6 +4,11 @@ import { RedisModule } from '../../core/auth/redis.module'
 import { EncryptionModule } from '../../core/encryption/encryption.module'
 import { EventLogModule } from '../95-event-log/event-log.module'
 import { IntuitOauthClientFactory } from '../20-intuit-oauth/intuit-oauth-client.factory'
+import { ConnectionAccessRepository } from './connection-access.repository'
+import {
+  ConnectionShareController,
+  ConnectionShareListController,
+} from './connection-shares.controller'
 import { ConnectionTokenRefreshService } from './connection-token-refresh.service'
 import { ConnectionsController } from './connections.controller'
 import { ConnectionsRepository } from './connections.repository'
@@ -45,6 +50,8 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
   imports: [AppConfigModule, RedisModule, EncryptionModule, EventLogModule],
   controllers: [
     ConnectionsController,
+    ConnectionShareController,
+    ConnectionShareListController,
     MicrosoftConnectionController,
     DropboxConnectionController,
     DropboxFilesController,
@@ -53,6 +60,7 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
   ],
   providers: [
     ConnectionsRepository,
+    ConnectionAccessRepository,
     ConnectionsService,
     ConnectionTokenRefreshService,
     ProviderRegistry,
