@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common'
 import { EncryptionService } from '../../core/encryption/encryption.service'
 import type { ConnectionPermission } from '../../db/schema/connection-access'
 import type {
+  AuthType,
+  DecryptedApiKeyConnection,
   DecryptedUserConnection,
   Provider,
   ScopeType,
@@ -36,6 +38,23 @@ export interface UpsertPlainConnection {
 }
 
 /**
+ * Input plaintext para crear/actualizar una conexión api_key.
+ * `credentials` es JSON específico del provider (ej. Clover:
+ * `{api_token, merchant_id}`).
+ */
+export interface UpsertApiKeyConnection {
+  userId: string
+  provider: Provider
+  externalAccountId: string
+  clientId?: string | null
+  scopeType?: ScopeType
+  email: string | null
+  label: string | null
+  credentials: Record<string, unknown>
+  metadata?: Record<string, unknown> | null
+}
+
+/**
  * Vista pública de una conexión (sin tokens cifrados ni metadata
  * interna). Es lo que se devuelve al frontend en GET /v1/connections.
  *
@@ -56,10 +75,11 @@ export interface PublicConnection {
   externalAccountId: string
   clientId: string | null
   scopeType: ScopeType
+  authType: AuthType
   email: string | null
   label: string | null
-  scopes: string
-  accessTokenExpiresAt: Date
+  scopes: string | null
+  accessTokenExpiresAt: Date | null
   accessRole: ConnectionAccessRole
   createdAt: Date
   updatedAt: Date
@@ -77,6 +97,7 @@ function toPublic(
     externalAccountId: row.externalAccountId,
     clientId: row.clientId,
     scopeType: row.scopeType as ScopeType,
+    authType: row.authType as AuthType,
     email: row.email,
     label: row.label,
     scopes: row.scopes,
@@ -86,7 +107,25 @@ function toPublic(
   }
 }
 
-function toDecrypted(row: UserConnection, encryption: EncryptionService): DecryptedUserConnection {
+function toDecryptedApiKey(
+  row: UserConnection,
+  encryption: EncryptionService,
+): DecryptedApiKeyConnection {
+  if (row.credentialsEncrypted === null) {
+    throw new Error(`Row ${row.id} es api_key pero credentials_encrypted es null`)
+  }
+  const credentialsJson = encryption.decrypt(row.credentialsEncrypted)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(credentialsJson)
+  } catch (err) {
+    throw new Error(
+      `Row ${row.id}: credentials_encrypted no contiene JSON válido tras descifrar (${(err as Error).message})`,
+    )
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    throw new Error(`Row ${row.id}: credentials_encrypted descifrado no es objeto JSON`)
+  }
   return {
     id: row.id,
     userId: row.userId,
@@ -96,7 +135,29 @@ function toDecrypted(row: UserConnection, encryption: EncryptionService): Decryp
     scopeType: row.scopeType as ScopeType,
     email: row.email,
     label: row.label,
-    scopes: row.scopes,
+    credentials: parsed as Record<string, unknown>,
+  }
+}
+
+function toDecrypted(row: UserConnection, encryption: EncryptionService): DecryptedUserConnection {
+  // Las rows OAuth (auth_type='oauth' por default) tienen estos campos
+  // garantizados por CHECK constraint en DB. Si row.authType==='api_key',
+  // este toDecrypted NO debe llamarse — usar `toDecryptedApiKey`.
+  if (row.accessTokenEncrypted === null || row.accessTokenExpiresAt === null) {
+    throw new Error(
+      `Row ${row.id} no tiene access_token (probablemente auth_type='api_key', usar toDecryptedApiKey)`,
+    )
+  }
+  return {
+    id: row.id,
+    userId: row.userId,
+    provider: row.provider as Provider,
+    externalAccountId: row.externalAccountId,
+    clientId: row.clientId,
+    scopeType: row.scopeType as ScopeType,
+    email: row.email,
+    label: row.label,
+    scopes: row.scopes ?? '',
     accessToken: encryption.decrypt(row.accessTokenEncrypted),
     refreshToken:
       row.refreshTokenEncrypted === null ? null : encryption.decrypt(row.refreshTokenEncrypted),
@@ -330,5 +391,64 @@ export class ConnectionsService {
   async listShares(connectionId: string, actorUserId: string): Promise<ShareWithUser[]> {
     await this.assertOwner(connectionId, actorUserId)
     return this.accessRepo.listByConnection(connectionId)
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // v0.11.0 — api_key connections
+  // ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Crea (o reemplaza) una conexión api_key. Cifra `credentials` JSON.
+   */
+  async upsertApiKey(data: UpsertApiKeyConnection): Promise<PublicConnection> {
+    const credentialsEncrypted = this.encryption.encrypt(JSON.stringify(data.credentials))
+    const row = await this.repo.upsertApiKey({
+      userId: data.userId,
+      provider: data.provider,
+      externalAccountId: data.externalAccountId,
+      clientId: data.clientId,
+      scopeType: data.scopeType,
+      email: data.email,
+      label: data.label,
+      credentialsEncrypted,
+      metadata: data.metadata ?? null,
+    })
+    return toPublic(row)
+  }
+
+  /**
+   * Actualiza solo `credentials` para una conexión api_key existente.
+   * Solo el dueño puede llamar.
+   */
+  async updateApiKeyCredentials(
+    connectionId: string,
+    userId: string,
+    credentials: Record<string, unknown>,
+  ): Promise<PublicConnection> {
+    const credentialsEncrypted = this.encryption.encrypt(JSON.stringify(credentials))
+    const row = await this.repo.updateApiKeyCredentials(connectionId, userId, credentialsEncrypted)
+    if (!row) throw new ConnectionNotFoundError(connectionId)
+    return toPublic(row)
+  }
+
+  /**
+   * Devuelve la conexión api_key descifrada si el user tiene acceso
+   * (dueño O shared con cualquier permission). Lanza
+   * `ConnectionNotFoundError` si no existe, no es del user/shared, o
+   * no es de tipo api_key.
+   */
+  async getDecryptedApiKeyByIdForUser(
+    connectionId: string,
+    userId: string,
+  ): Promise<DecryptedApiKeyConnection> {
+    const row = await this.repo.findById(connectionId)
+    if (row?.authType !== 'api_key') throw new ConnectionNotFoundError(connectionId)
+
+    if (row.userId !== userId) {
+      const share = await this.accessRepo.findByConnectionAndUser(connectionId, userId)
+      if (!share) throw new ConnectionNotFoundError(connectionId)
+    }
+
+    return toDecryptedApiKey(row, this.encryption)
   }
 }

@@ -15,13 +15,14 @@ const ConnectionItemSchema = z
     id: z.string().uuid(),
     provider: z.enum(PROVIDERS),
     externalAccountId: z.string(),
+    authType: z.enum(['oauth', 'api_key']).describe('Mecanismo de auth de la conexión'),
     email: z.string().email().nullable(),
     label: z.string().nullable(),
-    scopes: z.string(),
+    scopes: z.string().nullable(),
     accessRole: z
       .enum(['owner', 'shared-read', 'shared-write'])
       .describe('Rol del user actual sobre esta conexión'),
-    accessTokenExpiresAt: z.string().datetime(),
+    accessTokenExpiresAt: z.string().datetime().nullable(),
     createdAt: z.string().datetime(),
     updatedAt: z.string().datetime(),
   })

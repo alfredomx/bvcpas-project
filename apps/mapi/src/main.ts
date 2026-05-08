@@ -97,6 +97,13 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     description: 'Flow OAuth con Google + listing on-demand de Drive',
   },
 
+  // Merchants — providers POS/comercio (api-key auth manual del merchant).
+  {
+    name: 'Merchants - Clover',
+    displayName: 'Clover',
+    description: 'Provider Clover via api_token manual + reporte custom por merchant',
+  },
+
   // Providers (acciones admin/uso de la conexión, distinto del flow OAuth).
   { name: 'Intuit API', description: 'Admin: proxy V3 + listado de tokens (sin OAuth)' },
   { name: 'Connections', description: 'Mis conexiones a servicios externos (cross-provider)' },
@@ -139,6 +146,7 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
     name: 'OAuth',
     tags: ['OAuth - Intuit', 'OAuth - Microsoft', 'OAuth - Dropbox', 'OAuth - Google'],
   },
+  { name: 'Merchants', tags: ['Merchants - Clover'] },
   { name: 'Providers', tags: ['Intuit API', 'Connections'] },
   { name: 'Utils', tags: ['Public', 'Health'] },
 ]

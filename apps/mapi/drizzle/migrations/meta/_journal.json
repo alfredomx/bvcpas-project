@@ -64,6 +64,13 @@
       "when": 1778215770995,
       "tag": "0008_connection_access",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778225038901,
+      "tag": "0009_auth_type_api_key",
+      "breakpoints": true
     }
   ]
 }

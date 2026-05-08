@@ -57,6 +57,9 @@ const STATUS_BY_CODE: Record<string, number> = {
   CONNECTION_SHARE_SELF: 400,
   CONNECTION_SHARE_DUPLICATE: 409,
   CONNECTION_SHARE_TARGET_USER_NOT_FOUND: 404,
+
+  // 21-connections api_key (v0.11.0)
+  CREDENTIALS_SHAPE_INVALID: 400,
 }
 
 interface ErrorBody {

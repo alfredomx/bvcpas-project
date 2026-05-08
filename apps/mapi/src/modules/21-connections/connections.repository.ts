@@ -25,6 +25,18 @@ export interface UpsertConnectionData {
   metadata?: Record<string, unknown> | null
 }
 
+export interface UpsertApiKeyConnectionData {
+  userId: string
+  provider: Provider
+  externalAccountId: string
+  clientId?: string | null
+  scopeType?: ScopeType
+  email: string | null
+  label: string | null
+  credentialsEncrypted: string
+  metadata?: Record<string, unknown> | null
+}
+
 export interface ListByUserFilters {
   provider?: Provider
 }
@@ -151,6 +163,78 @@ export class ConnectionsRepository {
         ),
       )
       .limit(1)
+    return row ?? null
+  }
+
+  /**
+   * Inserta/actualiza una conexión `auth_type='api_key'`. Mismo UNIQUE
+   * compuesto (user_id, provider, external_account_id) — si existe, se
+   * actualizan credentials y label.
+   */
+  async upsertApiKey(data: UpsertApiKeyConnectionData): Promise<UserConnection> {
+    const [row] = await this.db
+      .insert(userConnections)
+      .values({
+        userId: data.userId,
+        provider: data.provider,
+        externalAccountId: data.externalAccountId,
+        clientId: data.clientId ?? null,
+        scopeType: data.scopeType ?? 'full',
+        authType: 'api_key',
+        email: data.email,
+        label: data.label,
+        credentialsEncrypted: data.credentialsEncrypted,
+        // Campos OAuth quedan null:
+        scopes: null,
+        accessTokenEncrypted: null,
+        refreshTokenEncrypted: null,
+        accessTokenExpiresAt: null,
+        refreshTokenExpiresAt: null,
+        metadata: data.metadata ?? null,
+      })
+      .onConflictDoUpdate({
+        target: [
+          userConnections.userId,
+          userConnections.provider,
+          userConnections.externalAccountId,
+        ],
+        set: {
+          ...(data.clientId !== undefined && { clientId: data.clientId }),
+          ...(data.scopeType !== undefined && { scopeType: data.scopeType }),
+          authType: 'api_key' as const,
+          email: data.email,
+          label: data.label,
+          credentialsEncrypted: data.credentialsEncrypted,
+          metadata: data.metadata ?? null,
+          updatedAt: new Date(),
+        },
+      })
+      .returning()
+    if (!row) throw new Error('ConnectionsRepository.upsertApiKey: no row returned')
+    return row
+  }
+
+  /**
+   * Actualiza solo el campo `credentials_encrypted` para una conexión
+   * api_key existente del user. No toca el resto de campos.
+   * Devuelve null si la conexión no existe o no pertenece al user.
+   */
+  async updateApiKeyCredentials(
+    connectionId: string,
+    userId: string,
+    credentialsEncrypted: string,
+  ): Promise<UserConnection | null> {
+    const [row] = await this.db
+      .update(userConnections)
+      .set({ credentialsEncrypted, updatedAt: new Date() })
+      .where(
+        and(
+          eq(userConnections.id, connectionId),
+          eq(userConnections.userId, userId),
+          eq(userConnections.authType, 'api_key'),
+        ),
+      )
+      .returning()
     return row ?? null
   }
 
