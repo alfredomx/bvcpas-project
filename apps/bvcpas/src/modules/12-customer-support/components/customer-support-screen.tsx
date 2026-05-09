@@ -12,6 +12,7 @@ import { CsHeader } from './cs-header'
 import { CsQuickLinks } from './cs-quick-links'
 import { CsStatsGrid } from './cs-stats-grid'
 import { CsSuggestedAction } from './cs-suggested-action'
+import { CsTransactions, type ClientFilter } from './cs-transactions'
 
 export interface CustomerSupportScreenProps {
   clientId: string
@@ -51,6 +52,10 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
       <CsSuggestedAction client={data.client} followup={data.followup} stats={data.stats} />
       <CsQuickLinks />
       <CsActivityTimeline monthly={data.monthly} />
+      <CsTransactions
+        clientId={data.client.id}
+        clientFilter={data.client.transactions_filter as ClientFilter}
+      />
     </div>
   )
 }
