@@ -269,7 +269,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | ------------------- | ------ | ------------------------------------ | ------------------------------------------------------------------- |
 | 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) + [v0.3.2](00-foundation/v0.3.2.md) |
 | 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md)   |
-| 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md)                                        |
+| 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md) + [v0.4.1](11-clients/v0.4.1.md)       |
 | 12-customer-support | 📅     | (futuro)                             | —                                                                     |
 | 13-dashboards       | 📅     | [README.md](13-dashboards/README.md) | (sin código; reservado para views)                                    |
 | 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md) + [v0.3.1](15-app-shell/v0.3.1.md)   |
@@ -287,6 +287,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.3.1   | 15-app-shell  | ✅     | Strip de diseño cosmético (D-bvcpas-022)                                     | bvcpas-v0.3.1 | [15-app-shell/v0.3.1.md](15-app-shell/v0.3.1.md)   |
 | 0.3.2   | 00-foundation | ✅     | SDK tipado desde OpenAPI (`openapi-typescript` + `openapi-fetch`)            | bvcpas-v0.3.2 | [00-foundation/v0.3.2.md](00-foundation/v0.3.2.md) |
 | 0.4.0   | 11-clients    | ✅     | Sidebar consume `/v1/clients` directo + módulo 11-clients real (D-026/027/028) | bvcpas-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)       |
+| 0.4.1   | 11-clients    | ✅     | Fix sidebar paginación: `pageSize=200` (D-bvcpas-029)                        | bvcpas-v0.4.1 | [11-clients/v0.4.1.md](11-clients/v0.4.1.md)       |
 
 ---
 
@@ -322,6 +323,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-026 | Heurística view-vs-CRUD: `/v1/<recurso>` plano para 1:1 con tabla; `/v1/views/<x>` sólo cuando hay orquestación | 0.4.0   | Sí          |
 | D-bvcpas-027 | Sidebar consume `GET /v1/clients` directo (supera D-bvcpas-015 — `/v1/dashboards/customer-support` fue eliminado) | 0.4.0   | Sí          |
 | D-bvcpas-028 | Primer consumidor del SDK tipado en producción: `clients.api.ts` del módulo 11-clients                    | 0.4.0   | No          |
+| D-bvcpas-029 | Sidebar usa `pageSize=200` sin paginación real; agregar loop cuando algún tenant rebase 200 clientes      | 0.4.1   | No          |
 
 ---
 
