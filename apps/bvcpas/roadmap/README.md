@@ -294,6 +294,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.1   | 14-transactions     | ✅ | Tabla Uncategorized/AMA's + Sync + rename "Customer Support" → "Uncat. Transactions" — D-033/034/035 | bvcpas-v0.5.1 | [14-transactions/v0.5.1.md](14-transactions/v0.5.1.md) |
 | 0.5.2   | 12-customer-support | ✅ | `<CsConfigSheet>` (botón Configure → Sheet con 5 settings de envío) — D-036/037/038 | bvcpas-v0.5.2 | [12-customer-support/v0.5.2.md](12-customer-support/v0.5.2.md) |
 | 0.5.3   | 12-customer-support | ✅ | CSV emails (D-039/040) + fix toast transparente + activity timeline reactivo (D-041) | bvcpas-v0.5.3 | [12-customer-support/v0.5.3.md](12-customer-support/v0.5.3.md) |
+| 0.5.4   | 12-customer-support | ✅ | Reorden de layout: tabs + Sync alineados; timeline 2/3 + suggested action 1/3 | bvcpas-v0.5.4 | [12-customer-support/v0.5.4.md](12-customer-support/v0.5.4.md) |
 
 ---
 
