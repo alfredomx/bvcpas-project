@@ -157,14 +157,40 @@ describe('<CsQuickLinks>', () => {
 })
 
 describe('<CsActivityTimeline>', () => {
-  it('renders 12 buckets and highlights the previous month', () => {
+  it('default mode "uncategorized" plots uncats per month', () => {
     render(
       <CsActivityTimeline monthly={sample.monthly} now={new Date('2026-05-09T12:00:00Z')} />,
     )
-    // Cada bucket trae aria-label con "MonthName N uncats".
     expect(screen.getByLabelText(/January 16 uncats/)).toBeInTheDocument()
     expect(screen.getByLabelText(/April 0 uncats/)).toBeInTheDocument()
-    // Highlighted month figura en el título superior.
-    expect(screen.getByText(/April highlighted/)).toBeInTheDocument()
+    expect(screen.getByText(/uncats per month · April highlighted/)).toBeInTheDocument()
+  })
+
+  it('mode "amas" plots ask_my_accountant counts and changes the legend', () => {
+    const monthly: typeof sample.monthly = {
+      previous_year_total: { uncats: 0, amas: 0 },
+      by_month: [
+        { month: 1, uncats: 16, amas: 5 },
+        { month: 2, uncats: 7, amas: 0 },
+        ...Array.from({ length: 10 }, (_, i) => ({
+          month: i + 3,
+          uncats: 0,
+          amas: 0,
+        })),
+      ],
+    }
+
+    render(
+      <CsActivityTimeline
+        monthly={monthly}
+        mode="amas"
+        now={new Date('2026-05-09T12:00:00Z')}
+      />,
+    )
+    expect(screen.getByLabelText(/January 5 AMAs/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/February 0 AMAs/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/ask my accountant per month · April highlighted/),
+    ).toBeInTheDocument()
   })
 })

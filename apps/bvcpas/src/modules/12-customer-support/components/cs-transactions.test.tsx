@@ -1,16 +1,30 @@
 // Tests de <CsTransactions> (v0.5.1, Bloque D).
+// v0.5.3: tab + onTabChange ahora son props (controlled).
 
+import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
-import { CsTransactions } from './cs-transactions'
+import {
+  CsTransactions,
+  type CsTransactionsProps,
+  type TransactionsTab,
+} from './cs-transactions'
 import type {
   Transaction,
   TransactionCategory,
 } from '@/modules/14-transactions/api/transactions.api'
+
+// Wrapper para tests: maneja el state controlled de tab.
+function CsTransactionsHarness(
+  props: Omit<CsTransactionsProps, 'tab' | 'onTabChange'>,
+) {
+  const [tab, setTab] = useState<TransactionsTab>('uncategorized')
+  return <CsTransactions {...props} tab={tab} onTabChange={setTab} />
+}
 
 const listTransactionsMock = vi.fn()
 const syncTransactionsMock = vi.fn()
@@ -95,12 +109,12 @@ describe('<CsTransactions>', () => {
     ['expense', /expense only/i],
     ['income', /income only/i],
   ] as const)('renders filter legend when filter=%s', async (filter, pattern) => {
-    render(<CsTransactions clientId="c-1" clientFilter={filter} />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter={filter} />, { wrapper })
     expect(screen.getByText(pattern)).toBeInTheDocument()
   })
 
   it('default tab is Uncategorized and merges expense + income sorted desc', async () => {
-    render(<CsTransactions clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/Uncategorized \(2\)/)).toBeInTheDocument()
@@ -112,7 +126,7 @@ describe('<CsTransactions>', () => {
   })
 
   it('switches to AMAs tab and renders only ask_my_accountant items', async () => {
-    render(<CsTransactions clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/AMA's \(1\)/)).toBeInTheDocument()
@@ -138,7 +152,7 @@ describe('<CsTransactions>', () => {
       duration_ms: 100,
     })
 
-    render(<CsTransactions clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^sync$/i }))
@@ -158,7 +172,7 @@ describe('<CsTransactions>', () => {
     err.statusCode = 400
     syncTransactionsMock.mockRejectedValue(err)
 
-    render(<CsTransactions clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^sync$/i }))
@@ -172,7 +186,7 @@ describe('<CsTransactions>', () => {
     listTransactionsMock.mockReset()
     listTransactionsMock.mockResolvedValue({ items: [], total: 0 })
 
-    render(<CsTransactions clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/No transactions in this category/)).toBeInTheDocument()

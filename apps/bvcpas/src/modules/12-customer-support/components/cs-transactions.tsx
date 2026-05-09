@@ -3,7 +3,7 @@
 // Bloque inferior de la tab Uncat. Transactions: leyenda del filter +
 // botón Sync + tabs Uncategorized / AMA's con tablas.
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -24,11 +24,15 @@ import { computeRange } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
 
 export type ClientFilter = 'all' | 'income' | 'expense'
+export type TransactionsTab = 'uncategorized' | 'amas'
 
 export interface CsTransactionsProps {
   clientId: string
   /** transactions_filter del cliente (afecta sólo el follow-up al cliente). */
   clientFilter: ClientFilter
+  /** Tab activa (controlled). El estado vive en el orquestador. */
+  tab: TransactionsTab
+  onTabChange: (tab: TransactionsTab) => void
 }
 
 function filterLegend(filter: ClientFilter): string {
@@ -106,9 +110,12 @@ function TxTable({ items, isLoading, isError }: TxTableProps) {
   )
 }
 
-export function CsTransactions({ clientId, clientFilter }: CsTransactionsProps) {
-  const [tab, setTab] = useState<'uncategorized' | 'amas'>('uncategorized')
-
+export function CsTransactions({
+  clientId,
+  clientFilter,
+  tab,
+  onTabChange,
+}: CsTransactionsProps) {
   const expenseQuery = useTransactions(clientId, 'uncategorized_expense')
   const incomeQuery = useTransactions(clientId, 'uncategorized_income')
   const amaQuery = useTransactions(clientId, 'ask_my_accountant')
@@ -146,16 +153,15 @@ export function CsTransactions({ clientId, clientFilter }: CsTransactionsProps) 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <Button onClick={handleSync} disabled={sync.isPending}>
-          {sync.isPending ? 'Syncing…' : 'Sync'}
-        </Button>
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
           {filterLegend(clientFilter)}
         </p>
-        
+        <Button onClick={handleSync} disabled={sync.isPending}>
+          {sync.isPending ? 'Syncing…' : 'Sync'}
+        </Button>
       </div>
 
-      <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
+      <Tabs value={tab} onValueChange={(value) => onTabChange(value as TransactionsTab)}>
         <TabsList>
           <TabsTrigger value="uncategorized">
             Uncategorized ({uncategorizedItems.length})
