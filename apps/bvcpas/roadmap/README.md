@@ -26,23 +26,23 @@ falta.
 
 **Módulos activos:**
 
-- `00-foundation` ✅ (v0.1.0 + v0.3.2 cerradas — scaffold base + SDK tipado desde OpenAPI).
-- `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
-- `11-clients` 🚧 (mínimo en v0.3.0 — solo tipos).
-- `13-dashboards` 🚧 (v0.3.0 cerrada — api+hook customer-support).
-- `15-app-shell` ✅ (v0.3.0 + v0.3.1 cerradas — AppShell + sidebar + tabs + 8 placeholders; v0.3.1 strippeó el diseño cosmético).
-- `12-customer-support` 📅 (planeado para v0.4.0 — pantalla real Customer Support).
+- `00-foundation` ✅ (v0.1.0 + v0.3.2 — scaffold + SDK tipado).
+- `10-core-auth` ✅ (v0.2.0 + v0.2.1 — login + tests).
+- `11-clients` ✅ (v0.4.0 — `listClients` + `useClients` vía SDK tipado consumiendo `GET /v1/clients`).
+- `13-dashboards` 📅 (sin código todavía; reservado para views agregadoras tipo `/v1/views/uncats`. Ver D-bvcpas-026).
+- `15-app-shell` ✅ (v0.3.0 + v0.3.1 + v0.4.0 — AppShell + sidebar reapuntada a `useClients` en v0.4.0; v0.3.1 strippeó diseño cosmético).
+- `12-customer-support` 📅 (planeado: pantalla real cuando se consuma `/v1/views/uncats`).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
-- v0.4.0 — Pantalla Customer Support real (consume
-  `GET /v1/dashboards/customer-support/:clientId`): header con
-  status + urgencia, stats grid, suggested action, activity timeline,
-  quick links, tabla uncats/AMAs.
-- v0.5.0+ — Tabs adicionales conforme mapi exponga datos
+- v0.4.1 — Migración de `useSession` al SDK tipado y borrado de
+  `@/lib/http.ts` (cierra D-bvcpas-025).
+- v0.5.0 — Pantalla Customer Support real (consume
+  `GET /v1/views/uncats` vía módulo `13-dashboards`).
+- v0.6.0+ — Tabs adicionales conforme mapi exponga views
   (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR Payroll,
   Property Tax).
 
@@ -267,12 +267,12 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 | Carpeta             | Status | TDD                                  | Versiones                                                           |
 | ------------------- | ------ | ------------------------------------ | ------------------------------------------------------------------- |
-| 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md)                                   |
-| 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md) |
-| 11-clients          | 🚧     | [README.md](11-clients/README.md)    | (mínimo en v0.3.0)                                                  |
-| 12-customer-support | 📅     | (futuro)                             | —                                                                   |
-| 13-dashboards       | 🚧     | [README.md](13-dashboards/README.md) | (api+hook en v0.3.0)                                                |
-| 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md)                                    |
+| 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) + [v0.3.2](00-foundation/v0.3.2.md) |
+| 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md)   |
+| 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md)                                        |
+| 12-customer-support | 📅     | (futuro)                             | —                                                                     |
+| 13-dashboards       | 📅     | [README.md](13-dashboards/README.md) | (sin código; reservado para views)                                    |
+| 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md) + [v0.3.1](15-app-shell/v0.3.1.md)   |
 
 ---
 
@@ -284,6 +284,9 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.2.0   | 10-core-auth  | ✅     | Login real contra mapi + sesión + guard                                      | bvcpas-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)   |
 | 0.2.1   | 10-core-auth  | ✅     | Tests retroactivos (Vitest + Testing Library)                                | bvcpas-v0.2.1 | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)   |
 | 0.3.0   | 15-app-shell  | ✅     | AppShell visual + sidebar + tabs + 8 placeholders + diseño 1:1 con prototipo | bvcpas-v0.3.0 | [15-app-shell/v0.3.0.md](15-app-shell/v0.3.0.md)   |
+| 0.3.1   | 15-app-shell  | ✅     | Strip de diseño cosmético (D-bvcpas-022)                                     | bvcpas-v0.3.1 | [15-app-shell/v0.3.1.md](15-app-shell/v0.3.1.md)   |
+| 0.3.2   | 00-foundation | ✅     | SDK tipado desde OpenAPI (`openapi-typescript` + `openapi-fetch`)            | bvcpas-v0.3.2 | [00-foundation/v0.3.2.md](00-foundation/v0.3.2.md) |
+| 0.4.0   | 11-clients    | ✅     | Sidebar consume `/v1/clients` directo + módulo 11-clients real (D-026/027/028) | bvcpas-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)       |
 
 ---
 
@@ -315,7 +318,10 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-022 | Strip de diseño cosmético antes de rediseñar desde cero — sólo aliases shadcn neutros, sin tokens marca  | 0.3.1   | Sí          |
 | D-bvcpas-023 | Estilos: sólo Tailwind defaults + shadcn primitives sin modificar; cero CSS custom, gradientes, animaciones  | 0.3.2   | Sí          |
 | D-bvcpas-024 | SDK HTTP tipado generado desde OpenAPI (`openapi-typescript` + `openapi-fetch`); schema commiteado al repo | 0.3.2   | Sí          |
-| D-bvcpas-025 | Migración de `http.ts` → SDK diferida a v0.3.3 (coexistencia temporal acotada)                          | 0.3.2   | Sí          |
+| D-bvcpas-025 | Migración de `http.ts` → SDK diferida a v0.4.1 (sólo `useSession` queda; `useClientsList` se borró en v0.4.0) | 0.3.2   | Sí          |
+| D-bvcpas-026 | Heurística view-vs-CRUD: `/v1/<recurso>` plano para 1:1 con tabla; `/v1/views/<x>` sólo cuando hay orquestación | 0.4.0   | Sí          |
+| D-bvcpas-027 | Sidebar consume `GET /v1/clients` directo (supera D-bvcpas-015 — `/v1/dashboards/customer-support` fue eliminado) | 0.4.0   | Sí          |
+| D-bvcpas-028 | Primer consumidor del SDK tipado en producción: `clients.api.ts` del módulo 11-clients                    | 0.4.0   | No          |
 
 ---
 
