@@ -146,12 +146,13 @@ export function CsTransactions({ clientId, clientFilter }: CsTransactionsProps) 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          {filterLegend(clientFilter)}
-        </p>
         <Button onClick={handleSync} disabled={sync.isPending}>
           {sync.isPending ? 'Syncing…' : 'Sync'}
         </Button>
+        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+          {filterLegend(clientFilter)}
+        </p>
+        
       </div>
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)}>
@@ -159,7 +160,7 @@ export function CsTransactions({ clientId, clientFilter }: CsTransactionsProps) 
           <TabsTrigger value="uncategorized">
             Uncategorized ({uncategorizedItems.length})
           </TabsTrigger>
-          <TabsTrigger value="amas">AMA's ({amaQuery.items.length})</TabsTrigger>
+          <TabsTrigger value="amas">AMA&apos;s ({amaQuery.items.length})</TabsTrigger>
         </TabsList>
         <TabsContent value="uncategorized" className="mt-3">
           <TxTable

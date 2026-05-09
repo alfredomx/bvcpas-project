@@ -29,7 +29,7 @@ falta.
 - `00-foundation` ✅ (v0.1.0 + v0.3.2 — scaffold + SDK tipado).
 - `10-core-auth` ✅ (v0.2.0 + v0.2.1 — login + tests).
 - `11-clients` ✅ (v0.4.0 — `listClients` + `useClients` vía SDK tipado consumiendo `GET /v1/clients`).
-- `12-customer-support` ✅ (v0.5.0 + v0.5.1 — pantalla completa de la tab Uncat. Transactions; rename label/slug en v0.5.1).
+- `12-customer-support` ✅ (v0.5.0 + v0.5.1 + v0.5.2 — pantalla completa de la tab Uncat. Transactions, incluye Sheet de configuración).
 - `13-dashboards` ✅ (v0.5.0 — primera view real `uncats-detail`).
 - `14-transactions` ✅ (v0.5.1 — `useTransactions` + `useSyncTransactions` consumiendo `/v1/clients/:id/transactions[/sync]`).
 - `15-app-shell` ✅ (v0.3.0 + v0.3.1 + v0.4.0 + v0.5.1 — sidebar + tabs; rename de tab Customer Support en v0.5.1).
@@ -39,14 +39,13 @@ código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
-- v0.5.2 — `<Sheet>` de configuración de la tab Uncat. Transactions
-  (`transactions_filter`, `cc_email`, `draft_email_enabled`) — primer
-  uso del patrón D-bvcpas-033.
 - v0.6.0+ — Migración de `useSession` al SDK tipado + borrado de
   `@/lib/http.ts` (cierra D-bvcpas-025).
 - v0.7.0+ — Tabs adicionales conforme mapi exponga endpoints
   (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR Payroll,
   Property Tax).
+- TBD — Tab Settings global cross-cutting (legal_name, tier,
+  industry, conexiones OAuth/api-key) — segunda parte D-bvcpas-033.
 
 ---
 
@@ -271,8 +270,8 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | ------------------- | ------ | ------------------------------------ | ------------------------------------------------------------------- |
 | 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) + [v0.3.2](00-foundation/v0.3.2.md) |
 | 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md)   |
-| 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md) + [v0.4.1](11-clients/v0.4.1.md)       |
-| 12-customer-support | ✅     | [README.md](12-customer-support/README.md) | [v0.5.0](12-customer-support/v0.5.0.md) + v0.5.1 (rename, ver fix)   |
+| 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md) + [v0.4.1](11-clients/v0.4.1.md) + v0.5.2 |
+| 12-customer-support | ✅     | [README.md](12-customer-support/README.md) | [v0.5.0](12-customer-support/v0.5.0.md) + v0.5.1 + [v0.5.2](12-customer-support/v0.5.2.md) |
 | 13-dashboards       | ✅     | [README.md](13-dashboards/README.md)       | (primera view real en v0.5.0; TDD vive en 12-customer-support)        |
 | 14-transactions     | ✅     | [README.md](14-transactions/README.md)     | [v0.5.1](14-transactions/v0.5.1.md)                                  |
 | 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md) + [v0.3.1](15-app-shell/v0.3.1.md)   |
@@ -293,6 +292,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.4.1   | 11-clients    | ✅     | Fix sidebar paginación: `pageSize=200` (D-bvcpas-029)                        | bvcpas-v0.4.1 | [11-clients/v0.4.1.md](11-clients/v0.4.1.md)       |
 | 0.5.0   | 12-customer-support | ✅ | Tab Customer Support (parte 1: header + stats + timeline) — D-030/031/032 | bvcpas-v0.5.0 | [12-customer-support/v0.5.0.md](12-customer-support/v0.5.0.md) |
 | 0.5.1   | 14-transactions     | ✅ | Tabla Uncategorized/AMA's + Sync + rename "Customer Support" → "Uncat. Transactions" — D-033/034/035 | bvcpas-v0.5.1 | [14-transactions/v0.5.1.md](14-transactions/v0.5.1.md) |
+| 0.5.2   | 12-customer-support | ✅ | `<CsConfigSheet>` (botón Configure → Sheet con 5 settings de envío) — D-036/037/038 | bvcpas-v0.5.2 | [12-customer-support/v0.5.2.md](12-customer-support/v0.5.2.md) |
 
 ---
 
@@ -335,6 +335,9 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-033 | Settings por pestaña con `<Sheet>` + tab "Settings" global cross-cutting (convención; primera impl en v0.5.2) | 0.5.1   | Sí          |
 | D-bvcpas-034 | Renombramientos: cambio quirúrgico + nota `fix-*.md`. No se reescribe historia ni nombres internos        | 0.5.1   | Sí          |
 | D-bvcpas-035 | Tab "Customer Support" → "Uncat. Transactions" (label/slug); módulo `12-customer-support` queda como huella | 0.5.1   | No          |
+| D-bvcpas-036 | Primera implementación de D-033: botón ⚙ Configure en `<CsHeader>` abre `<CsConfigSheet>` lateral derecho | 0.5.2   | No          |
+| D-bvcpas-037 | Settings de envío de follow-up viven en el Sheet de la tab; tab Settings global aloja sólo lo estructural | 0.5.2   | No          |
+| D-bvcpas-038 | Sin defaults hardcoded en frontend (ej. `cc_email = lorena@...`); el default vive en mapi al crear cliente | 0.5.2   | No          |
 
 ---
 

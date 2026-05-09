@@ -17,7 +17,9 @@ Es el **primer consumidor del SDK tipado en producción**
 | Símbolo                                 | Para qué                                                            |
 | --------------------------------------- | ------------------------------------------------------------------- |
 | `listClients` (`api/clients.api.ts`)    | Wrapper sobre `GET /v1/clients`. Devuelve `ClientsListResponse`.    |
+| `updateClient` (`api/clients.api.ts`)   | Wrapper sobre `PATCH /v1/clients/:id`. Devuelve `ClientDetail`.     |
 | `useClients()` (`hooks/use-clients.ts`) | Hook React. Devuelve `{ items, isLoading, isError }`.               |
+| `useUpdateClient(id)`                   | Mutation. Invalida `uncats-detail` + `clients` on success.          |
 | `Client`                                | Shape canónico de un cliente (derivado de `ClientDto` del SDK).     |
 | `ClientsListResponse`                   | Response paginado: `{ items, total, page, pageSize }`.              |
 | `ClientStatus`                          | `'active' \| 'paused' \| 'offboarded'`.                             |
@@ -37,6 +39,9 @@ Es el **primer consumidor del SDK tipado en producción**
   (D-bvcpas-027).
 - v0.4.1 — `listClients` acepta `ListClientsParams`. Sidebar pasa
   `pageSize=200` para evitar el truncado de mapi a 50 (D-bvcpas-029).
+- v0.5.2 — `updateClient` + `useUpdateClient` (mutation). Consumido
+  por `<CsConfigSheet>` del módulo `12-customer-support`. Invalida
+  `['uncats-detail', clientId]` y `['clients']` on success.
 
 ## Pantallas que lo consumen
 

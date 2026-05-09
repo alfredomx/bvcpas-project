@@ -5,6 +5,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
@@ -20,8 +22,15 @@ vi.mock('sonner', () => ({
   toast: {
     message: (...args: unknown[]) => toastMessageMock(...args),
     error: vi.fn(),
+    success: vi.fn(),
   },
 }))
+
+// CsHeader monta CsConfigSheet que usa TanStack Query (mutation).
+function withQueryClient(children: ReactNode) {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return <QueryClientProvider client={client}>{children}</QueryClientProvider>
+}
 
 const sample: UncatsDetailResponse = {
   period: { from: '2025-01-01', to: '2026-04-30' },
@@ -72,11 +81,21 @@ const sample: UncatsDetailResponse = {
 
 describe('<CsHeader>', () => {
   it('renders legal name + contact + tier + followup status', () => {
-    render(<CsHeader client={sample.client} followup={sample.followup} />)
+    render(withQueryClient(<CsHeader client={sample.client} followup={sample.followup} />))
     expect(screen.getByText('Elite Fence & Welding, LLC')).toBeInTheDocument()
     expect(screen.getByText(/Hector Zavala/)).toBeInTheDocument()
     expect(screen.getByText(/PLATINUM/)).toBeInTheDocument()
     expect(screen.getByText(/awaiting reply/)).toBeInTheDocument()
+  })
+
+  it('shows Configure button that opens the CsConfigSheet', async () => {
+    render(withQueryClient(<CsHeader client={sample.client} followup={sample.followup} />))
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /configure/i }))
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    expect(screen.getByText(/affect the follow-up email/i)).toBeInTheDocument()
   })
 })
 

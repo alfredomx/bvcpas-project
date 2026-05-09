@@ -1386,6 +1386,10 @@ export interface components {
                 status: "active" | "paused" | "offboarded";
                 /** @enum {string} */
                 tier: "silver" | "gold" | "platinum";
+                draft_email_enabled: boolean;
+                /** @enum {string} */
+                transactions_filter: "all" | "income" | "expense";
+                cc_email: string | null;
                 primary_contact_name: string | null;
                 primary_contact_email: string | null;
                 notes: string | null;
@@ -1415,6 +1419,10 @@ export interface components {
             status: "active" | "paused" | "offboarded";
             /** @enum {string} */
             tier: "silver" | "gold" | "platinum";
+            draft_email_enabled: boolean;
+            /** @enum {string} */
+            transactions_filter: "all" | "income" | "expense";
+            cc_email: string | null;
             primary_contact_name: string | null;
             primary_contact_email: string | null;
             notes: string | null;
@@ -1436,6 +1444,10 @@ export interface components {
             timezone?: string | null;
             /** @enum {string} */
             tier?: "silver" | "gold" | "platinum";
+            draftEmailEnabled?: boolean;
+            /** @enum {string} */
+            transactionsFilter?: "all" | "income" | "expense";
+            ccEmail?: string | null;
             primaryContactName?: string | null;
             /** Format: email */
             primaryContactEmail?: string | null;
