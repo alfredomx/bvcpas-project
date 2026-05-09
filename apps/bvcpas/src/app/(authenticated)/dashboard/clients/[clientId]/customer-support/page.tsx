@@ -1,5 +1,14 @@
-import { ComingSoonPlaceholder } from '@/components/shared/coming-soon-placeholder'
+'use client'
 
-export default function CustomerSupportPage() {
-  return <ComingSoonPlaceholder tab="Customer Support" />
+import { use } from 'react'
+
+import { CustomerSupportScreen } from '@/modules/12-customer-support/components/customer-support-screen'
+
+export default function CustomerSupportPage({
+  params,
+}: {
+  params: Promise<{ clientId: string }>
+}) {
+  const { clientId } = use(params)
+  return <CustomerSupportScreen clientId={clientId} />
 }
