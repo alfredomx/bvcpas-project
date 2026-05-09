@@ -13,6 +13,7 @@
 - [v0.5.0](v0.5.0.md) — header + stats + suggested + quick links + timeline.
 - [v0.5.1](../14-transactions/v0.5.1.md) — agrega `<CsTransactions>` (tabla + sync) + rename de la tab.
 - [v0.5.2](v0.5.2.md) — `<CsConfigSheet>` (botón ⚙ Configure abre Sheet con 5 settings de envío de follow-ups).
+- [v0.5.3](v0.5.3.md) — `primaryContactEmail` y `ccEmail` aceptan múltiples emails (CSV); transform a `null` cuando vacío.
 
 **Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-09

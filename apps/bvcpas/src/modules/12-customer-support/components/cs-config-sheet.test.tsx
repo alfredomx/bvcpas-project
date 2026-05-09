@@ -117,7 +117,68 @@ describe('<CsConfigSheet>', () => {
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/valid email/i)).toBeInTheDocument()
+      expect(screen.getByText(/correos válidos/i)).toBeInTheDocument()
+    })
+    expect(updateClientMock).not.toHaveBeenCalled()
+  })
+
+  it('accepts multiple emails separated by comma in ccEmail', async () => {
+    updateClientMock.mockResolvedValue({ ...sampleClient })
+    render(
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(
+      screen.getByLabelText(/cc email/i),
+      'lorena@bv-cpas.com, ileana@bv-cpas.com',
+    )
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => {
+      expect(updateClientMock).toHaveBeenCalledTimes(1)
+    })
+    const [, body] = updateClientMock.mock.calls[0]
+    expect(body.ccEmail).toBe('lorena@bv-cpas.com, ileana@bv-cpas.com')
+  })
+
+  it('normalizes whitespace around commas', async () => {
+    updateClientMock.mockResolvedValue({ ...sampleClient })
+    render(
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(
+      screen.getByLabelText(/cc email/i),
+      '  a@b.com  ,c@d.com,   e@f.com  ',
+    )
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => {
+      expect(updateClientMock).toHaveBeenCalledTimes(1)
+    })
+    const [, body] = updateClientMock.mock.calls[0]
+    expect(body.ccEmail).toBe('a@b.com, c@d.com, e@f.com')
+  })
+
+  it('rejects when one of the CSV emails is invalid', async () => {
+    render(
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(
+      screen.getByLabelText(/cc email/i),
+      'a@b.com, not-email, c@d.com',
+    )
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/correos válidos/i)).toBeInTheDocument()
     })
     expect(updateClientMock).not.toHaveBeenCalled()
   })

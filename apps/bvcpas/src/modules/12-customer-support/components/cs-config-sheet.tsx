@@ -32,33 +32,60 @@ export interface CsConfigSheetProps {
   client: UncatsDetailResponse['client']
 }
 
-const optionalEmail = z
+// Validación + normalización de emails CSV (D-bvcpas-039, D-bvcpas-040).
+// Acepta uno o más correos separados por coma. Vacío → null.
+// Resultado: null o string normalizado "email1, email2".
+
+const SIMPLE_EMAIL_REGEX = /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/
+
+const csvEmailString = z
   .string()
-  .trim()
-  .max(255)
-  .refine((v) => v === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), {
-    message: 'Enter a valid email or leave empty.',
+  .transform((s) => {
+    const trimmed = s.trim()
+    if (trimmed === '') return null
+    return trimmed
+      .split(',')
+      .map((e) => e.trim())
+      .filter((e) => e.length > 0)
+      .join(', ')
   })
+  .refine(
+    (s) => {
+      if (s === null) return true
+      const parts = s.split(',').map((e) => e.trim()).filter((e) => e.length > 0)
+      return parts.length > 0 && parts.every((e) => SIMPLE_EMAIL_REGEX.test(e))
+    },
+    { message: 'Debe ser uno o más correos válidos separados por coma' },
+  )
+
+// Texto opcional → null si vacío. Para mantener consistencia con
+// el backend (`primary_contact_name: string | null`).
+const optionalText = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .transform((s) => {
+      const trimmed = s.trim()
+      return trimmed === '' ? null : trimmed
+    })
 
 const schema = z.object({
-  primaryContactName: z.string().trim().max(120),
-  primaryContactEmail: optionalEmail,
-  ccEmail: optionalEmail,
+  primaryContactName: optionalText(120),
+  primaryContactEmail: csvEmailString,
+  ccEmail: csvEmailString,
   transactionsFilter: z.enum(['all', 'income', 'expense']),
   draftEmailEnabled: z.boolean(),
 })
 
-type FormValues = z.infer<typeof schema>
-
-function emptyToNull(value: string): string | null {
-  const trimmed = value.trim()
-  return trimmed === '' ? null : trimmed
-}
+// Form trabaja con strings (input del usuario); submit recibe el
+// output del transform (string | null).
+type FormInput = z.input<typeof schema>
+type FormOutput = z.output<typeof schema>
 
 export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps) {
   const update = useUpdateClient(client.id)
 
-  const defaultValues: FormValues = {
+  const defaultValues: FormInput = {
     primaryContactName: client.primary_contact_name ?? '',
     primaryContactEmail: client.primary_contact_email ?? '',
     ccEmail: client.cc_email ?? '',
@@ -73,7 +100,7 @@ export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps
     watch,
     setValue,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<FormInput, unknown, FormOutput>({
     resolver: zodResolver(schema),
     defaultValues,
   })
@@ -87,11 +114,13 @@ export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps
   }, [open, client.id])
 
   const onSubmit = handleSubmit((values) => {
+    // values ya viene transformado por zod: name/emails son string|null
+    // y la normalización CSV ya está aplicada.
     update.mutate(
       {
-        primaryContactName: emptyToNull(values.primaryContactName),
-        primaryContactEmail: emptyToNull(values.primaryContactEmail),
-        ccEmail: emptyToNull(values.ccEmail),
+        primaryContactName: values.primaryContactName,
+        primaryContactEmail: values.primaryContactEmail,
+        ccEmail: values.ccEmail,
         transactionsFilter: values.transactionsFilter,
         draftEmailEnabled: values.draftEmailEnabled,
       },
@@ -155,7 +184,7 @@ export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps
               <RadioGroup
                 value={filterValue}
                 onValueChange={(v) =>
-                  setValue('transactionsFilter', v as FormValues['transactionsFilter'], {
+                  setValue('transactionsFilter', v as FormInput['transactionsFilter'], {
                     shouldDirty: true,
                   })
                 }
