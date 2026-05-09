@@ -90,7 +90,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup()
     await user.type(screen.getByLabelText(/work email/i), 'a@b.com')
     await user.type(screen.getByLabelText(/password/i), 'pw123')
-    await user.click(screen.getByRole('button', { name: /sign in to qb/i }))
+    await user.click(screen.getByRole('button', { name: /^sign in/i }))
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({ email: 'a@b.com', password: 'pw123' })
@@ -108,7 +108,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup()
     await user.type(screen.getByLabelText(/work email/i), 'a@b.com')
     await user.type(screen.getByLabelText(/password/i), 'wrong')
-    await user.click(screen.getByRole('button', { name: /sign in to qb/i }))
+    await user.click(screen.getByRole('button', { name: /^sign in/i }))
 
     await waitFor(() => {
       expect(toastErrorMock).toHaveBeenCalledWith('Invalid email or password.')
@@ -122,7 +122,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup()
     await user.type(screen.getByLabelText(/work email/i), 'not-an-email')
     await user.type(screen.getByLabelText(/password/i), 'pw123')
-    await user.click(screen.getByRole('button', { name: /sign in to qb/i }))
+    await user.click(screen.getByRole('button', { name: /^sign in/i }))
 
     // Zod bloquea submit. Damos tiempo al microtask y verificamos que
     // login NO se llamó.

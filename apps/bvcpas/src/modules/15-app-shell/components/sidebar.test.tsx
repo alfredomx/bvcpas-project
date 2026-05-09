@@ -175,7 +175,7 @@ describe('<Sidebar>', () => {
 
     await waitFor(() => expect(screen.getByText('Acme')).toBeInTheDocument())
 
-    expect(screen.getByText(/^all$/i)).toBeInTheDocument()
+    expect(screen.getByText(/^all\b/i)).toBeInTheDocument()
   })
 
   it('collapses to <SidebarCollapsed> when the collapse button is clicked', async () => {

@@ -3,11 +3,15 @@
 **App:** bvcpas
 **Status:** ✅ Primera versión cerrada (puede reabrirse para variantes
 visuales o feature extra)
-**Versiones que lo construyen:** [v0.3.0](v0.3.0.md) (AppShell visual
+**Versiones que lo construyen:**
 
-- sidebar funcional + tabs cliente + 8 placeholders + diseño 1:1 con
-  prototipo)
-  **Última revisión:** 2026-05-06
+- [v0.3.0](v0.3.0.md) — AppShell visual + sidebar funcional + tabs
+  cliente + 8 placeholders + diseño 1:1 con prototipo.
+- [v0.3.1](v0.3.1.md) — Strip de diseño cosmético (D-bvcpas-022).
+  Conserva 100% de la funcionalidad y todos los tests verde; sólo
+  vacía las clases de marca para reconstruir la identidad desde cero.
+
+**Última revisión:** 2026-05-09
   **Espejo backend:** ninguno — este módulo es puro frontend, no tiene
   contraparte en mapi.
 
@@ -102,9 +106,10 @@ Ver [CONVENTIONS.md §2](../CONVENTIONS.md#2-módulos-srcmodulesnn-name).
 
 ## Versiones planeadas
 
-- **v0.3.0** (📅 próxima): AppShell + sidebar (lista plana de clientes)
-  - topbar + avatar dropdown + tabs del cliente + Customer Support con
-    datos reales. Otras tabs renderizan "Coming soon".
+- **v0.3.0** ✅ AppShell + sidebar (lista plana de clientes) + topbar
+  + avatar dropdown + tabs del cliente + diseño 1:1 con prototipo.
+- **v0.3.1** ✅ Strip de diseño cosmético — base limpia para
+  reconstruir la identidad desde cero (D-bvcpas-022).
 
 ---
 
