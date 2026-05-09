@@ -52,9 +52,11 @@ TDD-first.
 - **D-bvcpas-016** — Virtualización con `@tanstack/react-virtual`
   desde día 1 aunque haya <100 clientes.
 - **D-bvcpas-017** — `/dashboard` muestra empty state, NO auto-select.
-- **D-bvcpas-018** — Customer Support tab también es placeholder en
-  v0.3.0; la pantalla real entra en una versión futura cuando
-  `/v1/views/uncats` se consuma desde el módulo `13-dashboards`.
+- **D-bvcpas-018** — Customer Support tab fue placeholder en v0.3.0.
+  **Superada en v0.5.0**: pantalla real consumiendo
+  `/v1/clients/:id/uncats` (módulo `12-customer-support`). Las otras
+  7 tabs (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR
+  Payroll, Property Tax) siguen siendo `<ComingSoonPlaceholder>`.
 
 ## localStorage keys
 
