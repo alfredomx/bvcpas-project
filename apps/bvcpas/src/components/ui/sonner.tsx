@@ -23,10 +23,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          '--normal-bg': 'var(--popover)',
-          '--normal-text': 'var(--popover-foreground)',
-          '--normal-border': 'var(--border)',
-          '--border-radius': 'var(--radius)',
+          // Tailwind v4 publica los tokens shadcn con prefijo `--color-*`
+          // desde `@theme`. El template default de sonner referencia
+          // `--popover` sin prefijo, lo que dejaba el toast transparente.
+          '--normal-bg': 'var(--color-popover)',
+          '--normal-text': 'var(--color-popover-foreground)',
+          '--normal-border': 'var(--color-border)',
         } as React.CSSProperties
       }
       {...props}
