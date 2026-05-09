@@ -26,7 +26,7 @@ falta.
 
 **Módulos activos:**
 
-- `00-foundation` ✅ (v0.1.0 cerrada — scaffold base).
+- `00-foundation` ✅ (v0.1.0 + v0.3.2 cerradas — scaffold base + SDK tipado desde OpenAPI).
 - `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
 - `11-clients` 🚧 (mínimo en v0.3.0 — solo tipos).
 - `13-dashboards` 🚧 (v0.3.0 cerrada — api+hook customer-support).
@@ -313,6 +313,9 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-020 | Naming campos: snake_case 1:1 con backend; sin adapters camelCase                                        | 0.3.0   | Sí          |
 | D-bvcpas-021 | Aliases shadcn dentro de `@theme` con prefijo `--color-*` (no en `:root` plano) — Tailwind v4            | 0.3.0   | Sí          |
 | D-bvcpas-022 | Strip de diseño cosmético antes de rediseñar desde cero — sólo aliases shadcn neutros, sin tokens marca  | 0.3.1   | Sí          |
+| D-bvcpas-023 | Estilos: sólo Tailwind defaults + shadcn primitives sin modificar; cero CSS custom, gradientes, animaciones  | 0.3.2   | Sí          |
+| D-bvcpas-024 | SDK HTTP tipado generado desde OpenAPI (`openapi-typescript` + `openapi-fetch`); schema commiteado al repo | 0.3.2   | Sí          |
+| D-bvcpas-025 | Migración de `http.ts` → SDK diferida a v0.3.3 (coexistencia temporal acotada)                          | 0.3.2   | Sí          |
 
 ---
 

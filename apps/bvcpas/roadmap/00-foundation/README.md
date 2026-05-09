@@ -2,8 +2,14 @@
 
 **App:** bvcpas
 **Status:** ✅ Completo
-**Versiones que lo construyen:** [v0.1.0](v0.1.0.md)
-**Última revisión:** 2026-05-04
+**Versiones que lo construyen:**
+
+- [v0.1.0](v0.1.0.md) — scaffold inicial (Tailwind, shadcn, path alias, layout root).
+- [v0.3.2](v0.3.2.md) — SDK tipado desde OpenAPI (`openapi-typescript`
+  + `openapi-fetch`). Cliente `@/lib/api/client` con middlewares auth
+  y 401-dispatch. Coexiste con `@/lib/http.ts` hasta v0.3.3.
+
+**Última revisión:** 2026-05-09
 
 ---
 

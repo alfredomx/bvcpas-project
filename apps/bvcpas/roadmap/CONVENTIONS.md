@@ -183,43 +183,52 @@ import { ClientList } from '@/modules/11-clients/components/client-list'
 - **Tailwind v4** vía `@import 'tailwindcss';` en `globals.css`. No hay
   `tailwind.config.ts` — el theme se define con `@theme {...}` dentro del
   CSS.
-- **shadcn/ui style: new-york**. Sus aliases internos (`bg-primary`,
-  `text-foreground`, `border-input`, etc.) se mapean a los tokens
-  semánticos de bvcpas en `:root` de `globals.css`. Una sola fuente de
-  verdad: el día que cambia la identidad, se toca solo `globals.css`.
+- **shadcn/ui style: new-york**.
 - **No** escribir CSS suelto en archivos `.css` aparte (excepto
   `globals.css`). Toda la UI con clases Tailwind.
 - **`cn()`** (de `@/lib/utils`) para combinar clases condicionales:
   ```tsx
-  <div className={cn('rounded border', isActive && 'bg-primary')} />
+  <div className={cn('rounded border', isActive && 'bg-muted')} />
   ```
 
-### Identidad visual — sistema de tokens (D-bvcpas-009)
+### Reglas de estilos vigentes (D-bvcpas-022, D-bvcpas-023)
 
-**Regla dura:** los componentes nunca usan colores literales
-(`bg-[#1a2244]`, `text-[#fff]`, `border-[#ccd1de]`). Solo:
+**v0.3.1 strippeó todo el diseño cosmético** — tokens custom de marca
+(`--color-brand-*`, `--color-surface-*`, etc.) se eliminaron. La
+identidad visual se reconstruirá en una versión futura.
 
-1. **Tokens semánticos bvcpas** (definidos en `@theme` de `globals.css`):
-   - Surfaces: `bg-surface-canvas`, `bg-surface-soft`, `bg-surface-muted`,
-     `bg-surface-strong`, `bg-surface-hover`, `bg-surface-selected`,
-     `bg-surface-lavender`, etc.
-   - Borders: `border-border-default`, `border-border-strong`,
-     `border-border-soft`.
-   - Text: `text-text-primary`, `text-text-secondary`, `text-text-muted`,
-     `text-text-tertiary`, `text-text-disabled`, `text-text-inverse`.
-   - Brand: `bg-brand-navy`, `bg-brand-navy-soft`, `bg-brand-accent`,
-     `text-brand-navy`, `text-brand-accent`, etc.
-   - Status: `bg-status-success`, `text-status-warning`,
-     `bg-status-danger-bg` (fondos sutiles con alpha), etc.
+Hasta entonces, **regla dura**:
 
-2. **Roles shadcn** cuando se use un componente shadcn que ya los
-   consume internamente (`<Button variant="default">` → `bg-primary`).
-   Eso es válido porque los roles shadcn están aliaseados a los tokens
-   bvcpas en `:root`.
+1. **Sólo Tailwind defaults + aliases shadcn neutros.** El `globals.css`
+   actual sólo declara `@theme` con fonts (`--font-sans`, `--font-mono`)
+   y aliases shadcn (`--color-background`, `--color-foreground`,
+   `--color-muted`, `--color-primary`, `--color-border`,
+   `--color-destructive`, etc.). Nada más.
 
-**Para cambiar la identidad** (ejemplo: navy → azul cobalto):
-edita `--color-brand-navy` en `globals.css`. Se propaga a todos los
-componentes automáticamente.
+2. **Prohibido en componentes:**
+   - Clases `bg-brand-*`, `text-brand-*`, `bg-surface-*`,
+     `border-border-*`, `text-text-*`, `bg-status-*` — esos tokens
+     NO existen en `globals.css`.
+   - Valores arbitrarios `text-[12.5px]`, `h-10.75`, `w-103`,
+     `rounded-[1px]`.
+   - `style={{ background: 'linear-gradient(...)' }}` y similares.
+   - Gradientes, animaciones (excepto las de shadcn primitives),
+     iconos elaborados, sombras decorativas.
+
+3. **Permitido:**
+   - Tailwind defaults: `flex`, `grid`, `gap-2`, `p-4`, `text-sm`,
+     `text-xl`, `font-medium`, `border`, `rounded-md`, etc.
+   - Tokens shadcn neutros: `bg-background`, `text-foreground`,
+     `bg-muted`, `text-muted-foreground`, `bg-primary`,
+     `text-primary-foreground`, `border`, `bg-card`, `bg-popover`,
+     `text-destructive`, etc.
+   - Componentes shadcn primitives sin modificar: `<Button>`,
+     `<Input>`, `<Label>`, `<Form>`, `<Table>`, `<DropdownMenu>`,
+     `<Avatar>`, `<Skeleton>`, etc.
+
+4. **Para datos tabulares** usa siempre `<Table>` de shadcn. Para
+   formularios siempre `<Form>` + `<FormField>` + `<FormItem>` con
+   react-hook-form + zod.
 
 ### Agregar un componente shadcn
 
@@ -228,38 +237,60 @@ npx shadcn@latest add button
 npx shadcn@latest add dialog input label ...
 ```
 
-Quedan en `src/components/ui/`. **No los edites a mano salvo ajuste de
-tema** — los aliases de `:root` ya los reconvierten a la identidad
-bvcpas.
+Quedan en `src/components/ui/`. **No los edites a mano** mientras la
+regla de estilos esté vigente. Si necesitas que un componente se vea
+distinto, abrelo en una versión que reabra la identidad visual; no
+parches el primitive.
 
 ---
 
 ## 6. Comunicación con el backend
 
-- Backend dev: `https://dev.alfredo.mx` (tunnel cloudflared → localhost:4000).
+- Backend dev: `https://dev.alfredo.mx` (apunta a localhost:4000).
 - Backend prod: `https://mapi.kodapp.com.mx`.
-- La URL base se lee de `NEXT_PUBLIC_API_URL` (env var pública).
-- Toda llamada HTTP al backend va por **`@/lib/http.ts`** (futuro): wrapper
-  con baseURL, header `Authorization: Bearer <token>`, parseo de errores
-  Zod del backend.
-- Cada módulo expone funciones tipadas en `api/`:
+- URL base: `NEXT_PUBLIC_API_URL` (env var pública en `.env.local`).
 
-  ```ts
-  // src/modules/11-clients/api/clients.api.ts
-  import { http } from '@/lib/http'
-  import type { Client } from '../types'
+### SDK tipado (D-bvcpas-024)
 
-  export async function listClients(): Promise<Client[]> {
-    return http.get('/v1/clients')
-  }
-  ```
+Toda llamada nueva va por **`@/lib/api/client`**, un cliente
+`openapi-fetch` tipado contra el OpenAPI de mapi.
 
-### Tipos request/response
+```ts
+// src/modules/11-clients/api/clients.api.ts
+import { api } from '@/lib/api/client'
 
-- Si el backend expone Zod schemas (mapi los expone vía `nestjs-zod`), los
-  tipos los derivamos manualmente o vía `z.infer` si compartiéramos schemas.
-  Por simplicidad, hoy tipamos a mano en `types.ts` del módulo siguiendo lo
-  que documenta `apps/mapi/docs/api-routes.md`.
+export async function listClients() {
+  const { data, error } = await api.GET('/v1/clients')
+  if (error) throw error
+  return data
+}
+```
+
+**Beneficio:** TypeScript valida en compile time que el path, query,
+body y response existen en mapi. Si mapi cambia un campo, los lugares
+que rompen aparecen como errores TS antes de runtime.
+
+### Regenerar tipos cuando mapi cambia
+
+```bash
+cd apps/bvcpas
+npm run sdk:gen
+```
+
+Lee `https://dev.alfredo.mx/v1/docs-json` y regenera
+`src/lib/api/schema.ts`. Commitea el diff. Requiere mapi corriendo.
+
+### Coexistencia temporal con `@/lib/http.ts` (D-bvcpas-025)
+
+Hasta v0.3.3, los módulos viejos siguen usando `@/lib/http.ts` (cliente
+manual con `ApiError`). v0.3.3 migra `useSession`, `useClientsList` y
+borra `http.ts`.
+
+**Mientras dura la coexistencia:**
+
+- Features nuevas: usan `@/lib/api/client` (SDK).
+- Features que ya existían en v0.3.1: siguen con `@/lib/http.ts`. No
+  migrar de oportunidad — la migración es su propio commit en v0.3.3.
 
 ---
 
