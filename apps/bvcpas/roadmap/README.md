@@ -29,20 +29,20 @@ falta.
 - `00-foundation` ✅ (v0.1.0 + v0.3.2 — scaffold + SDK tipado).
 - `10-core-auth` ✅ (v0.2.0 + v0.2.1 — login + tests).
 - `11-clients` ✅ (v0.4.0 — `listClients` + `useClients` vía SDK tipado consumiendo `GET /v1/clients`).
-- `13-dashboards` 📅 (sin código todavía; reservado para views agregadoras tipo `/v1/views/uncats`. Ver D-bvcpas-026).
+- `12-customer-support` ✅ (v0.5.0 — header + stats + suggested + quick links + activity timeline consumiendo `/v1/clients/:id/uncats`).
+- `13-dashboards` ✅ (v0.5.0 — primera view real `uncats-detail`).
 - `15-app-shell` ✅ (v0.3.0 + v0.3.1 + v0.4.0 — AppShell + sidebar reapuntada a `useClients` en v0.4.0; v0.3.1 strippeó diseño cosmético).
-- `12-customer-support` 📅 (planeado: pantalla real cuando se consuma `/v1/views/uncats`).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
-- v0.4.1 — Migración de `useSession` al SDK tipado y borrado de
+- v0.5.1 — Tabla Uncategorized / AMA's en la tab Customer Support
+  (módulo `14-transactions` consumiendo `GET /v1/clients/:id/transactions`).
+- v0.6.0+ — Migración de `useSession` al SDK tipado + borrado de
   `@/lib/http.ts` (cierra D-bvcpas-025).
-- v0.5.0 — Pantalla Customer Support real (consume
-  `GET /v1/views/uncats` vía módulo `13-dashboards`).
-- v0.6.0+ — Tabs adicionales conforme mapi exponga views
+- v0.7.0+ — Tabs adicionales conforme mapi exponga views
   (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR Payroll,
   Property Tax).
 
@@ -270,8 +270,8 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 00-foundation       | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) + [v0.3.2](00-foundation/v0.3.2.md) |
 | 10-core-auth        | ✅     | [README.md](10-core-auth/README.md)  | [v0.2.0](10-core-auth/v0.2.0.md) + [v0.2.1](10-core-auth/v0.2.1.md)   |
 | 11-clients          | ✅     | [README.md](11-clients/README.md)    | [v0.4.0](11-clients/v0.4.0.md) + [v0.4.1](11-clients/v0.4.1.md)       |
-| 12-customer-support | 📅     | (futuro)                             | —                                                                     |
-| 13-dashboards       | 📅     | [README.md](13-dashboards/README.md) | (sin código; reservado para views)                                    |
+| 12-customer-support | ✅     | [README.md](12-customer-support/README.md) | [v0.5.0](12-customer-support/v0.5.0.md)                         |
+| 13-dashboards       | ✅     | [README.md](13-dashboards/README.md)       | (primera view real en v0.5.0; archivo TDD vive en 12-customer-support) |
 | 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)  | [v0.3.0](15-app-shell/v0.3.0.md) + [v0.3.1](15-app-shell/v0.3.1.md)   |
 
 ---
@@ -288,6 +288,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.3.2   | 00-foundation | ✅     | SDK tipado desde OpenAPI (`openapi-typescript` + `openapi-fetch`)            | bvcpas-v0.3.2 | [00-foundation/v0.3.2.md](00-foundation/v0.3.2.md) |
 | 0.4.0   | 11-clients    | ✅     | Sidebar consume `/v1/clients` directo + módulo 11-clients real (D-026/027/028) | bvcpas-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)       |
 | 0.4.1   | 11-clients    | ✅     | Fix sidebar paginación: `pageSize=200` (D-bvcpas-029)                        | bvcpas-v0.4.1 | [11-clients/v0.4.1.md](11-clients/v0.4.1.md)       |
+| 0.5.0   | 12-customer-support | ✅ | Tab Customer Support (parte 1: header + stats + timeline) — D-030/031/032 | bvcpas-v0.5.0 | [12-customer-support/v0.5.0.md](12-customer-support/v0.5.0.md) |
 
 ---
 
@@ -324,6 +325,9 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-027 | Sidebar consume `GET /v1/clients` directo (supera D-bvcpas-015 — `/v1/dashboards/customer-support` fue eliminado) | 0.4.0   | Sí          |
 | D-bvcpas-028 | Primer consumidor del SDK tipado en producción: `clients.api.ts` del módulo 11-clients                    | 0.4.0   | No          |
 | D-bvcpas-029 | Sidebar usa `pageSize=200` sin paginación real; agregar loop cuando algún tenant rebase 200 clientes      | 0.4.1   | No          |
+| D-bvcpas-030 | Tab Customer Support consume view `/v1/clients/:id/uncats`; wrapper vive en `13-dashboards` (corolario 026) | 0.5.0   | No          |
+| D-bvcpas-031 | "Mes actual del dashboard" = mes anterior real; helpers en `12-customer-support/lib/date-range.ts`        | 0.5.0   | No          |
+| D-bvcpas-032 | División v0.5.0 / v0.5.1 para Customer Support: header+stats en 12-cs; tabla de transactions en 14-tx     | 0.5.0   | No          |
 
 ---
 
