@@ -12,6 +12,7 @@
 
 - [v0.5.0](v0.5.0.md) — header + stats + suggested + quick links + timeline.
 - [v0.5.1](../14-transactions/v0.5.1.md) — agrega `<CsTransactions>` (tabla + sync) + rename de la tab.
+- [v0.5.2](v0.5.2.md) — `<CsConfigSheet>` (botón ⚙ Configure abre Sheet con 5 settings de envío de follow-ups).
 
 **Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-09
@@ -56,6 +57,7 @@ Match 1:1 con
 | `<CsQuickLinks>`           | 6 botones placeholder (toast on click).                    |
 | `<CsActivityTimeline>`     | 12 barras mensuales; mes anterior highlighted.             |
 | `<CsTransactions>`         | Leyenda del filter + Sync + tabs Uncategorized/AMA's (v0.5.1). |
+| `<CsConfigSheet>`          | Sheet lateral con 5 settings de envío de follow-ups (v0.5.2). |
 
 ## Helpers (v0.5.0)
 
