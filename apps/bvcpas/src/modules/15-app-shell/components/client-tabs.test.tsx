@@ -24,7 +24,7 @@ describe('<ClientTabs>', () => {
   beforeEach(() => {
     pushMock.mockReset()
     usePathnameMock.mockReset()
-    usePathnameMock.mockReturnValue('/dashboard/clients/c-1/customer-support')
+    usePathnameMock.mockReturnValue('/dashboard/clients/c-1/uncategorized-transactions')
     window.localStorage.clear()
   })
 
@@ -47,7 +47,7 @@ describe('<ClientTabs>', () => {
     render(<ClientTabs clientId="c-1" />)
 
     expect(screen.getByRole('tab', { name: '1099' })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('tab', { name: 'Customer Support' })).toHaveAttribute(
+    expect(screen.getByRole('tab', { name: 'Uncat. Transactions' })).toHaveAttribute(
       'aria-selected',
       'false',
     )

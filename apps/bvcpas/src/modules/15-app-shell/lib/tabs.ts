@@ -16,7 +16,7 @@ export interface TabDef {
 }
 
 export const TABS: readonly TabDef[] = [
-  { slug: 'customer-support', label: 'Customer Support' },
+  { slug: 'uncategorized-transactions', label: 'Uncat. Transactions' },
   { slug: 'reconciliations', label: 'Reconciliations' },
   { slug: 'w9', label: 'W-9' },
   { slug: '1099', label: '1099' },
@@ -27,7 +27,7 @@ export const TABS: readonly TabDef[] = [
 ] as const
 
 /** Slug por default cuando un cliente se abre sin tab específico. */
-export const DEFAULT_TAB_SLUG: TabDef['slug'] = 'customer-support'
+export const DEFAULT_TAB_SLUG: TabDef['slug'] = 'uncategorized-transactions'
 
 /**
  * Retorna el `TabDef` para un slug dado, o `undefined` si el slug no
