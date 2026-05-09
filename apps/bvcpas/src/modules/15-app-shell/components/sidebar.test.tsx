@@ -69,6 +69,9 @@ function makeClient(name: string, id?: string): Client {
     primary_contact_email: null,
     notes: null,
     metadata: null,
+    draft_email_enabled: true,
+    transactions_filter: 'all',
+    cc_email: null,
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
   }
