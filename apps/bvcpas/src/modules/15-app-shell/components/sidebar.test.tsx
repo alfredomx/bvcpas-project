@@ -1,12 +1,14 @@
 // Tests TDD-first de <Sidebar> (v0.3.0, Bloque 4b).
+// Migrado en v0.4.0: ahora consume `useClients` del módulo 11-clients
+// (D-bvcpas-027) en vez del antiguo `useClientsList` de 13-dashboards.
 //
 // Responsabilidades:
-// - Skeleton mientras useClientsList está loading.
+// - Skeleton mientras useClients está loading.
 // - Renderiza una fila por cliente devuelto.
 // - Search local filtra cliente-side por legal_name (case-insensitive).
 // - Highlight (active) en la fila cuya URL matchea el clientId actual.
 // - Click en fila navega a /dashboard/clients/<id>/customer-support.
-// - Filtro "All" presente (visualmente) — único filtro en v0.3.0.
+// - Filtro "All" presente (visualmente) — único filtro por ahora.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
@@ -15,16 +17,13 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
 import { Sidebar } from './sidebar'
-import type {
-  CustomerSupportListItem,
-  CustomerSupportListResponse,
-} from '@/modules/13-dashboards/types'
+import type { Client, ClientsListResponse } from '@/modules/11-clients/api/clients.api'
 
-// Mock del api wrapper que useClientsList consume.
+// Mock del api wrapper que useClients consume.
 const listClientsMock = vi.fn()
 
-vi.mock('@/modules/13-dashboards/api/customer-support.api', () => ({
-  listClientsForSidebar: (...args: unknown[]) => listClientsMock(...args),
+vi.mock('@/modules/11-clients/api/clients.api', () => ({
+  listClients: (...args: unknown[]) => listClientsMock(...args),
 }))
 
 // Mock router de Next.
@@ -54,32 +53,33 @@ vi.mock('@tanstack/react-virtual', () => ({
   }),
 }))
 
-function makeItem(name: string, id?: string): CustomerSupportListItem {
+function makeClient(name: string, id?: string): Client {
   return {
-    client_id: id ?? `c-${name.replace(/\s+/g, '-').toLowerCase()}`,
+    id: id ?? `c-${name.replace(/\s+/g, '-').toLowerCase()}`,
     legal_name: name,
+    dba: null,
+    qbo_realm_id: null,
+    industry: null,
+    entity_type: null,
+    fiscal_year_start: null,
+    timezone: null,
+    status: 'active',
     tier: 'silver',
-    qbo_realm_id: '9000',
-    followup: { status: 'pending', sent_at: null },
-    stats: {
-      uncats_count: 0,
-      amas_count: 0,
-      responded_count: 0,
-      progress_pct: 0,
-      amount_total: '0.00',
-      last_synced_at: null,
-    },
-    monthly: {
-      previous_year_total: { uncats: 0, amas: 0 },
-      by_month: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, uncats: 0, amas: 0 })),
-    },
+    primary_contact_name: null,
+    primary_contact_email: null,
+    notes: null,
+    metadata: null,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z',
   }
 }
 
-function makeResponse(items: CustomerSupportListItem[]): CustomerSupportListResponse {
+function makeResponse(items: Client[]): ClientsListResponse {
   return {
-    period: { from: '2025-01-01', to: '2026-04-30' },
     items,
+    total: items.length,
+    page: 1,
+    pageSize: 50,
   }
 }
 
@@ -112,7 +112,7 @@ describe('<Sidebar>', () => {
 
   it('renders one row per client when loaded', async () => {
     listClientsMock.mockResolvedValue(
-      makeResponse([makeItem('Acme'), makeItem('Bravo'), makeItem('Charlie')]),
+      makeResponse([makeClient('Acme'), makeClient('Bravo'), makeClient('Charlie')]),
     )
 
     render(<Sidebar />, { wrapper })
@@ -126,7 +126,7 @@ describe('<Sidebar>', () => {
 
   it('filters rows by search input (case-insensitive)', async () => {
     listClientsMock.mockResolvedValue(
-      makeResponse([makeItem('Elite Fence'), makeItem('Acme'), makeItem('Bravo')]),
+      makeResponse([makeClient('Elite Fence'), makeClient('Acme'), makeClient('Bravo')]),
     )
 
     render(<Sidebar />, { wrapper })
@@ -142,7 +142,7 @@ describe('<Sidebar>', () => {
   })
 
   it('navigates to /dashboard/clients/<id>/customer-support on row click', async () => {
-    listClientsMock.mockResolvedValue(makeResponse([makeItem('Acme', 'c-acme')]))
+    listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme', 'c-acme')]))
 
     render(<Sidebar />, { wrapper })
 
@@ -157,7 +157,7 @@ describe('<Sidebar>', () => {
   it('marks the row matching useParams().clientId as active', async () => {
     useParamsMock.mockReturnValue({ clientId: 'c-bravo' })
     listClientsMock.mockResolvedValue(
-      makeResponse([makeItem('Acme', 'c-acme'), makeItem('Bravo', 'c-bravo')]),
+      makeResponse([makeClient('Acme', 'c-acme'), makeClient('Bravo', 'c-bravo')]),
     )
 
     render(<Sidebar />, { wrapper })
@@ -168,8 +168,8 @@ describe('<Sidebar>', () => {
     expect(screen.getByRole('button', { name: /acme/i })).not.toHaveAttribute('aria-current')
   })
 
-  it('renders an "All" filter label as the only filter for v0.3.0', async () => {
-    listClientsMock.mockResolvedValue(makeResponse([makeItem('Acme')]))
+  it('renders an "All" filter label as the only filter', async () => {
+    listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme')]))
 
     render(<Sidebar />, { wrapper })
 
@@ -179,7 +179,7 @@ describe('<Sidebar>', () => {
   })
 
   it('collapses to <SidebarCollapsed> when the collapse button is clicked', async () => {
-    listClientsMock.mockResolvedValue(makeResponse([makeItem('Acme')]))
+    listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme')]))
 
     render(<Sidebar />, { wrapper })
     await waitFor(() => expect(screen.getByText('Acme')).toBeInTheDocument())
@@ -194,7 +194,7 @@ describe('<Sidebar>', () => {
 
   it('expands again when the expand button is clicked', async () => {
     window.localStorage.setItem('bvcpas.sidebarCollapsed', 'true')
-    listClientsMock.mockResolvedValue(makeResponse([makeItem('Acme')]))
+    listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme')]))
 
     render(<Sidebar />, { wrapper })
 

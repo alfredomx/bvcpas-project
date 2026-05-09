@@ -43,14 +43,18 @@ TDD-first.
 
 ## Decisiones relevantes
 
-- **D-bvcpas-015** — Sidebar consume
-  `GET /v1/dashboards/customer-support` (no `GET /v1/clients`) porque
-  ese endpoint trae los stats agregados que la UI necesita.
+- **D-bvcpas-015** — Sidebar consumía
+  `GET /v1/dashboards/customer-support`. **Superada por D-bvcpas-027**
+  en v0.4.0: el endpoint fue eliminado del backend y, tras el strip
+  cosmético de v0.3.1, la fila ya no muestra info enriquecida, así
+  que se reapuntó a `GET /v1/clients` directo (`useClients` del
+  módulo `11-clients`).
 - **D-bvcpas-016** — Virtualización con `@tanstack/react-virtual`
   desde día 1 aunque haya <100 clientes.
 - **D-bvcpas-017** — `/dashboard` muestra empty state, NO auto-select.
 - **D-bvcpas-018** — Customer Support tab también es placeholder en
-  v0.3.0; la pantalla real entra en v0.4.0.
+  v0.3.0; la pantalla real entra en una versión futura cuando
+  `/v1/views/uncats` se consuma desde el módulo `13-dashboards`.
 
 ## localStorage keys
 

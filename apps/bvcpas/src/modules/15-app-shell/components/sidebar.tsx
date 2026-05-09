@@ -8,7 +8,7 @@ import { ChevronsLeft, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useClientsList } from '@/modules/13-dashboards/hooks/use-clients-list'
+import { useClients } from '@/modules/11-clients/hooks/use-clients'
 
 import { useSidebarCollapsed } from '../hooks/use-sidebar-collapsed'
 import { SidebarCollapsed } from './sidebar-collapsed'
@@ -23,7 +23,7 @@ export function Sidebar() {
   const activeClientId = typeof params?.clientId === 'string' ? params.clientId : undefined
 
   const { collapsed, setCollapsed } = useSidebarCollapsed()
-  const { items, isLoading } = useClientsList()
+  const { items, isLoading } = useClients()
   const [search, setSearch] = useState('')
 
   const filtered = useMemo(() => {
@@ -97,7 +97,7 @@ export function Sidebar() {
               const item = filtered[vRow.index]
               return (
                 <div
-                  key={item.client_id}
+                  key={item.id}
                   style={{
                     position: 'absolute',
                     top: 0,
@@ -108,9 +108,9 @@ export function Sidebar() {
                   }}
                 >
                   <SidebarRow
-                    clientId={item.client_id}
+                    clientId={item.id}
                     legalName={item.legal_name}
-                    active={item.client_id === activeClientId}
+                    active={item.id === activeClientId}
                     onSelect={handleSelect}
                   />
                 </div>

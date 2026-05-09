@@ -3,7 +3,7 @@
 import { use } from 'react'
 
 import { Skeleton } from '@/components/ui/skeleton'
-import { useClientsList } from '@/modules/13-dashboards/hooks/use-clients-list'
+import { useClients } from '@/modules/11-clients/hooks/use-clients'
 import { ClientTabs } from '@/modules/15-app-shell/components/client-tabs'
 
 export default function ClientLayout({
@@ -14,7 +14,7 @@ export default function ClientLayout({
   params: Promise<{ clientId: string }>
 }) {
   const { clientId } = use(params)
-  const { items, isLoading } = useClientsList()
+  const { items, isLoading } = useClients()
 
   if (isLoading) {
     return (
@@ -32,7 +32,7 @@ export default function ClientLayout({
     )
   }
 
-  const exists = items.some((it) => it.client_id === clientId)
+  const exists = items.some((it) => it.id === clientId)
 
   if (!exists) {
     return (
