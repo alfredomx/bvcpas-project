@@ -32,12 +32,14 @@ vi.mock('@/modules/10-core-auth/api/auth.api', () => ({
 }))
 
 // AppShell ahora se monta dentro del layout. Mock del api de
-// dashboards para que useClientsList no haga fetch real, y mock de
+// 11-clients para que useClients no haga fetch real, y mock de
 // react-virtual + useParams/usePathname que la sidebar consume.
-vi.mock('@/modules/13-dashboards/api/customer-support.api', () => ({
-  listClientsForSidebar: vi.fn().mockResolvedValue({
-    period: { from: '2025-01-01', to: '2026-04-30' },
+vi.mock('@/modules/11-clients/api/clients.api', () => ({
+  listClients: vi.fn().mockResolvedValue({
     items: [],
+    total: 0,
+    page: 1,
+    pageSize: 50,
   }),
 }))
 

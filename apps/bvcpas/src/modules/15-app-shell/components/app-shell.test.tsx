@@ -11,10 +11,12 @@ import type { ReactNode } from 'react'
 
 import { AppShell } from './app-shell'
 
-vi.mock('@/modules/13-dashboards/api/customer-support.api', () => ({
-  listClientsForSidebar: vi.fn().mockResolvedValue({
-    period: { from: '2025-01-01', to: '2026-04-30' },
+vi.mock('@/modules/11-clients/api/clients.api', () => ({
+  listClients: vi.fn().mockResolvedValue({
     items: [],
+    total: 0,
+    page: 1,
+    pageSize: 50,
   }),
 }))
 

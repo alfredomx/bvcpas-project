@@ -250,6 +250,27 @@ parches el primitive.
 - Backend prod: `https://mapi.kodapp.com.mx`.
 - URL base: `NEXT_PUBLIC_API_URL` (env var pública en `.env.local`).
 
+### View vs. CRUD (D-bvcpas-026)
+
+Antes de decidir qué endpoint consume una pantalla nueva, aplica la
+heurística:
+
+- **`/v1/<recurso>`** = CRUD plano del recurso (1:1 con tabla DB).
+  Vive en su módulo de dominio. Ejemplos: `/v1/clients`,
+  `/v1/users`, `/v1/connections`.
+- **`/v1/views/<nombre>`** = endpoint de lectura que orquesta
+  múltiples recursos / agregaciones / cálculos para alimentar una
+  pantalla. Vive en el módulo `13-dashboards`. Ejemplo:
+  `/v1/views/uncats` (mezcla transactions + followups + clients).
+
+**Heurística:** si el frontend necesitaría 2+ fetch + JOIN/cálculo
+para construir la pantalla → candidato a view. Si es 1 fetch a 1
+recurso → CRUD plano.
+
+**Por qué:** una view siempre es más cara (SQL complejo, cache,
+bugs). REST estándar espera CRUD por defecto. No metas lógica de
+agregación en `/v1/<recurso>` "porque es más rápido".
+
 ### SDK tipado (D-bvcpas-024)
 
 Toda llamada nueva va por **`@/lib/api/client`**, un cliente
@@ -282,15 +303,15 @@ Lee `https://dev.alfredo.mx/v1/docs-json` y regenera
 
 ### Coexistencia temporal con `@/lib/http.ts` (D-bvcpas-025)
 
-Hasta v0.3.3, los módulos viejos siguen usando `@/lib/http.ts` (cliente
-manual con `ApiError`). v0.3.3 migra `useSession`, `useClientsList` y
-borra `http.ts`.
+Hasta v0.4.1, `useSession` (login, logout, me) sigue usando
+`@/lib/http.ts` (cliente manual con `ApiError`). v0.4.1 lo migra al
+SDK y borra `http.ts`.
 
 **Mientras dura la coexistencia:**
 
 - Features nuevas: usan `@/lib/api/client` (SDK).
-- Features que ya existían en v0.3.1: siguen con `@/lib/http.ts`. No
-  migrar de oportunidad — la migración es su propio commit en v0.3.3.
+- `useSession`: queda con `http.ts` hasta v0.4.1. No migrar de
+  oportunidad — la migración es su propio commit en v0.4.1.
 
 ---
 
