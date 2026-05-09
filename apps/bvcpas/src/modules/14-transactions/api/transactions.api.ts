@@ -1,0 +1,46 @@
+// Wrappers sobre `/v1/clients/:id/transactions` y
+// `/v1/clients/:id/transactions/sync` usando el SDK tipado.
+//
+// snake_case 1:1 con el backend (D-bvcpas-020).
+
+import { api } from '@/lib/api/client'
+import type { components, paths } from '@/lib/api/schema'
+
+export type TransactionsListResponse = components['schemas']['TransactionsListResponseDto']
+export type Transaction = TransactionsListResponse['items'][number]
+export type TransactionCategory = Transaction['category']
+
+export type SyncResult = components['schemas']['SyncResultDto']
+export type SyncBody = components['schemas']['SyncTransactionsBodyDto']
+
+export type ListTransactionsParams = NonNullable<
+  paths['/v1/clients/{id}/transactions']['get']['parameters']['query']
+>
+
+export async function listTransactions(
+  clientId: string,
+  params?: ListTransactionsParams,
+): Promise<TransactionsListResponse> {
+  const { data, error } = await api.GET('/v1/clients/{id}/transactions', {
+    params: {
+      path: { id: clientId },
+      query: params ?? {},
+    },
+  })
+  if (error) throw error
+  if (!data) throw new Error('listTransactions: empty response')
+  return data
+}
+
+export async function syncTransactions(
+  clientId: string,
+  body: SyncBody,
+): Promise<SyncResult> {
+  const { data, error } = await api.POST('/v1/clients/{id}/transactions/sync', {
+    params: { path: { id: clientId } },
+    body,
+  })
+  if (error) throw error
+  if (!data) throw new Error('syncTransactions: empty response')
+  return data
+}

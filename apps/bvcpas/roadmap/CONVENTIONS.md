@@ -410,6 +410,32 @@ git push origin --delete <app>/<NN-modulo>
 
 `--no-ff` preserva la historia del feature como un sub-grafo en main.
 
+### Renombramientos: cambio quirúrgico + nota fix (D-bvcpas-034)
+
+Cuando algo se renombra (label de UI, slug, feature, etc.) aplicamos
+el cambio mínimo viable para que **funcione** y **se llame
+correctamente en lo visible al usuario**. **No reescribimos**:
+
+- Documentación histórica (TDDs cerrados, comentarios viejos).
+- Nombres de carpetas de módulos.
+- Nombres de wrappers/hooks que describen el endpoint backend.
+- Componentes con prefijos históricos (`<CsHeader>`, etc.).
+
+La versión que renombra agrega un archivo
+`roadmap/<modulo>/fix-<descripcion>.md` con:
+
+- Qué se llamaba antes y cómo se llama ahora.
+- Lista de qué SÍ se renombró.
+- Lista de qué NO se renombró y por qué.
+- Consecuencias para futuros lectores.
+
+**Razón:** los renombramientos van a pasar todo el tiempo. Reescribir
+cada commit/comentario/import histórico es costoso y nunca se acaba.
+Cambio quirúrgico + nota explicativa = futuros lectores entienden sin
+frenar 2 horas de trabajo.
+
+Ejemplo: [v0.5.1 rename Customer Support → Uncat. Transactions](12-customer-support/fix-rename-customer-support-tab.md).
+
 ### Reglas duras
 
 1. **Solo una versión 🚧 a la vez.**

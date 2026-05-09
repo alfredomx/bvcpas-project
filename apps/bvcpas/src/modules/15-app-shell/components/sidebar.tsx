@@ -41,7 +41,7 @@ export function Sidebar() {
   })
 
   const handleSelect = (clientId: string) => {
-    router.push(`/dashboard/clients/${clientId}/customer-support`)
+    router.push(`/dashboard/clients/${clientId}/uncategorized-transactions`)
   }
 
   if (collapsed) {

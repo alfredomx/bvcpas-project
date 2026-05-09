@@ -7,7 +7,7 @@
 // - Renderiza una fila por cliente devuelto.
 // - Search local filtra cliente-side por legal_name (case-insensitive).
 // - Highlight (active) en la fila cuya URL matchea el clientId actual.
-// - Click en fila navega a /dashboard/clients/<id>/customer-support.
+// - Click en fila navega a /dashboard/clients/<id>/uncategorized-transactions.
 // - Filtro "All" presente (visualmente) — único filtro por ahora.
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -141,7 +141,7 @@ describe('<Sidebar>', () => {
     expect(screen.queryByText('Bravo')).not.toBeInTheDocument()
   })
 
-  it('navigates to /dashboard/clients/<id>/customer-support on row click', async () => {
+  it('navigates to /dashboard/clients/<id>/uncategorized-transactions on row click', async () => {
     listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme', 'c-acme')]))
 
     render(<Sidebar />, { wrapper })
@@ -151,7 +151,7 @@ describe('<Sidebar>', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /acme/i }))
 
-    expect(pushMock).toHaveBeenCalledWith('/dashboard/clients/c-acme/customer-support')
+    expect(pushMock).toHaveBeenCalledWith('/dashboard/clients/c-acme/uncategorized-transactions')
   })
 
   it('marks the row matching useParams().clientId as active', async () => {
