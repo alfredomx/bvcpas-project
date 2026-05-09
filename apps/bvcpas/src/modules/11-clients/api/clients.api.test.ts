@@ -62,7 +62,7 @@ describe('clients.api', () => {
   })
 
   describe('listClients', () => {
-    it('calls GET /v1/clients and returns the typed response', async () => {
+    it('calls GET /v1/clients with no query when no args are passed', async () => {
       const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleResponse))
       vi.stubGlobal('fetch', fetchMock)
 
@@ -75,6 +75,32 @@ describe('clients.api', () => {
       expect(calledRequest.method).toBe('GET')
       expect(result).toEqual(sampleResponse)
       expect(result.items[0].id).toBe('c-1')
+    })
+
+    it('forwards pageSize as a query param', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleResponse))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { listClients } = await importApi()
+      await listClients({ pageSize: 200 })
+
+      const [calledRequest] = fetchMock.mock.calls[0]
+      expect(calledRequest.url).toBe(`${TEST_BASE_URL}/v1/clients?pageSize=200`)
+    })
+
+    it('forwards multiple query params', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleResponse))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { listClients } = await importApi()
+      await listClients({ pageSize: 100, status: 'active', tier: 'gold' })
+
+      const [calledRequest] = fetchMock.mock.calls[0]
+      const url = new URL(calledRequest.url)
+      expect(url.pathname).toBe('/v1/clients')
+      expect(url.searchParams.get('pageSize')).toBe('100')
+      expect(url.searchParams.get('status')).toBe('active')
+      expect(url.searchParams.get('tier')).toBe('gold')
     })
 
     it('throws when the response is not 2xx', async () => {

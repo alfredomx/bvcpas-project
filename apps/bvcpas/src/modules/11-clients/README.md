@@ -35,6 +35,8 @@ Es el **primer consumidor del SDK tipado en producción**
 - v0.3.0 — tipos mínimos.
 - v0.4.0 — `listClients` + `useClients`. Sidebar consume este hook
   (D-bvcpas-027).
+- v0.4.1 — `listClients` acepta `ListClientsParams`. Sidebar pasa
+  `pageSize=200` para evitar el truncado de mapi a 50 (D-bvcpas-029).
 
 ## Pantallas que lo consumen
 
