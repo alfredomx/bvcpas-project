@@ -1,8 +1,19 @@
-# 12-customer-support — Tab Customer Support del cliente
+# 12-customer-support (uncat-transactions) — Tab Uncat. Transactions del cliente
+
+> **Nota:** la tab fue renombrada de "Customer Support" a
+> "Uncat. Transactions" en v0.5.1. La carpeta del módulo se queda
+> con su nombre original (`12-customer-support`) por D-bvcpas-034
+> (cambios quirúrgicos). Ver
+> [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md).
 
 **App:** bvcpas
-**Status:** ✅ v0.5.0 cerrada (header + stats + suggested + quick links + timeline). Tabla Uncategorized/AMA's pendiente para v0.5.1.
-**Versiones que lo construyen:** [v0.5.0](v0.5.0.md)
+**Status:** ✅ v0.5.1 — pantalla completa (header + stats + suggested + quick links + timeline + tabla Uncategorized/AMA's con sync).
+**Versiones que lo construyen:**
+
+- [v0.5.0](v0.5.0.md) — header + stats + suggested + quick links + timeline.
+- [v0.5.1](../14-transactions/v0.5.1.md) — agrega `<CsTransactions>` (tabla + sync) + rename de la tab.
+
+**Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-09
 
 ---
@@ -44,6 +55,7 @@ Match 1:1 con
 | `<CsSuggestedAction>`      | Card con CTA "Draft follow-up" (placeholder).              |
 | `<CsQuickLinks>`           | 6 botones placeholder (toast on click).                    |
 | `<CsActivityTimeline>`     | 12 barras mensuales; mes anterior highlighted.             |
+| `<CsTransactions>`         | Leyenda del filter + Sync + tabs Uncategorized/AMA's (v0.5.1). |
 
 ## Helpers (v0.5.0)
 
