@@ -30,7 +30,7 @@ falta.
 - `10-core-auth` ✅ (v0.2.0 + v0.2.1 cerradas — login + tests).
 - `11-clients` 🚧 (mínimo en v0.3.0 — solo tipos).
 - `13-dashboards` 🚧 (v0.3.0 cerrada — api+hook customer-support).
-- `15-app-shell` ✅ (v0.3.0 cerrada — AppShell + sidebar + tabs + 8 placeholders).
+- `15-app-shell` ✅ (v0.3.0 + v0.3.1 cerradas — AppShell + sidebar + tabs + 8 placeholders; v0.3.1 strippeó el diseño cosmético).
 - `12-customer-support` 📅 (planeado para v0.4.0 — pantalla real Customer Support).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
@@ -312,6 +312,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-019 | Política de branches: `<app>/<NN-modulo>` sin versión; tag `<app>-vX.Y.Z`. Convención unificada con mapi | 0.3.0   | Sí          |
 | D-bvcpas-020 | Naming campos: snake_case 1:1 con backend; sin adapters camelCase                                        | 0.3.0   | Sí          |
 | D-bvcpas-021 | Aliases shadcn dentro de `@theme` con prefijo `--color-*` (no en `:root` plano) — Tailwind v4            | 0.3.0   | Sí          |
+| D-bvcpas-022 | Strip de diseño cosmético antes de rediseñar desde cero — sólo aliases shadcn neutros, sin tokens marca  | 0.3.1   | Sí          |
 
 ---
 

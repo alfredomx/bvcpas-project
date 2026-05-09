@@ -1,18 +1,10 @@
 'use client'
 
-// Layout de un cliente: barra de tabs + children (el contenido de la
-// tab activa).
-//
-// Si el clientId de la URL no existe en la lista de clientes (devuelta
-// por useClientsList), se muestra "Client not found" en el panel
-// derecho. La sidebar sigue funcionando normal.
-
 import { use } from 'react'
-import { FileQuestion } from 'lucide-react'
 
+import { Skeleton } from '@/components/ui/skeleton'
 import { useClientsList } from '@/modules/13-dashboards/hooks/use-clients-list'
 import { ClientTabs } from '@/modules/15-app-shell/components/client-tabs'
-import { Skeleton } from '@/components/ui/skeleton'
 
 export default function ClientLayout({
   children,
@@ -27,7 +19,7 @@ export default function ClientLayout({
   if (isLoading) {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex h-10 items-center gap-2 border-b border-border-default px-4">
+        <div className="flex h-10 items-center gap-2 border-b px-4">
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-6 w-24" />
           <Skeleton className="h-6 w-16" />
@@ -44,19 +36,11 @@ export default function ClientLayout({
 
   if (!exists) {
     return (
-      <section className="flex h-full flex-col items-center justify-center gap-4 px-6 py-16 text-center">
-        <div className="flex size-14 items-center justify-center rounded-full bg-status-danger-bg">
-          <FileQuestion className="size-6 text-status-danger" aria-hidden />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-status-danger">
-            Not found
-          </p>
-          <h2 className="text-[22px] font-bold tracking-tight text-brand-navy">Client not found</h2>
-        </div>
-        <p className="max-w-sm text-[13px] leading-relaxed text-text-muted">
-          The client in the URL does not exist or you do not have access. Pick another from the
-          sidebar.
+      <section className="flex h-full flex-col items-center justify-center gap-2 px-6 py-16 text-center">
+        <p className="text-xs uppercase tracking-wide text-destructive">Not found</p>
+        <h2 className="text-xl font-semibold">Client not found</h2>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          The client in the URL does not exist or you do not have access.
         </p>
       </section>
     )

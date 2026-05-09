@@ -1,28 +1,20 @@
 'use client'
 
-// <Sidebar>: lista virtualizada de clientes con search local y filtro
-// "All" (único filtro en v0.3.0). Diseño 1:1 con reference/cs-navy2.css
-// (.stream-list-pane, .stream-tabs, .stream-search-wrap, .st-tab).
-//
-// Virtualización (D-bvcpas-016): @tanstack/react-virtual desde día 1
-// aunque haya <100 clientes, para evitar refactor cuando crezca.
-
 import { useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { ChevronsLeft, Search } from 'lucide-react'
 
-import { useClientsList } from '@/modules/13-dashboards/hooks/use-clients-list'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
+import { useClientsList } from '@/modules/13-dashboards/hooks/use-clients-list'
 
 import { useSidebarCollapsed } from '../hooks/use-sidebar-collapsed'
 import { SidebarCollapsed } from './sidebar-collapsed'
 import { SidebarRow } from './sidebar-row'
 
-// Fila densa: nombre+monto / status+contacto / sparkline. Match 1:1
-// con reference (.sr-body 64.89px medido en DevTools del prototipo).
-const ROW_HEIGHT = 65
+const ROW_HEIGHT = 48
 const SKELETON_ROW_COUNT = 7
 
 export function Sidebar() {
@@ -57,58 +49,43 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-full w-103 flex-col border-r border-border-default bg-surface-canvas">
-      {/* Stream tabs (filtros). Hoy solo "All" — espejo de .stream-tabs. */}
-      <div className="flex items-center gap-2 border-b border-border-default bg-surface-soft px-3.5 pt-2.5">
-        <button
+    <aside className="flex h-full w-72 shrink-0 flex-col border-r">
+      <div className="flex h-10 items-center gap-2 border-b px-3">
+        <span className="text-sm font-medium">All</span>
+        <span className="text-xs text-muted-foreground">{items.length}</span>
+        <span className="flex-1" />
+        <Button
           type="button"
-          className="flex h-8 items-center gap-1.5 border-b-[2.5px] border-brand-accent pb-2 text-[11.5px] font-medium text-brand-navy"
-        >
-          All
-          <span className="rounded-full bg-brand-accent/20 px-1.5 py-0.5 font-mono text-[9.5px] font-medium text-brand-accent-strong">
-            {items.length}
-          </span>
-        </button>
-        <div className="flex-1" />
-        <button
-          type="button"
+          variant="ghost"
+          size="icon-sm"
           onClick={() => setCollapsed(true)}
           aria-label="Collapse sidebar"
-          className={cn(
-            'mb-1 flex size-7 shrink-0 items-center justify-center rounded text-text-tertiary transition-colors',
-            'hover:bg-surface-muted hover:text-brand-navy',
-          )}
         >
-          <ChevronsLeft className="size-4" />
-        </button>
+          <ChevronsLeft />
+        </Button>
       </div>
 
-      {/* Search wrap — espejo de .stream-search-wrap */}
-      <div className="border-b border-border-soft bg-surface-canvas p-3">
+      <div className="border-b p-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-text-tertiary" />
-          <input
+          <Search className="pointer-events-none absolute left-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search clients…"
-            className={cn(
-              'h-8 w-full rounded-md border border-border-strong bg-surface-soft pl-8 pr-3 text-[11.5px] text-text-primary placeholder:text-text-tertiary',
-              'outline-none transition focus:border-brand-navy-soft focus:bg-surface-canvas focus:shadow-[0_0_0_3px_rgba(30,42,82,0.10)]',
-            )}
+            className="pl-8"
           />
         </div>
       </div>
 
-      {/* Lista virtualizada */}
       {isLoading ? (
-        <div data-testid="sidebar-skeleton" className="flex flex-col gap-1.5 p-3">
+        <div data-testid="sidebar-skeleton" className="flex flex-col gap-1.5 p-2">
           {Array.from({ length: SKELETON_ROW_COUNT }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
+            <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
       ) : (
-        <div ref={scrollRef} className="flex-1 overflow-y-auto bg-surface-canvas">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div
             style={{
               height: virtualizer.getTotalSize(),

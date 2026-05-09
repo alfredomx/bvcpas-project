@@ -1,102 +1,34 @@
 @import 'tailwindcss';
 
-/* ============================================================================
-   Identidad bvcpas (D-bvcpas-009)
-   ----------------------------------------------------------------------------
-   Tokens semánticos centralizados. Para cambiar la identidad visual, editar
-   solo este archivo — los componentes consumen estos tokens, nunca colores
-   literales.
-
-   Reglas:
-   - Componentes usan clases tipo `bg-surface-canvas`, `text-text-primary`,
-     `bg-brand-navy`, `text-brand-accent`, `border-border-strong`.
-   - shadcn/ui consume los aliases mapeados (`bg-primary`, `text-foreground`,
-     etc.) que viven en :root abajo. Esos aliases apuntan a los tokens
-     semánticos, así shadcn renderiza con la identidad bvcpas sin reescribir
-     los componentes.
-   - Status colors (`status-success`, `status-warning`, etc.) se usan en
-     pills, badges, alertas. Tienen fondos sutiles con alpha 0.10.
-
-   Paleta heredada de reference/cs-navy2.css y reference/login-navy-v2.html.
-   ============================================================================ */
+/* v0.3.1 (D-bvcpas-022): tokens custom de marca removidos. Sólo viven
+   los aliases shadcn estándar para que los componentes ui/* renderen
+   con su estilo neutro. El rediseño de marca se construirá desde cero
+   en una versión posterior. */
 
 @theme {
-  /* Fonts */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
 
-  /* Surfaces (fondos) */
-  --color-surface-canvas: #ffffff;
-  --color-surface-soft: #f7f8fb;
-  --color-surface-muted: #eef0f6;
-  --color-surface-strong: #e3e6ef;
-  --color-surface-stronger: #d3d7e3;
-  --color-surface-hover: #f1f3f8;
-  --color-surface-selected: #e8ebf3;
-  --color-surface-lavender: #eaedf6;
-  --color-surface-lavender-strong: #dde2f0;
-
-  /* Borders */
-  --color-border-default: #e5e7ef;
-  --color-border-strong: #ccd1de;
-  --color-border-soft: #eef0f5;
-
-  /* Text scale (toda en navy) */
-  --color-text-primary: #1a2244;
-  --color-text-secondary: #424b6e;
-  --color-text-muted: #6b7390;
-  --color-text-tertiary: #9aa0b3;
-  --color-text-disabled: #c2c6d3;
-  --color-text-inverse: #ffffff;
-
-  /* Brand (navy + naranja) */
-  --color-brand-navy: #1a2244;
-  --color-brand-navy-soft: #2a356b;
-  --color-brand-navy-softer: #3a4685;
-  --color-brand-accent: #f59e0b;
-  --color-brand-accent-strong: #ea7f0c;
-  --color-brand-accent-soft: #fdba3a;
-
-  /* Status */
-  --color-status-success: #2f8f5e;
-  --color-status-warning: #c97a14;
-  --color-status-danger: #c64a3a;
-  --color-status-info: #1e2a52;
-  --color-status-special: #4b3a78;
-
-  /* Status backgrounds (alpha 0.10 sobre el color base) */
-  --color-status-success-bg: rgba(47, 143, 94, 0.1);
-  --color-status-warning-bg: rgba(201, 122, 20, 0.1);
-  --color-status-danger-bg: rgba(198, 74, 58, 0.1);
-  --color-status-info-bg: rgba(30, 42, 82, 0.08);
-  --color-status-special-bg: rgba(75, 58, 120, 0.1);
-
-  /* shadcn/ui aliases — los tokens semánticos de shadcn (bg-popover,
-     bg-primary, text-foreground, etc.) DEBEN vivir dentro de @theme
-     con prefijo --color-* para que Tailwind v4 los genere como utility
-     classes. Se mapean a los tokens bvcpas. */
-  --color-background: var(--color-surface-canvas);
-  --color-foreground: var(--color-text-primary);
-  --color-card: var(--color-surface-canvas);
-  --color-card-foreground: var(--color-text-primary);
-  --color-popover: var(--color-surface-canvas);
-  --color-popover-foreground: var(--color-text-primary);
-  --color-primary: var(--color-brand-navy);
-  --color-primary-foreground: var(--color-text-inverse);
-  --color-secondary: var(--color-surface-muted);
-  --color-secondary-foreground: var(--color-text-primary);
-  --color-muted: var(--color-surface-soft);
-  --color-muted-foreground: var(--color-text-muted);
-  --color-accent: var(--color-surface-muted);
-  --color-accent-foreground: var(--color-text-primary);
-  --color-destructive: var(--color-status-danger);
-  --color-destructive-foreground: var(--color-text-inverse);
-  --color-border: var(--color-border-default);
-  --color-input: var(--color-border-default);
-  --color-ring: var(--color-brand-navy);
-
-  /* Radio base */
-  --radius: 0.5rem;
+  /* Aliases shadcn (neutros, sin marca). En @theme con prefijo
+     --color-* para que Tailwind v4 genere las utility classes. */
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.145 0 0);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.145 0 0);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.145 0 0);
+  --color-primary: oklch(0.205 0 0);
+  --color-primary-foreground: oklch(0.985 0 0);
+  --color-secondary: oklch(0.97 0 0);
+  --color-secondary-foreground: oklch(0.205 0 0);
+  --color-muted: oklch(0.97 0 0);
+  --color-muted-foreground: oklch(0.556 0 0);
+  --color-accent: oklch(0.97 0 0);
+  --color-accent-foreground: oklch(0.205 0 0);
+  --color-destructive: oklch(0.577 0.245 27.325);
+  --color-border: oklch(0.922 0 0);
+  --color-input: oklch(0.922 0 0);
+  --color-ring: oklch(0.708 0 0);
 }
 
 html,
@@ -107,15 +39,7 @@ body {
 }
 
 body {
-  background: var(--color-surface-canvas);
-  color: var(--color-text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
-  /* Font features de Inter usados en reference/cs-styles.css para
-     glifos alternativos ('a', 'g', 'l') que dan el look del prototipo. */
-  font-feature-settings:
-    'cv11',
-    'ss01',
-    'ss03';
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.5;
+  background: var(--color-background);
+  color: var(--color-foreground);
 }

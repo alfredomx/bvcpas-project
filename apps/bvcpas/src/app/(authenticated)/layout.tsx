@@ -41,8 +41,8 @@ export default function AuthenticatedLayout({ children }: { children: React.Reac
 
   if (isLoading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-canvas">
-        <div className="size-6 animate-spin rounded-full border-2 border-border-strong border-t-brand-navy" />
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="size-6 animate-spin rounded-full border-2 border-muted border-t-foreground" />
       </div>
     )
   }
