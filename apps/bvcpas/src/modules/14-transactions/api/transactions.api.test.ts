@@ -130,4 +130,74 @@ describe('transactions.api', () => {
       ).rejects.toBeDefined()
     })
   })
+
+  describe('saveTransactionNote', () => {
+    const sampleResponse = {
+      id: 'r-1',
+      client_id: 'c-1',
+      realm_id: '9000',
+      qbo_txn_type: 'Expense',
+      qbo_txn_id: '13192',
+      txn_date: '2025-09-01',
+      vendor_name: 'CCS',
+      memo: 'memo',
+      split_account: 'Bank',
+      category: 'uncategorized_expense',
+      amount: '200.00',
+      client_note: 'office supplies',
+      qbo_account_id: '84',
+      completed: true,
+      responded_at: '2026-05-10T00:00:00.000Z',
+      synced_to_qbo_at: null,
+    }
+
+    it('PATCHes with qbo_sync=false by default', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleResponse))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { saveTransactionNote } = await importApi()
+      await saveTransactionNote('c-1', 't-1', {
+        note: 'office supplies',
+        qbo_account_id: '84',
+        completed: true,
+      })
+
+      const [calledRequest] = fetchMock.mock.calls[0]
+      const url = new URL(calledRequest.url)
+      expect(url.pathname).toBe('/v1/clients/c-1/transactions/responses/t-1')
+      expect(url.searchParams.get('qbo_sync')).toBe('false')
+      expect(calledRequest.method).toBe('PATCH')
+    })
+
+    it('PATCHes with qbo_sync=true when qboSync option is true', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleResponse))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { saveTransactionNote } = await importApi()
+      await saveTransactionNote(
+        'c-1',
+        't-1',
+        { note: 'office supplies', qbo_account_id: '84', completed: true },
+        { qboSync: true },
+      )
+
+      const [calledRequest] = fetchMock.mock.calls[0]
+      const url = new URL(calledRequest.url)
+      expect(url.searchParams.get('qbo_sync')).toBe('true')
+    })
+
+    it('throws on non-2xx', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(400, {}))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { saveTransactionNote } = await importApi()
+      await expect(
+        saveTransactionNote('c-1', 't-1', {
+          note: 'x',
+          qbo_account_id: null,
+          completed: false,
+        }),
+      ).rejects.toBeDefined()
+    })
+  })
 })
