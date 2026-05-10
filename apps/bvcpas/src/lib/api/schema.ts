@@ -901,6 +901,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/clients/{id}/transactions/responses/{txnId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /v1/clients/:id/transactions/responses/:txnId
+         * @description Admin guarda o edita la nota de una transacción en nombre del cliente. UPSERT — si ya existe respuesta, la actualiza. `:txnId` es el UUID interno de la transacción en `client_transactions`.
+         */
+        patch: operations["ClientTransactionResponsesController_saveNote"];
+        trace?: never;
+    };
     "/v1/clients/{id}/followups/{period}": {
         parameters: {
             query?: never;
@@ -969,7 +989,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/public/transactions/{token}": {
+    "/v1/public/uncats/{token}": {
         parameters: {
             query?: never;
             header?: never;
@@ -977,7 +997,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * /v1/public/transactions/:token
+         * /v1/public/uncats/:token
          * @description Endpoint público (sin JWT, autenticado por token) para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.
          */
         get: operations["PublicTransactionsController_getTransactions"];
@@ -989,7 +1009,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/public/transactions/{token}/{txnId}": {
+    "/v1/public/uncats/{token}/{txnId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1003,7 +1023,7 @@ export interface paths {
         options?: never;
         head?: never;
         /**
-         * /v1/public/transactions/:token/:txnId
+         * /v1/public/uncats/:token/:txnId
          * @description El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita. `:txnId` es el id UUID interno de la transacción.
          */
         patch: operations["PublicTransactionsController_saveNote"];
@@ -1449,7 +1469,6 @@ export interface components {
             transactionsFilter?: "all" | "income" | "expense";
             ccEmail?: string | null;
             primaryContactName?: string | null;
-            /** Format: email */
             primaryContactEmail?: string | null;
             notes?: string | null;
         };
@@ -1788,8 +1807,18 @@ export interface components {
                 /** @enum {string} */
                 category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
                 amount: string;
+                qbo_account_id: string | null;
                 /** Format: date-time */
                 synced_at: string;
+                response: {
+                    client_note: string;
+                    qbo_account_id: string | null;
+                    completed: boolean;
+                    /** Format: date-time */
+                    responded_at: string;
+                    /** Format: date-time */
+                    synced_to_qbo_at: string | null;
+                } | null;
             }[];
             total: number;
         };
@@ -1810,11 +1839,44 @@ export interface components {
                 category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
                 amount: string;
                 client_note: string;
+                qbo_account_id: string | null;
+                completed: boolean;
                 /** Format: date-time */
                 responded_at: string;
                 /** Format: date-time */
                 synced_to_qbo_at: string | null;
             }[];
+        };
+        /** @description Cuerpo del PATCH para guardar nota + account del cliente/operador */
+        SaveNoteBodyDto: {
+            note: string;
+            /** @description AccountRef.value del COA de QBO — guardado temporalmente hasta writeback */
+            qbo_account_id?: string | null;
+            /** @description true cuando el operador/cliente considera el llenado correcto */
+            completed?: boolean;
+        };
+        TransactionResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            client_id: string;
+            realm_id: string;
+            qbo_txn_type: string;
+            qbo_txn_id: string;
+            txn_date: string;
+            vendor_name: string | null;
+            memo: string | null;
+            split_account: string | null;
+            /** @enum {string} */
+            category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
+            amount: string;
+            client_note: string;
+            qbo_account_id: string | null;
+            completed: boolean;
+            /** Format: date-time */
+            responded_at: string;
+            /** Format: date-time */
+            synced_to_qbo_at: string | null;
         };
         FollowupDto: {
             /** Format: uuid */
@@ -1928,31 +1990,6 @@ export interface components {
                 responded_at: string | null;
             }[];
         };
-        /** @description Cuerpo del PATCH para guardar nota del cliente */
-        SaveNoteBodyDto: {
-            note: string;
-        };
-        TransactionResponseDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            client_id: string;
-            realm_id: string;
-            qbo_txn_type: string;
-            qbo_txn_id: string;
-            txn_date: string;
-            vendor_name: string | null;
-            memo: string | null;
-            split_account: string | null;
-            /** @enum {string} */
-            category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
-            amount: string;
-            client_note: string;
-            /** Format: date-time */
-            responded_at: string;
-            /** Format: date-time */
-            synced_to_qbo_at: string | null;
-        };
         CustomerSupportListResponseDto: {
             period: {
                 from: string;
@@ -2042,6 +2079,16 @@ export interface components {
                     amas: number;
                 }[];
             };
+            public_link: {
+                token: string;
+                /** Format: uri */
+                url: string;
+                label: string | null;
+                /** Format: date-time */
+                expires_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+            } | null;
         };
         /** @description Respuesta del healthcheck principal */
         HealthResponseDto: {
@@ -3315,6 +3362,8 @@ export interface operations {
                 filter?: "all" | "income" | "expense";
                 startDate?: string;
                 endDate?: string;
+                /** @description Buscar por qbo_txn_id exacto */
+                qboTxnId?: string;
             };
             header?: never;
             path: {
@@ -3380,6 +3429,39 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TransactionResponsesListDto"];
                 };
+            };
+        };
+    };
+    ClientTransactionResponsesController_saveNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                txnId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveNoteBodyDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionResponseDto"];
+                };
+            };
+            /** @description Transacción no encontrada en el snapshot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

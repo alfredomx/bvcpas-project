@@ -27,6 +27,8 @@ const sampleListResponse = {
       category: 'uncategorized_expense',
       amount: '200.00',
       synced_at: '2026-04-30T23:59:00.000Z',
+      qbo_account_id: null,
+      response: null,
     },
   ],
   total: 1,

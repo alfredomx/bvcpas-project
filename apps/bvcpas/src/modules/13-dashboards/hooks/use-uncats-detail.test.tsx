@@ -47,6 +47,7 @@ function makeResponse(): UncatsDetailResponse {
       previous_year_total: { uncats: 1, amas: 0 },
       by_month: Array.from({ length: 12 }, (_, i) => ({ month: i + 1, uncats: 0, amas: 0 })),
     },
+    public_link: null,
   }
 }
 

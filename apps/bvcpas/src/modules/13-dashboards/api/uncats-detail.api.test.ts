@@ -48,6 +48,7 @@ const sampleResponse = {
       amas: 0,
     })),
   },
+  public_link: null,
 }
 
 async function importApi(): Promise<typeof import('./uncats-detail.api')> {

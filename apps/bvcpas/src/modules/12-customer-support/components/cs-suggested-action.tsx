@@ -37,7 +37,7 @@ export function CsSuggestedAction({ client, followup, stats }: CsSuggestedAction
 
   return (
     <Card>
-      <CardContent className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between">
+      <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-xs uppercase tracking-wide text-muted-foreground">
             Suggested next action

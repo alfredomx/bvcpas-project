@@ -1,14 +1,11 @@
-// Grid de KPIs del cliente. 6 stats: At risk, Uncats {mes anterior},
+// Grid de KPIs del cliente. 6 stats: At risk, Total uncats,
 // Silent streak, AMA's, Total backlog, Progress.
 
-import { dashboardMonth } from '../lib/date-range'
 import { formatAmount, silentStreakInMonths } from '../lib/format'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
 export interface CsStatsGridProps {
   stats: UncatsDetailResponse['stats']
-  /** "now" para calcular el mes anterior. Default: new Date(). */
-  now?: Date
 }
 
 interface StatCellProps {
@@ -25,8 +22,7 @@ function StatCell({ label, value }: StatCellProps) {
   )
 }
 
-export function CsStatsGrid({ stats, now = new Date() }: CsStatsGridProps) {
-  const monthLabel = dashboardMonth(now).label
+export function CsStatsGrid({ stats }: CsStatsGridProps) {
   const totalBacklog = stats.uncats_count + stats.amas_count
   const silentMonths = silentStreakInMonths(stats.silent_streak_days)
   const silentDisplay =
@@ -35,7 +31,7 @@ export function CsStatsGrid({ stats, now = new Date() }: CsStatsGridProps) {
   return (
     <div className="grid grid-cols-2 divide-x rounded-md border md:grid-cols-6">
       <StatCell label="At risk" value={formatAmount(stats.amount_total)} />
-      <StatCell label={`Uncats ${monthLabel}`} value={String(stats.uncats_count)} />
+      <StatCell label="Total uncats" value={String(stats.uncats_count)} />
       <StatCell label="Silent streak" value={silentDisplay} />
       <StatCell label="AMA's" value={String(stats.amas_count)} />
       <StatCell label="Total backlog" value={String(totalBacklog)} />

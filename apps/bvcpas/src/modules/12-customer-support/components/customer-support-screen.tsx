@@ -13,6 +13,7 @@ import { useState } from 'react'
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { useUncatsDetail } from '@/modules/13-dashboards/hooks/use-uncats-detail'
+import { useQboAccounts } from '@/modules/14-transactions/hooks/use-qbo-accounts'
 
 import { CsActivityTimeline } from './cs-activity-timeline'
 import { CsHeader } from './cs-header'
@@ -32,6 +33,7 @@ export interface CustomerSupportScreenProps {
 export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) {
   const { data, isLoading, isError } = useUncatsDetail(clientId)
   const [tab, setTab] = useState<TransactionsTab>('uncategorized')
+  const { accounts } = useQboAccounts(data?.client.qbo_realm_id ?? null)
 
   if (isLoading) {
     return (
@@ -71,6 +73,7 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
       <CsTransactions
         clientId={data.client.id}
         realmId={data.client.qbo_realm_id}
+        accounts={accounts}
         clientFilter={data.client.transactions_filter as ClientFilter}
         tab={tab}
         onTabChange={setTab}
