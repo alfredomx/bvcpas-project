@@ -13,6 +13,7 @@ const getQboAccountsMock = vi.fn()
 const saveTransactionNoteMock = vi.fn()
 const toastSuccessMock = vi.fn()
 const toastErrorMock = vi.fn()
+const toastWarningMock = vi.fn()
 
 vi.mock('@/modules/14-transactions/api/qbo-accounts.api', () => ({
   getQboAccounts: (...args: unknown[]) => getQboAccountsMock(...args),
@@ -27,6 +28,7 @@ vi.mock('sonner', () => ({
     message: vi.fn(),
     success: (...args: unknown[]) => toastSuccessMock(...args),
     error: (...args: unknown[]) => toastErrorMock(...args),
+    warning: (...args: unknown[]) => toastWarningMock(...args),
   },
 }))
 
@@ -59,6 +61,7 @@ describe('<TxDetailModal>', () => {
     saveTransactionNoteMock.mockReset()
     toastSuccessMock.mockReset()
     toastErrorMock.mockReset()
+    toastWarningMock.mockReset()
     window.localStorage.clear()
     getQboAccountsMock.mockResolvedValue([
       { Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' },
@@ -174,6 +177,7 @@ describe('<TxDetailModal>', () => {
       sampleTx.client_id,
       sampleTx.id,
       expect.objectContaining({ note: 'office supplies' }),
+      expect.objectContaining({ qboSync: expect.any(Boolean) }),
     )
   })
 
@@ -259,4 +263,99 @@ describe('<TxDetailModal>', () => {
       ' - per client approval',
     )
   })
+
+  it('passes qboSync=true to wrapper when Update in QB checkbox is on', async () => {
+    window.localStorage.setItem('bvcpas.updateInQb', 'true')
+    saveTransactionNoteMock.mockResolvedValue({})
+
+    render(
+      <TxDetailModal
+        transaction={sampleTx}
+        realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        open={true}
+        onClose={() => {}}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(/what was this transaction for/i), 'office supplies')
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(saveTransactionNoteMock).toHaveBeenCalledTimes(1)
+    })
+    const callArgs = saveTransactionNoteMock.mock.calls[0]
+    // saveTransactionNote(clientId, txnId, body, options)
+    expect(callArgs[3]).toEqual({ qboSync: true })
+  })
+
+  it('passes qboSync=false when checkbox is off', async () => {
+    window.localStorage.setItem('bvcpas.updateInQb', 'false')
+    saveTransactionNoteMock.mockResolvedValue({})
+
+    render(
+      <TxDetailModal
+        transaction={sampleTx}
+        realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        open={true}
+        onClose={() => {}}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(/what was this transaction for/i), 'office supplies')
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(saveTransactionNoteMock).toHaveBeenCalledTimes(1)
+    })
+    const callArgs = saveTransactionNoteMock.mock.calls[0]
+    expect(callArgs[3]).toEqual({ qboSync: false })
+  })
+
+  it.each([
+    ['QBO_ACCOUNT_ID_REQUIRED', 400, /select a qbo account/i, 'error'],
+    ['TXN_TYPE_NOT_SUPPORTED', 400, /purchase and deposit/i, 'error'],
+    ['INTUIT_STALE_SYNC_TOKEN', 409, /stale/i, 'warning'],
+    ['INTUIT_API_ERROR', 502, /quickbooks update failed/i, 'warning'],
+  ] as const)(
+    'shows specific %s for code/status %s',
+    async (code, status, pattern, severity) => {
+      const err: Error & { code?: string; statusCode?: number } = new Error(code)
+      err.code = code
+      err.statusCode = status
+      saveTransactionNoteMock.mockRejectedValue(err)
+
+      const onClose = vi.fn()
+      render(
+        <TxDetailModal
+          transaction={sampleTx}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={onClose}
+        />,
+        { wrapper },
+      )
+
+      const user = userEvent.setup()
+      await user.type(screen.getByLabelText(/what was this transaction for/i), 'office supplies')
+      await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+      const targetMock = severity === 'warning' ? toastWarningMock : toastErrorMock
+      await waitFor(() => {
+        expect(targetMock).toHaveBeenCalledWith(expect.stringMatching(pattern))
+      })
+      // Errores 400 (validación) bloquean — modal queda abierto.
+      // Errores 409/502 (writeback fallido) — la nota local sí se guardó,
+      // pero el modal queda abierto para que el operador re-intente sync
+      // o cierre manualmente. En ambos casos onClose NO se llama
+      // automáticamente.
+      expect(onClose).not.toHaveBeenCalled()
+    },
+  )
 })

@@ -916,7 +916,9 @@ export interface paths {
         head?: never;
         /**
          * PATCH /v1/clients/:id/transactions/responses/:txnId
-         * @description Admin guarda o edita la nota de una transacción en nombre del cliente. UPSERT — si ya existe respuesta, la actualiza. `:txnId` es el UUID interno de la transacción en `client_transactions`.
+         * @description Admin guarda o edita la nota de una transacción en nombre del cliente. UPSERT — si ya existe respuesta, la actualiza.
+         *
+         *     Si se manda `?qbo_sync=true`, además del upsert local hace writeback a QBO: GET → mergea AccountRef + PrivateNote → POST update. Requiere `qbo_account_id` no-null. Solo soporta Purchase y Deposit en v1; otros tipos devuelven `TXN_TYPE_NOT_SUPPORTED`. Cuando el writeback tiene éxito, marca `synced_to_qbo_at` y fuerza `completed=true`. Si falla, el response queda guardado para reintentar.
          */
         patch: operations["ClientTransactionResponsesController_saveNote"];
         trace?: never;
@@ -1812,6 +1814,7 @@ export interface components {
                 synced_at: string;
                 response: {
                     client_note: string;
+                    appended_text: string | null;
                     qbo_account_id: string | null;
                     completed: boolean;
                     /** Format: date-time */
@@ -1839,6 +1842,7 @@ export interface components {
                 category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
                 amount: string;
                 client_note: string;
+                appended_text: string | null;
                 qbo_account_id: string | null;
                 completed: boolean;
                 /** Format: date-time */
@@ -1850,6 +1854,8 @@ export interface components {
         /** @description Cuerpo del PATCH para guardar nota + account del cliente/operador */
         SaveNoteBodyDto: {
             note: string;
+            /** @description Sufijo opcional que se concatena a `note` al hacer writeback a QBO (no afecta el note guardado en mapi). Ej: "as per client's notes (05-10-2026)". */
+            appended_text?: string | null;
             /** @description AccountRef.value del COA de QBO — guardado temporalmente hasta writeback */
             qbo_account_id?: string | null;
             /** @description true cuando el operador/cliente considera el llenado correcto */
@@ -1871,6 +1877,7 @@ export interface components {
             category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
             amount: string;
             client_note: string;
+            appended_text: string | null;
             qbo_account_id: string | null;
             completed: boolean;
             /** Format: date-time */
@@ -3434,7 +3441,10 @@ export interface operations {
     };
     ClientTransactionResponsesController_saveNote: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description true para sincronizar también a QBO al guardar. */
+                qbo_sync?: boolean;
+            };
             header?: never;
             path: {
                 id: string;
@@ -3456,8 +3466,29 @@ export interface operations {
                     "application/json": components["schemas"]["TransactionResponseDto"];
                 };
             };
+            /** @description qbo_account_id requerido o tipo no soportado */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Transacción no encontrada en el snapshot */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SyncToken stale: la transacción cambió en QBO */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error de Intuit API durante el writeback */
+            502: {
                 headers: {
                     [name: string]: unknown;
                 };

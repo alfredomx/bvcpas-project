@@ -34,15 +34,27 @@ export async function listTransactions(
   return data
 }
 
+export interface SaveTransactionNoteOptions {
+  /**
+   * Si `true`, mapi además del upsert local hace writeback a QBO.
+   * Equivale a query param `?qbo_sync=true`. Default `false`.
+   */
+  qboSync?: boolean
+}
+
 export async function saveTransactionNote(
   clientId: string,
   txnId: string,
   body: SaveNoteBody,
+  options?: SaveTransactionNoteOptions,
 ): Promise<TransactionResponse> {
   const { data, error } = await api.PATCH(
     '/v1/clients/{id}/transactions/responses/{txnId}',
     {
-      params: { path: { id: clientId, txnId } },
+      params: {
+        path: { id: clientId, txnId },
+        query: { qbo_sync: options?.qboSync ?? false },
+      },
       body,
     },
   )
