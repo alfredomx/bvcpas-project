@@ -19,15 +19,21 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
 import { useQboAccounts } from '@/modules/14-transactions/hooks/use-qbo-accounts'
 
@@ -75,6 +81,10 @@ export function TxDetailModal({
   const { suffix, setSuffix } = useNoteSuffix()
   const [note, setNote] = useState('')
   const [selectedAccount, setSelectedAccount] = useState('')
+  const [comboOpen, setComboOpen] = useState(false)
+
+  const selectedAccountName =
+    accounts.find((a) => a.Id === selectedAccount)?.Name ?? ''
 
   if (!transaction) return null
 
@@ -129,41 +139,58 @@ export function TxDetailModal({
             </div>
           </div>
 
-          {/* Account dropdown */}
+          {/* Account combobox with search */}
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="account-select">Category / account</Label>
+            <Label>Category / account</Label>
             {realmId === null ? (
               <p className="text-sm text-muted-foreground">
                 QBO not connected — connect QuickBooks to load accounts.
               </p>
             ) : accountsError ? (
-              <p className="text-sm text-destructive">
-                Could not load accounts.
-              </p>
+              <p className="text-sm text-destructive">Could not load accounts.</p>
             ) : (
-              <Select
-                value={selectedAccount}
-                onValueChange={setSelectedAccount}
-                disabled={accountsLoading}
-              >
-                <SelectTrigger id="account-select">
-                  <SelectValue
-                    placeholder={
-                      accountsLoading ? 'Loading accounts…' : 'Select an account…'
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((acc) => (
-                    <SelectItem key={acc.Id} value={acc.Id}>
-                      {acc.Name}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        {acc.AccountType}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={comboOpen} onOpenChange={setComboOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={comboOpen}
+                    disabled={accountsLoading}
+                    className="justify-between font-normal"
+                  >
+                    {accountsLoading
+                      ? 'Loading accounts…'
+                      : selectedAccountName || 'Search account…'}
+                    <span className="ml-2 shrink-0 text-muted-foreground">⌄</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0" style={{ width: 'var(--radix-popover-trigger-width)' }}>
+                  <Command>
+                    <CommandInput placeholder="Search account…" />
+                    <CommandList>
+                      <CommandEmpty>No account found.</CommandEmpty>
+                      <CommandGroup>
+                        {accounts.map((acc) => (
+                          <CommandItem
+                            key={acc.Id}
+                            value={acc.Name}
+                            onSelect={() => {
+                              setSelectedAccount(acc.Id)
+                              setComboOpen(false)
+                            }}
+                          >
+                            <span className="flex-1">{acc.Name}</span>
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              {acc.AccountType}
+                            </span>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             )}
           </div>
 
