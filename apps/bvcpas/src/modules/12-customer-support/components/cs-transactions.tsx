@@ -6,6 +6,7 @@
 
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { Check, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -20,6 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSyncTransactions } from '@/modules/14-transactions/hooks/use-sync-transactions'
 import { useTransactions } from '@/modules/14-transactions/hooks/use-transactions'
 import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
+import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 
 import { computeRange } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
@@ -30,11 +32,10 @@ export type TransactionsTab = 'uncategorized' | 'amas'
 
 export interface CsTransactionsProps {
   clientId: string
-  /** QBO realm ID del cliente (para el dropdown de cuentas en el modal). */
   realmId: string | null
-  /** transactions_filter del cliente (afecta sólo el follow-up al cliente). */
+  /** Lista de cuentas QBO — cargada en el orquestador y compartida con la tabla y el modal. */
+  accounts: QboAccount[]
   clientFilter: ClientFilter
-  /** Tab activa (controlled). El estado vive en el orquestador. */
   tab: TransactionsTab
   onTabChange: (tab: TransactionsTab) => void
 }
@@ -65,9 +66,10 @@ interface TxTableProps {
   isLoading: boolean
   isError: boolean
   onRowClick: (tx: Transaction) => void
+  accounts: QboAccount[]
 }
 
-function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
+function TxTable({ items, isLoading, isError, onRowClick, accounts }: TxTableProps) {
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading transactions…</p>
   }
@@ -81,7 +83,7 @@ function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Id</TableHead>
+          <TableHead className="hidden" />
           <TableHead>Date</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Check #</TableHead>
@@ -90,7 +92,7 @@ function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
           <TableHead>Split</TableHead>
           <TableHead>Category</TableHead>
           <TableHead className="text-right">Amount</TableHead>
-          <TableHead>Notes</TableHead>
+          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -100,7 +102,7 @@ function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
             className="cursor-pointer hover:bg-muted/50"
             onClick={() => onRowClick(t)}
           >
-            <TableCell className="font-mono text-xs">{t.qbo_txn_id}</TableCell>
+            <TableCell className="hidden font-mono text-xs">{t.qbo_txn_id}</TableCell>
             <TableCell>{formatDate(t.txn_date)}</TableCell>
             <TableCell>{t.qbo_txn_type}</TableCell>
             <TableCell>{t.docnum ?? ''}</TableCell>
@@ -109,9 +111,24 @@ function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
               {t.memo ?? ''}
             </TableCell>
             <TableCell>{t.split_account ?? ''}</TableCell>
-            <TableCell>{t.category}</TableCell>
+            <TableCell>
+              {(() => {
+                const accountId = t.response?.qbo_account_id ?? t.qbo_account_id
+                if (accountId) {
+                  const found = accounts.find((a) => a.Id === accountId)
+                  if (found) return found.Name
+                }
+                return t.category.replace(/_/g, ' ')
+              })()}
+            </TableCell>
             <TableCell className="text-right font-mono">{formatSignedAmount(t)}</TableCell>
-            <TableCell />
+            <TableCell className="text-center">
+              {t.response?.completed ? (
+                <Check className="size-4 text-green-600" />
+              ) : (
+                <X className="size-4 text-muted-foreground" />
+              )}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -122,6 +139,7 @@ function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
 export function CsTransactions({
   clientId,
   realmId,
+  accounts,
   clientFilter,
   tab,
   onTabChange,
@@ -133,8 +151,15 @@ export function CsTransactions({
   const amaQuery = useTransactions(clientId, 'ask_my_accountant')
 
   const uncategorizedItems = useMemo(() => {
-    const merged = [...expenseQuery.items, ...incomeQuery.items]
-    return merged.sort((a, b) => b.txn_date.localeCompare(a.txn_date))
+    // Income (deposits) primero, luego expense. Cada bloque ordenado
+    // por fecha descendente.
+    const sortedIncome = [...incomeQuery.items].sort((a, b) =>
+      b.txn_date.localeCompare(a.txn_date),
+    )
+    const sortedExpense = [...expenseQuery.items].sort((a, b) =>
+      b.txn_date.localeCompare(a.txn_date),
+    )
+    return [...sortedIncome, ...sortedExpense]
   }, [expenseQuery.items, incomeQuery.items])
 
   const sync = useSyncTransactions(clientId)
@@ -185,6 +210,7 @@ export function CsTransactions({
             isLoading={expenseQuery.isLoading || incomeQuery.isLoading}
             isError={expenseQuery.isError || incomeQuery.isError}
             onRowClick={setSelectedTx}
+            accounts={accounts}
           />
         </TabsContent>
         <TabsContent value="amas" className="mt-3">
@@ -193,6 +219,7 @@ export function CsTransactions({
             isLoading={amaQuery.isLoading}
             isError={amaQuery.isError}
             onRowClick={setSelectedTx}
+            accounts={accounts}
           />
         </TabsContent>
       </Tabs>
@@ -200,6 +227,7 @@ export function CsTransactions({
       <TxDetailModal
         transaction={selectedTx}
         realmId={realmId}
+        accounts={accounts}
         open={selectedTx !== null}
         onClose={() => setSelectedTx(null)}
       />
