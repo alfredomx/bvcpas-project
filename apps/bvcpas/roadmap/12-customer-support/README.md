@@ -17,6 +17,7 @@
 - [v0.5.4](v0.5.4.md) — reorden de layout: tabs + Sync en una row; activity timeline 2/3 + suggested action 1/3.
 - [v0.5.5](v0.5.5.md) — modal de detalle de transacción (`<TxDetailModal>`): badges, memo, dropdown QBO accounts, nota editable, sufijo localStorage, preview.
 - [v0.5.6](v0.5.6.md) — modal funcional con guardado real (`PATCH /v1/clients/:id/transactions/responses/:txnId`), `completed` calculado en frontend, combobox con search, columnas ajustadas, stats refresh sin reload.
+- [v0.5.7](v0.5.7.md) — writeback a QuickBooks (`?qbo_sync=true`), `appended_text` en body del PATCH, mapeo de errores específicos (QBO_ACCOUNT_ID_REQUIRED, TXN_TYPE_NOT_SUPPORTED, INTUIT_STALE_SYNC_TOKEN, INTUIT_API_ERROR).
 
 **Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-09
