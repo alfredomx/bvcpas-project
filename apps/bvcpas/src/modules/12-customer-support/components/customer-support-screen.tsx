@@ -61,21 +61,16 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
     <div className="flex flex-col gap-6 p-6">
       <CsHeader client={data.client} followup={data.followup} />
       <CsQuickLinks />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div className="md:col-span-2">
-          <CsActivityTimeline monthly={data.monthly} mode={tab} />
-        </div>
-        <div className="md:col-span-1">
-          <CsSuggestedAction
-            client={data.client}
-            followup={data.followup}
-            stats={data.stats}
-          />
-        </div>
-      </div>
+      <CsActivityTimeline monthly={data.monthly} mode={tab} />
       <CsStatsGrid stats={data.stats} />
+      <CsSuggestedAction
+        client={data.client}
+        followup={data.followup}
+        stats={data.stats}
+      />
       <CsTransactions
         clientId={data.client.id}
+        realmId={data.client.qbo_realm_id}
         clientFilter={data.client.transactions_filter as ClientFilter}
         tab={tab}
         onTabChange={setTab}
