@@ -39,7 +39,10 @@ código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
 
 **Próximas versiones planeadas:**
 
-- v0.6.0+ — Migración de `useSession` al SDK tipado + borrado de
+- v0.6.0 — **Writeback a QuickBooks**: el checkbox "Update in QB's"
+  del modal dispara la actualización real de la transacción en QBO
+  (account, memo con append text). Endpoint mapi pendiente.
+- v0.6.x+ — Migración de `useSession` al SDK tipado + borrado de
   `@/lib/http.ts` (cierra D-bvcpas-025).
 - v0.7.0+ — Tabs adicionales conforme mapi exponga endpoints
   (Reconciliations, W-9, 1099, Mgt Report, Tax Packet, QTR Payroll,
@@ -296,6 +299,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.3   | 12-customer-support | ✅ | CSV emails (D-039/040) + fix toast transparente + activity timeline reactivo (D-041) | bvcpas-v0.5.3 | [12-customer-support/v0.5.3.md](12-customer-support/v0.5.3.md) |
 | 0.5.4   | 12-customer-support | ✅ | Reorden de layout: tabs + Sync alineados; timeline 2/3 + suggested action 1/3 | bvcpas-v0.5.4 | [12-customer-support/v0.5.4.md](12-customer-support/v0.5.4.md) |
 | 0.5.5   | 12-customer-support | ✅ | Modal de detalle de transacción + QBO accounts dropdown + nota con sufijo localStorage — D-042/043/044/045 | bvcpas-v0.5.5 | [12-customer-support/v0.5.5.md](12-customer-support/v0.5.5.md) |
+| 0.5.6   | 12-customer-support | ✅ | Modal funcional (PATCH responses), combobox search, completed en frontend, layout ajustado — D-046/047/048/049/050 | bvcpas-v0.5.6 | [12-customer-support/v0.5.6.md](12-customer-support/v0.5.6.md) |
 
 ---
 
@@ -348,6 +352,11 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-043 | Sufijo de nota guardado en localStorage por usuario (`bvcpas.noteSuffix`); la fecha se agrega al construir el preview     | 0.5.5   | No          |
 | D-bvcpas-044 | Cuentas QBO vía proxy `POST /v1/intuit/realms/{realmId}/call`; tipos locales `QboAccount` (proxy devuelve `unknown`)     | 0.5.5   | No          |
 | D-bvcpas-045 | Botón "Save" del modal es placeholder hasta v0.5.6 cuando mapi exponga endpoint autenticado de guardado de notas          | 0.5.5   | Sí          |
+| D-bvcpas-046 | `completed` lo calcula el frontend al hacer Save (note + qbo_account_id distinto al original); evita que mapi cargue catálogo QBO | 0.5.6   | No          |
+| D-bvcpas-047 | Cuentas QBO se cargan UNA vez en `<CustomerSupportScreen>` y se comparten por props a tabla y modal                       | 0.5.6   | No          |
+| D-bvcpas-048 | Al guardar el modal se invalidan dos query keys: `transactions` (tabla) y `uncats-detail` (stats grid)                    | 0.5.6   | No          |
+| D-bvcpas-049 | Editar shadcn Dialog para quitar `sm:max-w-lg` hardcodeado que impedía override del ancho desde className                | 0.5.6   | No          |
+| D-bvcpas-050 | Append text de nota no se manda al backend; concatenación al guardar va cuando se implemente writeback a QBO              | 0.5.6   | No          |
 
 ---
 
