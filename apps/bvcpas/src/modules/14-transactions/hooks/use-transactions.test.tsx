@@ -29,6 +29,8 @@ function makeTransaction(id: string, category: TransactionCategory): Transaction
     category,
     amount: '100.00',
     synced_at: '2026-04-30T23:59:00.000Z',
+    qbo_account_id: null,
+    response: null,
   }
 }
 

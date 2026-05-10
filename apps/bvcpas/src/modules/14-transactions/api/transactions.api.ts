@@ -12,6 +12,8 @@ export type TransactionCategory = Transaction['category']
 
 export type SyncResult = components['schemas']['SyncResultDto']
 export type SyncBody = components['schemas']['SyncTransactionsBodyDto']
+export type SaveNoteBody = components['schemas']['SaveNoteBodyDto']
+export type TransactionResponse = components['schemas']['TransactionResponseDto']
 
 export type ListTransactionsParams = NonNullable<
   paths['/v1/clients/{id}/transactions']['get']['parameters']['query']
@@ -29,6 +31,23 @@ export async function listTransactions(
   })
   if (error) throw error
   if (!data) throw new Error('listTransactions: empty response')
+  return data
+}
+
+export async function saveTransactionNote(
+  clientId: string,
+  txnId: string,
+  body: SaveNoteBody,
+): Promise<TransactionResponse> {
+  const { data, error } = await api.PATCH(
+    '/v1/clients/{id}/transactions/responses/{txnId}',
+    {
+      params: { path: { id: clientId, txnId } },
+      body,
+    },
+  )
+  if (error) throw error
+  if (!data) throw new Error('saveTransactionNote: empty response')
   return data
 }
 
