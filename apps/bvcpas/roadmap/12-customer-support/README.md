@@ -15,6 +15,7 @@
 - [v0.5.2](v0.5.2.md) — `<CsConfigSheet>` (botón ⚙ Configure abre Sheet con 5 settings de envío de follow-ups).
 - [v0.5.3](v0.5.3.md) — `primaryContactEmail` y `ccEmail` aceptan múltiples emails (CSV); transform a `null` cuando vacío.
 - [v0.5.4](v0.5.4.md) — reorden de layout: tabs + Sync en una row; activity timeline 2/3 + suggested action 1/3.
+- [v0.5.5](v0.5.5.md) — modal de detalle de transacción (`<TxDetailModal>`): badges, memo, dropdown QBO accounts, nota editable, sufijo localStorage, preview.
 
 **Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-09
