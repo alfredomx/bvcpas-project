@@ -295,6 +295,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.2   | 12-customer-support | ✅ | `<CsConfigSheet>` (botón Configure → Sheet con 5 settings de envío) — D-036/037/038 | bvcpas-v0.5.2 | [12-customer-support/v0.5.2.md](12-customer-support/v0.5.2.md) |
 | 0.5.3   | 12-customer-support | ✅ | CSV emails (D-039/040) + fix toast transparente + activity timeline reactivo (D-041) | bvcpas-v0.5.3 | [12-customer-support/v0.5.3.md](12-customer-support/v0.5.3.md) |
 | 0.5.4   | 12-customer-support | ✅ | Reorden de layout: tabs + Sync alineados; timeline 2/3 + suggested action 1/3 | bvcpas-v0.5.4 | [12-customer-support/v0.5.4.md](12-customer-support/v0.5.4.md) |
+| 0.5.5   | 12-customer-support | ✅ | Modal de detalle de transacción + QBO accounts dropdown + nota con sufijo localStorage — D-042/043/044/045 | bvcpas-v0.5.5 | [12-customer-support/v0.5.5.md](12-customer-support/v0.5.5.md) |
 
 ---
 
@@ -343,6 +344,10 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-039 | `csvEmailString` schema con `.transform()` interno que convierte vacío → `null` antes del refine            | 0.5.3   | No          |
 | D-bvcpas-040 | Frontend valida emails con regex `^[^\s@,]+@[^\s@,]+\.[^\s@,]+$` por cada parte del CSV; mapi sólo `string\|null` | 0.5.3   | No          |
 | D-bvcpas-041 | `<CsActivityTimeline>` recibe `mode` por props; state `tab` levantado al orquestador para sincronizar con `<CsTransactions>` | 0.5.3   | No          |
+| D-bvcpas-042 | Modal de transacción usa `<Dialog>` shadcn (no Sheet — es acción puntual, no panel de configuración)                       | 0.5.5   | No          |
+| D-bvcpas-043 | Sufijo de nota guardado en localStorage por usuario (`bvcpas.noteSuffix`); la fecha se agrega al construir el preview     | 0.5.5   | No          |
+| D-bvcpas-044 | Cuentas QBO vía proxy `POST /v1/intuit/realms/{realmId}/call`; tipos locales `QboAccount` (proxy devuelve `unknown`)     | 0.5.5   | No          |
+| D-bvcpas-045 | Botón "Save" del modal es placeholder hasta v0.5.6 cuando mapi exponga endpoint autenticado de guardado de notas          | 0.5.5   | Sí          |
 
 ---
 

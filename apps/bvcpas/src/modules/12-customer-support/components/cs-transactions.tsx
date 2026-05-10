@@ -2,8 +2,9 @@
 
 // Bloque inferior de la tab Uncat. Transactions: leyenda del filter +
 // botón Sync + tabs Uncategorized / AMA's con tablas.
+// v0.5.5: click en fila abre <TxDetailModal>.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -22,12 +23,15 @@ import type { Transaction } from '@/modules/14-transactions/api/transactions.api
 
 import { computeRange } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
+import { TxDetailModal } from './tx-detail-modal'
 
 export type ClientFilter = 'all' | 'income' | 'expense'
 export type TransactionsTab = 'uncategorized' | 'amas'
 
 export interface CsTransactionsProps {
   clientId: string
+  /** QBO realm ID del cliente (para el dropdown de cuentas en el modal). */
+  realmId: string | null
   /** transactions_filter del cliente (afecta sólo el follow-up al cliente). */
   clientFilter: ClientFilter
   /** Tab activa (controlled). El estado vive en el orquestador. */
@@ -60,9 +64,10 @@ interface TxTableProps {
   items: Transaction[]
   isLoading: boolean
   isError: boolean
+  onRowClick: (tx: Transaction) => void
 }
 
-function TxTable({ items, isLoading, isError }: TxTableProps) {
+function TxTable({ items, isLoading, isError, onRowClick }: TxTableProps) {
   if (isLoading) {
     return <p className="text-sm text-muted-foreground">Loading transactions…</p>
   }
@@ -90,7 +95,11 @@ function TxTable({ items, isLoading, isError }: TxTableProps) {
       </TableHeader>
       <TableBody>
         {items.map((t) => (
-          <TableRow key={t.id}>
+          <TableRow
+            key={t.id}
+            className="cursor-pointer hover:bg-muted/50"
+            onClick={() => onRowClick(t)}
+          >
             <TableCell className="font-mono text-xs">{t.qbo_txn_id}</TableCell>
             <TableCell>{formatDate(t.txn_date)}</TableCell>
             <TableCell>{t.qbo_txn_type}</TableCell>
@@ -112,10 +121,13 @@ function TxTable({ items, isLoading, isError }: TxTableProps) {
 
 export function CsTransactions({
   clientId,
+  realmId,
   clientFilter,
   tab,
   onTabChange,
 }: CsTransactionsProps) {
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
+
   const expenseQuery = useTransactions(clientId, 'uncategorized_expense')
   const incomeQuery = useTransactions(clientId, 'uncategorized_income')
   const amaQuery = useTransactions(clientId, 'ask_my_accountant')
@@ -172,6 +184,7 @@ export function CsTransactions({
             items={uncategorizedItems}
             isLoading={expenseQuery.isLoading || incomeQuery.isLoading}
             isError={expenseQuery.isError || incomeQuery.isError}
+            onRowClick={setSelectedTx}
           />
         </TabsContent>
         <TabsContent value="amas" className="mt-3">
@@ -179,9 +192,17 @@ export function CsTransactions({
             items={amaQuery.items}
             isLoading={amaQuery.isLoading}
             isError={amaQuery.isError}
+            onRowClick={setSelectedTx}
           />
         </TabsContent>
       </Tabs>
+
+      <TxDetailModal
+        transaction={selectedTx}
+        realmId={realmId}
+        open={selectedTx !== null}
+        onClose={() => setSelectedTx(null)}
+      />
     </div>
   )
 }

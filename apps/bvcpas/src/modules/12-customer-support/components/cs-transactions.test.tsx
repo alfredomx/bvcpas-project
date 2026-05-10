@@ -23,7 +23,7 @@ function CsTransactionsHarness(
   props: Omit<CsTransactionsProps, 'tab' | 'onTabChange'>,
 ) {
   const [tab, setTab] = useState<TransactionsTab>('uncategorized')
-  return <CsTransactions {...props} tab={tab} onTabChange={setTab} />
+  return <CsTransactions {...props} tab={tab} onTabChange={setTab} realmId={null} />
 }
 
 const listTransactionsMock = vi.fn()
@@ -34,6 +34,10 @@ const toastErrorMock = vi.fn()
 vi.mock('@/modules/14-transactions/api/transactions.api', () => ({
   listTransactions: (...args: unknown[]) => listTransactionsMock(...args),
   syncTransactions: (...args: unknown[]) => syncTransactionsMock(...args),
+}))
+
+vi.mock('@/modules/14-transactions/api/qbo-accounts.api', () => ({
+  getQboAccounts: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('sonner', () => ({
@@ -109,12 +113,12 @@ describe('<CsTransactions>', () => {
     ['expense', /expense only/i],
     ['income', /income only/i],
   ] as const)('renders filter legend when filter=%s', async (filter, pattern) => {
-    render(<CsTransactionsHarness clientId="c-1" clientFilter={filter} />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter={filter} realmId={null} />, { wrapper })
     expect(screen.getByText(pattern)).toBeInTheDocument()
   })
 
   it('default tab is Uncategorized and merges expense + income sorted desc', async () => {
-    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" realmId={null} />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/Uncategorized \(2\)/)).toBeInTheDocument()
@@ -126,7 +130,7 @@ describe('<CsTransactions>', () => {
   })
 
   it('switches to AMAs tab and renders only ask_my_accountant items', async () => {
-    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" realmId={null} />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/AMA's \(1\)/)).toBeInTheDocument()
@@ -152,7 +156,7 @@ describe('<CsTransactions>', () => {
       duration_ms: 100,
     })
 
-    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" realmId={null} />, { wrapper })
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^sync$/i }))
@@ -172,7 +176,7 @@ describe('<CsTransactions>', () => {
     err.statusCode = 400
     syncTransactionsMock.mockRejectedValue(err)
 
-    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" realmId={null} />, { wrapper })
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^sync$/i }))
@@ -186,7 +190,7 @@ describe('<CsTransactions>', () => {
     listTransactionsMock.mockReset()
     listTransactionsMock.mockResolvedValue({ items: [], total: 0 })
 
-    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" />, { wrapper })
+    render(<CsTransactionsHarness clientId="c-1" clientFilter="all" realmId={null} />, { wrapper })
 
     await waitFor(() => {
       expect(screen.getByText(/No transactions in this category/)).toBeInTheDocument()
