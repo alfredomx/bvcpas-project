@@ -10,17 +10,23 @@ import { TxDetailModal } from './tx-detail-modal'
 import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
 
 const getQboAccountsMock = vi.fn()
-const toastMessageMock = vi.fn()
+const saveTransactionNoteMock = vi.fn()
+const toastSuccessMock = vi.fn()
+const toastErrorMock = vi.fn()
 
 vi.mock('@/modules/14-transactions/api/qbo-accounts.api', () => ({
   getQboAccounts: (...args: unknown[]) => getQboAccountsMock(...args),
 }))
 
+vi.mock('@/modules/14-transactions/api/transactions.api', () => ({
+  saveTransactionNote: (...args: unknown[]) => saveTransactionNoteMock(...args),
+}))
+
 vi.mock('sonner', () => ({
   toast: {
-    message: (...args: unknown[]) => toastMessageMock(...args),
-    success: vi.fn(),
-    error: vi.fn(),
+    message: vi.fn(),
+    success: (...args: unknown[]) => toastSuccessMock(...args),
+    error: (...args: unknown[]) => toastErrorMock(...args),
   },
 }))
 
@@ -38,6 +44,8 @@ const sampleTx: Transaction = {
   category: 'uncategorized_expense',
   amount: '146.00',
   synced_at: '2026-04-30T23:59:00.000Z',
+  qbo_account_id: null,
+  response: null,
 }
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -48,7 +56,9 @@ function wrapper({ children }: { children: ReactNode }) {
 describe('<TxDetailModal>', () => {
   beforeEach(() => {
     getQboAccountsMock.mockReset()
-    toastMessageMock.mockReset()
+    saveTransactionNoteMock.mockReset()
+    toastSuccessMock.mockReset()
+    toastErrorMock.mockReset()
     window.localStorage.clear()
     getQboAccountsMock.mockResolvedValue([
       { Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' },
@@ -64,6 +74,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={() => {}}
       />,
@@ -82,6 +93,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={() => {}}
       />,
@@ -98,6 +110,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId={null}
+        accounts={[]}
         open={true}
         onClose={() => {}}
       />,
@@ -112,6 +125,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={() => {}}
       />,
@@ -133,12 +147,14 @@ describe('<TxDetailModal>', () => {
     expect(preview.textContent).toMatch(/office supplies/)
   })
 
-  it('Save calls toast placeholder and closes modal', async () => {
+  it('Save calls API and shows success toast then closes modal', async () => {
+    saveTransactionNoteMock.mockResolvedValue({})
     const onClose = vi.fn()
     render(
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={onClose}
       />,
@@ -146,10 +162,60 @@ describe('<TxDetailModal>', () => {
     )
 
     const user = userEvent.setup()
+    // Necesita nota para poder guardar.
+    await user.type(screen.getByLabelText(/what was this transaction for/i), 'office supplies')
     await user.click(screen.getByRole('button', { name: /^save$/i }))
 
-    expect(toastMessageMock).toHaveBeenCalledTimes(1)
-    expect(onClose).toHaveBeenCalledTimes(1)
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledTimes(1)
+      expect(onClose).toHaveBeenCalledTimes(1)
+    })
+    expect(saveTransactionNoteMock).toHaveBeenCalledWith(
+      sampleTx.client_id,
+      sampleTx.id,
+      expect.objectContaining({ note: 'office supplies' }),
+    )
+  })
+
+  it('Save shows error toast when API rejects', async () => {
+    saveTransactionNoteMock.mockRejectedValue(new Error('boom'))
+    render(
+      <TxDetailModal
+        transaction={sampleTx}
+        realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        open={true}
+        onClose={() => {}}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText(/what was this transaction for/i), 'office supplies')
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(toastErrorMock).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  it('Save blocks if note is empty', async () => {
+    render(
+      <TxDetailModal
+        transaction={sampleTx}
+        realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        open={true}
+        onClose={() => {}}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+    expect(saveTransactionNoteMock).not.toHaveBeenCalled()
+    expect(toastErrorMock).toHaveBeenCalledTimes(1)
   })
 
   it('Cancel closes without saving', async () => {
@@ -158,6 +224,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={onClose}
       />,
@@ -168,7 +235,7 @@ describe('<TxDetailModal>', () => {
     await user.click(screen.getByRole('button', { name: /cancel/i }))
 
     expect(onClose).toHaveBeenCalledTimes(1)
-    expect(toastMessageMock).not.toHaveBeenCalled()
+    expect(saveTransactionNoteMock).not.toHaveBeenCalled()
   })
 
   it('suffix input persists to localStorage', async () => {
@@ -176,6 +243,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
+        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
         open={true}
         onClose={() => {}}
       />,

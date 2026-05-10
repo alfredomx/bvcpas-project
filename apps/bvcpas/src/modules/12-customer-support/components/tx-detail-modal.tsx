@@ -6,11 +6,13 @@
 // v0.5.5: diseño completo, guardado es placeholder hasta que mapi
 // exponga el endpoint autenticado (D-bvcpas-045).
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogContent,
@@ -34,8 +36,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
-import { useQboAccounts } from '@/modules/14-transactions/hooks/use-qbo-accounts'
+import {
+  saveTransactionNote,
+  type Transaction,
+} from '@/modules/14-transactions/api/transactions.api'
+import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 
 import { buildNotePreview, useNoteSuffix } from '../hooks/use-note-suffix'
 import { formatAmount } from '../lib/format'
@@ -43,6 +48,8 @@ import { formatAmount } from '../lib/format'
 export interface TxDetailModalProps {
   transaction: Transaction | null
   realmId: string | null
+  /** Lista de cuentas QBO — cargada en el orquestador (CustomerSupportScreen). */
+  accounts: QboAccount[]
   open: boolean
   onClose: () => void
 }
@@ -72,16 +79,42 @@ function signedAmount(t: Transaction): string {
 export function TxDetailModal({
   transaction,
   realmId,
+  accounts,
   open,
   onClose,
 }: TxDetailModalProps) {
-  const { accounts, isLoading: accountsLoading, isError: accountsError } =
-    useQboAccounts(realmId)
+  const queryClient = useQueryClient()
+  const accountsLoading = false
+  const accountsError = false
 
   const { suffix, setSuffix } = useNoteSuffix()
   const [note, setNote] = useState('')
   const [selectedAccount, setSelectedAccount] = useState('')
   const [comboOpen, setComboOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [updateInQb, setUpdateInQbState] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage.getItem('bvcpas.updateInQb') === 'true'
+  })
+
+  const setUpdateInQb = (v: boolean) => {
+    window.localStorage.setItem('bvcpas.updateInQb', String(v))
+    setUpdateInQbState(v)
+  }
+
+  // Pre-llenar nota + account cuando abre el modal o cambia la transacción.
+  useEffect(() => {
+    if (!transaction) return
+    // Prioridad: response.qbo_account_id > item.qbo_account_id
+    const accountId =
+      transaction.response?.qbo_account_id ??
+      transaction.qbo_account_id ??
+      ''
+    setSelectedAccount(accountId)
+    setNote(transaction.response?.client_note ?? '')
+    setComboOpen(false)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transaction?.id, open])
 
   const selectedAccountName =
     accounts.find((a) => a.Id === selectedAccount)?.Name ?? ''
@@ -90,15 +123,42 @@ export function TxDetailModal({
 
   const preview = buildNotePreview(note, suffix)
 
-  const handleSave = () => {
-    // D-bvcpas-045: placeholder hasta que mapi exponga endpoint autenticado.
-    toast.message('Coming soon — backend endpoint pending.')
-    onClose()
+  const handleSave = async () => {
+    if (!note.trim()) {
+      toast.error('Please enter a note before saving.')
+      return
+    }
+    setIsSaving(true)
+    try {
+      // completed = el operador anotó Y eligió una cuenta distinta a la original.
+      // El frontend decide esto porque ya tiene ambos valores y evita que mapi
+      // tenga que cargar el catálogo de cuentas para saberlo.
+      const completed =
+        !!note.trim() &&
+        !!selectedAccount &&
+        selectedAccount !== transaction.qbo_account_id
+
+      await saveTransactionNote(transaction.client_id, transaction.id, {
+        note: note.trim(),
+        qbo_account_id: selectedAccount || null,
+        completed,
+      })
+      // Invalida el cache de transacciones para que al reabrir el modal
+      // los datos reflejen el response recién guardado.
+      queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
+      queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      toast.success('Note saved.')
+      onClose()
+    } catch {
+      toast.error('Could not save note. Try again.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
+      <DialogContent className="max-w-200" aria-describedby={undefined}>
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-col gap-2">
@@ -230,13 +290,25 @@ export function TxDetailModal({
           )}
         </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button type="button" onClick={handleSave}>
-            Save
-          </Button>
+        <DialogFooter className="flex items-center justify-between sm:justify-between">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="update-in-qb"
+              checked={updateInQb}
+              onCheckedChange={(v) => setUpdateInQb(v === true)}
+            />
+            <Label htmlFor="update-in-qb" className="cursor-pointer font-normal">
+              Update in QB&apos;s
+            </Label>
+          </div>
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving…' : 'Save'}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
