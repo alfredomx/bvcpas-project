@@ -77,6 +77,7 @@ const sample: UncatsDetailResponse = {
       { month: 12, uncats: 0, amas: 0 },
     ],
   },
+  public_link: null,
 }
 
 describe('<CsHeader>', () => {
@@ -101,10 +102,9 @@ describe('<CsHeader>', () => {
 
 describe('<CsStatsGrid>', () => {
   it('renders the 6 KPIs with formatted values', () => {
-    // now = 2026-05-09 → mes anterior = April.
-    render(<CsStatsGrid stats={sample.stats} now={new Date('2026-05-09T12:00:00Z')} />)
+    render(<CsStatsGrid stats={sample.stats} />)
     expect(screen.getByText('$62.6k')).toBeInTheDocument()
-    expect(screen.getByText('Uncats April')).toBeInTheDocument()
+    expect(screen.getByText('Total uncats')).toBeInTheDocument()
     expect(screen.getByText('26')).toBeInTheDocument() // uncats_count
     expect(screen.getByText("AMA's")).toBeInTheDocument()
     expect(screen.getByText('30')).toBeInTheDocument() // total backlog 26+4
