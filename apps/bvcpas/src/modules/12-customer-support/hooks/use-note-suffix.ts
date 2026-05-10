@@ -34,6 +34,15 @@ export function buildNotePreview(note: string, suffix: string, now = new Date())
   return `${trimmed}${suffix} (${formatDate(now)})`
 }
 
+/**
+ * Construye solo el append text: "{sufijo} ({fecha})".
+ * Es lo que se manda al backend en el campo `appended_text` del PATCH.
+ * Mapi lo concatena al `client_note` cuando hace writeback a QBO.
+ */
+export function buildAppendedText(suffix: string, now = new Date()): string {
+  return `${suffix} (${formatDate(now)})`
+}
+
 /** Hook React: lee/escribe sufijo en localStorage y lo mantiene en estado local. */
 export function useNoteSuffix() {
   const [suffix, setSuffixState] = useState<string>(getNoteSuffix)

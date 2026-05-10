@@ -42,7 +42,11 @@ import {
 } from '@/modules/14-transactions/api/transactions.api'
 import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 
-import { buildNotePreview, useNoteSuffix } from '../hooks/use-note-suffix'
+import {
+  buildAppendedText,
+  buildNotePreview,
+  useNoteSuffix,
+} from '../hooks/use-note-suffix'
 import { formatAmount } from '../lib/format'
 
 export interface TxDetailModalProps {
@@ -138,19 +142,48 @@ export function TxDetailModal({
         !!selectedAccount &&
         selectedAccount !== transaction.qbo_account_id
 
-      await saveTransactionNote(transaction.client_id, transaction.id, {
-        note: note.trim(),
-        qbo_account_id: selectedAccount || null,
-        completed,
-      })
+      await saveTransactionNote(
+        transaction.client_id,
+        transaction.id,
+        {
+          note: note.trim(),
+          qbo_account_id: selectedAccount || null,
+          completed,
+          // Mapi ignora este campo si qbo_sync=false; lo usa solo cuando
+          // sincroniza, concatenándolo al client_note antes de escribir el
+          // PrivateNote en QBO.
+          appended_text: buildAppendedText(suffix),
+        },
+        { qboSync: updateInQb },
+      )
       // Invalida el cache de transacciones para que al reabrir el modal
       // los datos reflejen el response recién guardado.
       queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
       queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
       toast.success('Note saved.')
       onClose()
-    } catch {
-      toast.error('Could not save note. Try again.')
+    } catch (err) {
+      const code = (err as { code?: string } | undefined)?.code
+      const status = (err as { statusCode?: number } | undefined)?.statusCode
+
+      // Errores que bloquean el guardado completo (validación 400).
+      if (code === 'QBO_ACCOUNT_ID_REQUIRED') {
+        toast.error('Select a QBO account before saving.')
+      } else if (code === 'TXN_TYPE_NOT_SUPPORTED') {
+        toast.error('Only Purchase and Deposit transactions are supported.')
+      } else if (status === 409 || code === 'INTUIT_STALE_SYNC_TOKEN') {
+        // 409: la nota local SÍ se guardó pero QBO necesita refresh.
+        toast.warning('Note saved, but QBO data is stale. Refresh and try again.')
+        queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
+        queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      } else if (status === 502 || code === 'INTUIT_API_ERROR') {
+        // 502: la nota local SÍ se guardó pero el writeback a QBO falló.
+        toast.warning('Note saved, but QuickBooks update failed. You can retry sync later.')
+        queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
+        queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      } else {
+        toast.error('Could not save note. Try again.')
+      }
     } finally {
       setIsSaving(false)
     }
