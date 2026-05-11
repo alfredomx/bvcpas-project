@@ -1,0 +1,1 @@
+ALTER TABLE "client_transaction_responses" ADD COLUMN "qbo_account_id" text;

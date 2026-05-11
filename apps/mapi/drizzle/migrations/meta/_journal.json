@@ -1,76 +1,97 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1777804730219,
-      "tag": "0000_users_sessions_eventlog",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1777837274498,
-      "tag": "0001_clients_intuit_tokens",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1777878168357,
-      "tag": "0002_clients_tier",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1777884750923,
-      "tag": "0003_customer_support",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1777886956865,
-      "tag": "0004_client_transactions_id",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1778043790768,
-      "tag": "0005_aromatic_wallflower",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1778049015848,
-      "tag": "0006_many_lifeguard",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1778125891522,
-      "tag": "0007_redundant_lake",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1778215770995,
-      "tag": "0008_connection_access",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1778225038901,
-      "tag": "0009_auth_type_api_key",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1777804730219,
+			"tag": "0000_users_sessions_eventlog",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1777837274498,
+			"tag": "0001_clients_intuit_tokens",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1777878168357,
+			"tag": "0002_clients_tier",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1777884750923,
+			"tag": "0003_customer_support",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1777886956865,
+			"tag": "0004_client_transactions_id",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1778043790768,
+			"tag": "0005_aromatic_wallflower",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1778049015848,
+			"tag": "0006_many_lifeguard",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1778125891522,
+			"tag": "0007_redundant_lake",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1778215770995,
+			"tag": "0008_connection_access",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1778225038901,
+			"tag": "0009_auth_type_api_key",
+			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1778410240312,
+			"tag": "0010_sparkling_spencer_smythe",
+			"breakpoints": true
+		},
+		{
+			"idx": 11,
+			"version": "7",
+			"when": 1778412027456,
+			"tag": "0011_classy_darkhawk",
+			"breakpoints": true
+		},
+		{
+			"idx": 12,
+			"version": "7",
+			"when": 1778415349410,
+			"tag": "0012_luxuriant_crystal",
+			"breakpoints": true
+		}
+	]
 }
