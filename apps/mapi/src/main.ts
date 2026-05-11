@@ -71,9 +71,13 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     description: 'Detalle de uncats del cliente para el dashboard',
   },
 
-  // Views (sin grupo: solo 1 tag por ahora; cuando entren recon/w-9
-  // se agrupan en su propia sección).
-  { name: 'Views', description: 'Vistas globales agregadas cross-cliente' },
+  // Views — vistas globales agregadas cross-cliente. Cuando entren recon/w-9
+  // se agregan más sub-tags al grupo.
+  {
+    name: 'Views - Uncats',
+    displayName: 'Uncats',
+    description: 'Lista maestra de uncats por cliente (dashboard del operador)',
+  },
 
   // OAuth flows — displayName corto bajo el grupo 'OAuth'.
   {
@@ -145,8 +149,7 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
       'Clients - Uncats',
     ],
   },
-  // 'Views' queda como tag plano — todavía no se le crea grupo porque
-  // tiene un solo tag. Se agrupa cuando entren más vistas (recon, w-9).
+  { name: 'Views', tags: ['Views - Uncats'] },
   {
     name: 'OAuth',
     tags: ['OAuth - Intuit', 'OAuth - Microsoft', 'OAuth - Dropbox', 'OAuth - Google'],

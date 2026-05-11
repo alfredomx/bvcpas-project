@@ -139,3 +139,7 @@ apps/*/reference/
 # Vercel (si llegas a deployar ahí)
 # =====================================================================
 .vercel/
+
+
+CLAUDE.md
+CLAUDE-mapi-context.md

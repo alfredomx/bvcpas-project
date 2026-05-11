@@ -1,4 +1,13 @@
-import { date, numeric, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core'
+import {
+  boolean,
+  date,
+  numeric,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import { clients } from './clients'
 import { CLIENT_TRANSACTION_CATEGORIES } from './client-transactions'
@@ -40,14 +49,21 @@ export const clientTransactionResponses = pgTable(
     category: text('category', { enum: CLIENT_TRANSACTION_CATEGORIES }).notNull(),
     amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
 
-    // Respuesta del cliente:
+    // Respuesta del cliente/operador:
     clientNote: text('client_note').notNull(),
+    appendedText: text('appended_text'), // Sufijo opcional que se concatena al clientNote al hacer writeback a QBO (ej. "as per client's notes (05-10-2026)")
+    qboAccountId: text('qbo_account_id'), // AccountRef.value del COA de QBO — guardado temporalmente hasta writeback
+    completed: boolean('completed').notNull().default(false),
     respondedAt: timestamp('responded_at', { withTimezone: true })
       .notNull()
       .default(sql`now()`),
 
     // Writeback a QBO (futuro):
     syncedToQboAt: timestamp('synced_to_qbo_at', { withTimezone: true }),
+
+    // Soft delete: cuando se borra desde el dashboard, se marca aquí para
+    // poder restaurar después. El sync nuevo de transactions no afecta esto.
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
 
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()

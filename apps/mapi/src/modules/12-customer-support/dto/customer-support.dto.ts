@@ -39,10 +39,22 @@ export const ListTransactionsQuerySchema = z
       .string()
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'endDate debe ser YYYY-MM-DD')
       .optional(),
+    qboTxnId: z.string().optional().describe('Buscar por qbo_txn_id exacto'),
   })
   .describe('Filtros para listar transacciones (clientId va en path)')
 
 export class ListTransactionsQueryDto extends createZodDto(ListTransactionsQuerySchema) {}
+
+const TransactionResponseInlineSchema = z
+  .object({
+    client_note: z.string(),
+    appended_text: z.string().nullable(),
+    qbo_account_id: z.string().nullable(),
+    completed: z.boolean(),
+    responded_at: z.string().datetime(),
+    synced_to_qbo_at: z.string().datetime().nullable(),
+  })
+  .nullable()
 
 const TransactionSchema = z.object({
   id: z.string().uuid(),
@@ -57,7 +69,9 @@ const TransactionSchema = z.object({
   split_account: z.string().nullable(),
   category: z.enum(CLIENT_TRANSACTION_CATEGORIES),
   amount: z.string(),
+  qbo_account_id: z.string().nullable(),
   synced_at: z.string().datetime(),
+  response: TransactionResponseInlineSchema,
 })
 
 export class TransactionDto extends createZodDto(TransactionSchema) {}
@@ -95,6 +109,9 @@ const TransactionResponseSchema = z.object({
   category: z.enum(CLIENT_TRANSACTION_CATEGORIES),
   amount: z.string(),
   client_note: z.string(),
+  appended_text: z.string().nullable(),
+  qbo_account_id: z.string().nullable(),
+  completed: z.boolean(),
   responded_at: z.string().datetime(),
   synced_to_qbo_at: z.string().datetime().nullable(),
 })
@@ -212,8 +229,41 @@ export class PublicTransactionsResponseDto extends createZodDto(PublicTransactio
 export const SaveNoteBodySchema = z
   .object({
     note: z.string().min(1, 'La nota no puede estar vacía').max(5000),
+    appended_text: z
+      .string()
+      .max(5000)
+      .nullable()
+      .optional()
+      .describe(
+        'Sufijo opcional que se concatena a `note` al hacer writeback a QBO (no afecta el note guardado en mapi). Ej: "as per client\'s notes (05-10-2026)".',
+      ),
+    qbo_account_id: z
+      .string()
+      .nullable()
+      .optional()
+      .describe('AccountRef.value del COA de QBO — guardado temporalmente hasta writeback'),
+    completed: z
+      .boolean()
+      .optional()
+      .describe('true cuando el operador/cliente considera el llenado correcto'),
   })
   .strict()
-  .describe('Cuerpo del PATCH para guardar nota del cliente')
+  .describe('Cuerpo del PATCH para guardar nota + account del cliente/operador')
 
 export class SaveNoteBodyDto extends createZodDto(SaveNoteBodySchema) {}
+
+export const SaveNoteQuerySchema = z
+  .object({
+    qbo_sync: z
+      .preprocess(
+        (v) => (typeof v === 'string' ? v.toLowerCase() === 'true' : (v ?? false)),
+        z.boolean(),
+      )
+      .optional()
+      .describe(
+        'Si true, además del upsert local hace writeback a QBO (solo Purchase/Deposit en v1).',
+      ),
+  })
+  .describe('Query opcional para forzar sincronización a QBO al guardar la nota')
+
+export class SaveNoteQueryDto extends createZodDto(SaveNoteQuerySchema) {}

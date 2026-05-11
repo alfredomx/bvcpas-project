@@ -6,6 +6,7 @@ import {
   type Client,
   type ClientStatus,
   type ClientTier,
+  type ClientTransactionsFilter,
   type NewClient,
   clients,
 } from '../../db/schema/clients'
@@ -29,6 +30,9 @@ export interface UpdateClientData {
   timezone?: string | null
   status?: ClientStatus
   tier?: ClientTier
+  draftEmailEnabled?: boolean
+  transactionsFilter?: ClientTransactionsFilter
+  ccEmail?: string | null
   primaryContactName?: string | null
   primaryContactEmail?: string | null
   notes?: string | null

@@ -1,6 +1,10 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { CLIENT_STATUSES, CLIENT_TIERS } from '../../../db/schema/clients'
+import {
+  CLIENT_STATUSES,
+  CLIENT_TIERS,
+  CLIENT_TRANSACTIONS_FILTERS,
+} from '../../../db/schema/clients'
 
 export const ListClientsQuerySchema = z
   .object({
@@ -35,6 +39,9 @@ const ClientSchema = z.object({
   timezone: z.string().nullable(),
   status: z.enum(CLIENT_STATUSES),
   tier: z.enum(CLIENT_TIERS),
+  draft_email_enabled: z.boolean(),
+  transactions_filter: z.enum(CLIENT_TRANSACTIONS_FILTERS),
+  cc_email: z.string().nullable(),
   primary_contact_name: z.string().nullable(),
   primary_contact_email: z.string().nullable(),
   notes: z.string().nullable(),
@@ -56,6 +63,42 @@ const ClientsListResponseSchema = z
 
 export class ClientsListResponseDto extends createZodDto(ClientsListResponseSchema) {}
 
+/**
+ * Acepta uno o más correos separados por coma. Cada correo se valida
+ * con un regex simple (algo@algo.algo, sin espacios). El input se
+ * normaliza antes de validar:
+ *   - trim general + trim por correo
+ *   - elimina elementos vacíos intermedios ("a@x.com,  ,, b@y.com" → "a@x.com, b@y.com")
+ *   - reformatea con ", " como separador estándar
+ *   - string vacío o solo whitespace → null ("sin contacto")
+ *
+ * Válidos:   "a@x.com", "a@x.com,b@y.com", "a@x.com, b@y.com", "" → null
+ * Inválidos: "basura", "a@x.com, basura", "a@x"
+ */
+const SIMPLE_EMAIL_REGEX = /^[^\s@,]+@[^\s@,]+\.[^\s@,]+$/
+const csvEmailString = z
+  .string()
+  .transform((s) => {
+    const trimmed = s.trim()
+    if (trimmed === '') return null
+    return trimmed
+      .split(',')
+      .map((e) => e.trim())
+      .filter(Boolean)
+      .join(', ')
+  })
+  .refine(
+    (s) => {
+      if (s === null) return true
+      const parts = s
+        .split(',')
+        .map((e) => e.trim())
+        .filter((e) => e.length > 0)
+      return parts.length > 0 && parts.every((e) => SIMPLE_EMAIL_REGEX.test(e))
+    },
+    { message: 'Debe ser uno o más correos válidos separados por coma' },
+  )
+
 export const UpdateClientSchema = z
   .object({
     legalName: z.string().min(1).max(200).optional(),
@@ -65,8 +108,11 @@ export const UpdateClientSchema = z
     fiscalYearStart: z.number().int().min(1).max(12).nullable().optional(),
     timezone: z.string().max(60).nullable().optional(),
     tier: z.enum(CLIENT_TIERS).optional(),
+    draftEmailEnabled: z.boolean().optional(),
+    transactionsFilter: z.enum(CLIENT_TRANSACTIONS_FILTERS).optional(),
+    ccEmail: csvEmailString.nullable().optional(),
     primaryContactName: z.string().max(120).nullable().optional(),
-    primaryContactEmail: z.string().email().max(255).nullable().optional(),
+    primaryContactEmail: csvEmailString.nullable().optional(),
     notes: z.string().nullable().optional(),
   })
   .strict()

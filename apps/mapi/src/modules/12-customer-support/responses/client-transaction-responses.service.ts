@@ -1,13 +1,26 @@
 import { Injectable } from '@nestjs/common'
 import { EventLogService } from '../../95-event-log/event-log.service'
-import { TransactionNotFoundInSnapshotError } from '../customer-support.errors'
+import {
+  QboAccountIdRequiredError,
+  TransactionNotFoundInSnapshotError,
+} from '../customer-support.errors'
 import { ClientTransactionsRepository } from '../transactions/client-transactions.repository'
 import { ClientTransactionResponsesRepository } from './client-transaction-responses.repository'
+import { QboWritebackService } from './qbo-writeback.service'
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
 
 export interface SaveResponseInput {
   txnId: string // id UUID interno de client_transactions
   note: string
+  /** Sufijo opcional concatenado a `note` solo en el writeback a QBO.
+   * NO se concatena al `clientNote` que se guarda en mapi. */
+  appendedText?: string | null
+  qboAccountId?: string | null
+  completed?: boolean
+  /** Si true, además del upsert local hace writeback a QBO. Requiere
+   * qboAccountId no-null y un `userId` válido para resolver tokens. */
+  qboSync?: boolean
+  userId?: string
 }
 
 /**
@@ -26,17 +39,27 @@ export class ClientTransactionResponsesService {
     private readonly responsesRepo: ClientTransactionResponsesRepository,
     private readonly txnRepo: ClientTransactionsRepository,
     private readonly events: EventLogService,
+    private readonly writeback: QboWritebackService,
   ) {}
 
   async saveResponse(input: SaveResponseInput): Promise<ClientTransactionResponse> {
     const txn = await this.txnRepo.findById(input.txnId)
     if (!txn) throw new TransactionNotFoundInSnapshotError(input.txnId)
 
+    if (input.qboSync && !input.qboAccountId) {
+      // Sin cuenta no hay writeback posible. Falla rápido antes de tocar DB.
+      throw new QboAccountIdRequiredError()
+    }
+
+    // includeDeleted: si el response existía pero estaba soft-deleted, el
+    // upsert lo va a reactivar (resetea deleted_at). Para reportar isUpdate
+    // correctamente debemos verlo aquí.
     const existed = await this.responsesRepo.findByTxn(
       txn.clientId,
       txn.realmId,
       txn.qboTxnType,
       txn.qboTxnId,
+      { includeDeleted: true },
     )
 
     const saved = await this.responsesRepo.upsert({
@@ -51,6 +74,9 @@ export class ClientTransactionResponsesService {
       category: txn.category,
       amount: txn.amount,
       clientNote: input.note,
+      appendedText: input.appendedText ?? null,
+      qboAccountId: input.qboAccountId ?? null,
+      completed: input.completed ?? false,
     })
 
     await this.events.log(
@@ -65,10 +91,72 @@ export class ClientTransactionResponsesService {
       { type: 'client', id: txn.clientId },
     )
 
+    if (input.qboSync && input.qboAccountId && input.userId) {
+      // Si el writeback falla, NO hacemos rollback del response. La nota
+      // queda guardada para que el admin pueda reintentar sin reescribir.
+      const trimmedAppend = input.appendedText?.trim() ?? ''
+      const qboNote = trimmedAppend ? `${input.note} ${trimmedAppend}` : input.note
+
+      await this.writeback.writeback({
+        realmId: txn.realmId,
+        clientId: txn.clientId,
+        userId: input.userId,
+        qboTxnType: txn.qboTxnType,
+        qboTxnId: txn.qboTxnId,
+        qboAccountId: input.qboAccountId,
+        note: qboNote,
+      })
+
+      const synced = await this.responsesRepo.markSyncedToQbo(saved.id)
+
+      await this.events.log(
+        'client_transaction_response.qbo_synced',
+        {
+          clientId: txn.clientId,
+          qboTxnId: txn.qboTxnId,
+          qboTxnType: txn.qboTxnType,
+          qboAccountId: input.qboAccountId,
+        },
+        input.userId,
+        { type: 'client', id: txn.clientId },
+      )
+
+      return synced ?? saved
+    }
+
     return saved
   }
 
   async listForClient(clientId: string): Promise<ClientTransactionResponse[]> {
     return this.responsesRepo.listByClient(clientId)
+  }
+
+  /** Soft-delete del response asociado a una transacción. Devuelve null si
+   * la transacción no tiene response o ya estaba borrado. */
+  async softDeleteByTxnId(txnId: string): Promise<ClientTransactionResponse | null> {
+    const txn = await this.txnRepo.findById(txnId)
+    if (!txn) throw new TransactionNotFoundInSnapshotError(txnId)
+
+    const deleted = await this.responsesRepo.softDeleteByTxn(
+      txn.clientId,
+      txn.realmId,
+      txn.qboTxnType,
+      txn.qboTxnId,
+    )
+
+    if (deleted) {
+      await this.events.log(
+        'client_transaction_response.deleted',
+        {
+          clientId: txn.clientId,
+          qboTxnId: txn.qboTxnId,
+          qboTxnType: txn.qboTxnType,
+        },
+        undefined,
+        { type: 'client', id: txn.clientId },
+      )
+    }
+
+    return deleted
   }
 }

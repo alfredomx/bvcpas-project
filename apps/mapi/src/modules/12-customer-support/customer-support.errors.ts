@@ -48,3 +48,28 @@ export class TransactionNotFoundInSnapshotError extends DomainError {
     super(`Transacción ${qboTxnId} no existe en el snapshot actual`)
   }
 }
+
+// QBO writeback (PATCH .../responses/:txnId?qbo_sync=true)
+
+export class QboAccountIdRequiredError extends DomainError {
+  readonly code = 'QBO_ACCOUNT_ID_REQUIRED'
+  constructor() {
+    super('qbo_account_id es requerido cuando qbo_sync=true (sin cuenta no hay writeback)')
+  }
+}
+
+export class QboTxnTypeNotSupportedError extends DomainError {
+  readonly code = 'TXN_TYPE_NOT_SUPPORTED'
+  constructor(qboTxnType: string) {
+    super(`Writeback no soportado para qbo_txn_type=${qboTxnType} (v1: solo Purchase, Deposit)`)
+  }
+}
+
+export class QboStaleSyncTokenError extends DomainError {
+  readonly code = 'INTUIT_STALE_SYNC_TOKEN'
+  constructor(qboTxnId: string) {
+    super(
+      `La transacción ${qboTxnId} fue editada en QBO mientras intentábamos actualizarla. Recarga y vuelve a intentar.`,
+    )
+  }
+}

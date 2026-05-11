@@ -142,6 +142,7 @@ function mapRow(row: QBRow, clientId: string, realmId: string): NewClientTransac
     vendorName: row.ColData[4]?.value || null,
     memo: row.ColData[5]?.value || null,
     splitAccount: row.ColData[6]?.value || null,
+    qboAccountId: row.ColData[7]?.id ?? null,
     category: classifyCategory(categoryCell, qboTxnType),
     amount: String(Math.abs(Number(amountCell))),
   }

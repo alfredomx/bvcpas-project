@@ -1,0 +1,1 @@
+ALTER TABLE "client_transaction_responses" ADD COLUMN "deleted_at" timestamp with time zone;

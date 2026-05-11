@@ -120,6 +120,70 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 >     organización). Más esfuerzo pero más confiable a largo plazo.
 > - Actualizar test `CR-msft-008` con el nuevo SCOPES esperado.
 
+### Trigger: cuando los AMAs de Journal Entries sean operativamente necesarios
+
+> **Diagnóstico (2026-05-10, validado contra realm 9130350335321926):**
+>
+> El sync actual usa `/reports/TransactionList` para detectar uncats/AMA.
+> Ese reporte **NO expone** las líneas AMA dentro de Journal Entries
+> multi-línea — las consolida con `ColData[7] = "-Split-"`. Por eso JEs
+> con líneas a "92000 ASK MY ACCOUNTANT" aparecen en QBO (en el reporte
+> agrupado por cuenta) pero NO en `client_transactions` de mapi.
+>
+> El parámetro `&group_by=Account` agrupa por cuenta **principal** (primera
+> línea), no por todas las líneas. `&account=<id>` es ignorado por QBO.
+>
+> **Solución validada:** query directa
+> `SELECT * FROM JournalEntry WHERE TxnDate ...` y filtrar en backend las
+> que tengan `Line[].JournalEntryLineDetail.AccountRef.value === <id_AMA>`.
+> Funciona — encuentra todas las JE-AMA del rango.
+>
+> **Decisiones pendientes a tomar al retomar:**
+>
+> 1. **¿Cómo se identifica la cuenta AMA por cliente?**
+>    - A) Lookup por nombre en cada sync (`SELECT * FROM Account WHERE Name LIKE '%Ask My Accountant%'`).
+>    - B) Columna nueva `clients.qbo_ama_account_id` que admin configura.
+>    - C) Match por regex en cada línea (`/ask my accountant/i`).
+>    - Mi voto inicial: A (cacheable, sin migración, robusto a cambios de ID).
+> 2. **¿1 row por JE o 1 row por línea AMA?**
+>    - A) 1 row por JE, monto = suma de líneas AMA.
+>    - B) 1 row por línea AMA (más granular).
+>    - Mi voto inicial: A (refleja la UI de QBO).
+> 3. **¿Aplicar también a líneas Uncategorized Income/Expense en JEs?** Sí muy
+>    probable — el patrón es el mismo.
+> 4. **Writeback de JEs**: hoy `qbo-writeback.service.ts` solo soporta
+>    Purchase/Deposit. Editar AMA en una JE requiere modificar la línea
+>    específica (no `Line[0]`). Es un trabajo aparte.
+>
+> **Implementación tentativa cuando se retome:**
+>
+> - Modificar `transactions-sync.service.ts` para hacer un segundo fetch
+>   `SELECT * FROM JournalEntry WHERE TxnDate BETWEEN ...`, filtrar por
+>   líneas AMA, y mergear al snapshot.
+> - El `qbo_txn_type` se guardaría como `'Journal Entry'` (o `'JournalEntry'`
+>   estandarizado).
+> - Agregar `'Journal Entry'` y `'JournalEntry'` al `TYPE_TO_V3` map del
+>   writeback (lanzando `TXN_TYPE_NOT_SUPPORTED` o implementando soporte real).
+
+### Trigger: cuando aplicar migraciones a prod sea fricción operativa
+
+> Hoy las migraciones se aplican a mano desde local (`npm run db:migrate`
+> apuntando al `DATABASE_URL` de prod) o vía SSH al server. Cada vez que
+> hay schema change hay que recordar aplicarlas antes/después del deploy.
+>
+> Cuando esto se vuelva fricción real (olvidos, deploy roto por schema
+> desactualizado, varios collaborators), implementar:
+>
+> - Script `apps/mapi/scripts/migrate-prod.ts` que se ejecute
+>   automáticamente al arrancar el container (entrypoint o
+>   `release_command` en Coolify) antes de levantar el server.
+> - Decisión a tomar entonces: ¿corre en cada arranque (idempotente,
+>   drizzle skipea las ya aplicadas) o solo en el primer arranque post-deploy?
+> - Plan de rollback: si la migración falla, el container NO debe
+>   levantar — fail-fast con log claro para que Coolify abortee el deploy.
+> - Considerar `pg_advisory_lock` para evitar que 2 réplicas corran
+>   migraciones en paralelo (no aplica hoy con 1 réplica, pero útil a futuro).
+
 ---
 
 ## Histórico

@@ -78,13 +78,16 @@ function serializeResponse(r: ClientTransactionResponse): TransactionResponseDto
     category: r.category,
     amount: r.amount,
     client_note: r.clientNote,
+    appended_text: r.appendedText ?? null,
+    qbo_account_id: r.qboAccountId ?? null,
+    completed: r.completed,
     responded_at: r.respondedAt.toISOString(),
     synced_to_qbo_at: r.syncedToQboAt ? r.syncedToQboAt.toISOString() : null,
   }
 }
 
 @ApiTags('Public')
-@Controller('public/transactions')
+@Controller('public/uncats')
 export class PublicTransactionsController {
   constructor(
     private readonly linksService: ClientPublicLinksService,
@@ -96,7 +99,7 @@ export class PublicTransactionsController {
   @Public()
   @Get(':token')
   @ApiOperation({
-    summary: '/v1/public/transactions/:token',
+    summary: '/v1/public/uncats/:token',
     description:
       'Endpoint público (sin JWT, autenticado por token) para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.',
   })
@@ -133,7 +136,7 @@ export class PublicTransactionsController {
   @Public()
   @Patch(':token/:txnId')
   @ApiOperation({
-    summary: '/v1/public/transactions/:token/:txnId',
+    summary: '/v1/public/uncats/:token/:txnId',
     description:
       'El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita. `:txnId` es el id UUID interno de la transacción.',
   })

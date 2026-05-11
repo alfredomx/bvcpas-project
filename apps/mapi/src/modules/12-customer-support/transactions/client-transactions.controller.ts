@@ -20,6 +20,7 @@ import { Roles } from '../../../core/auth/decorators/roles.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { Client } from '../../../db/schema/clients'
 import type { ClientTransaction } from '../../../db/schema/client-transactions'
+import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
 import { ClientsRepository } from '../../11-clients/clients.repository'
 import { ClientNotFoundError } from '../../11-clients/clients.errors'
 import {
@@ -33,8 +34,12 @@ import {
 } from '../dto/customer-support.dto'
 import { ClientTransactionsRepository } from './client-transactions.repository'
 import { TransactionsSyncService } from './transactions-sync.service'
+import { ClientTransactionResponsesRepository } from '../responses/client-transaction-responses.repository'
 
-function serializeTxn(t: ClientTransaction): TransactionDto {
+function serializeTxn(
+  t: ClientTransaction,
+  response?: ClientTransactionResponse | null,
+): TransactionDto {
   return {
     id: t.id,
     realm_id: t.realmId,
@@ -46,9 +51,20 @@ function serializeTxn(t: ClientTransaction): TransactionDto {
     vendor_name: t.vendorName,
     memo: t.memo,
     split_account: t.splitAccount,
+    qbo_account_id: t.qboAccountId ?? null,
     category: t.category,
     amount: t.amount,
     synced_at: t.syncedAt.toISOString(),
+    response: response
+      ? {
+          client_note: response.clientNote,
+          appended_text: response.appendedText ?? null,
+          qbo_account_id: response.qboAccountId ?? null,
+          completed: response.completed,
+          responded_at: response.respondedAt.toISOString(),
+          synced_to_qbo_at: response.syncedToQboAt ? response.syncedToQboAt.toISOString() : null,
+        }
+      : null,
   }
 }
 
@@ -78,6 +94,7 @@ export class ClientTransactionsController {
     private readonly syncService: TransactionsSyncService,
     private readonly txnRepo: ClientTransactionsRepository,
     private readonly clientsRepo: ClientsRepository,
+    private readonly responsesRepo: ClientTransactionResponsesRepository,
   ) {}
 
   @Post('sync')
@@ -124,15 +141,39 @@ export class ClientTransactionsController {
     const client = await this.clientsRepo.findById(clientId)
     if (!client) throw new ClientNotFoundError(clientId)
 
-    const items = await this.txnRepo.list({
-      clientId,
-      ...(query.category ? { category: query.category } : {}),
-      ...(query.startDate ? { startDate: query.startDate } : {}),
-      ...(query.endDate ? { endDate: query.endDate } : {}),
-    })
-    const filtered = applyClientFilter(items, client.transactionsFilter, query.filter)
+    const [items, responses] = await Promise.all([
+      this.txnRepo.list({
+        clientId,
+        ...(query.category ? { category: query.category } : {}),
+        ...(query.startDate ? { startDate: query.startDate } : {}),
+        ...(query.endDate ? { endDate: query.endDate } : {}),
+      }),
+      this.responsesRepo.listByClient(clientId),
+    ])
+
+    // Índice de responses por qboTxnType:qboTxnId para join en memoria
+    const responseIndex = new Map<string, ClientTransactionResponse>()
+    for (const r of responses) {
+      responseIndex.set(`${r.qboTxnType}:${r.qboTxnId}`, r)
+    }
+
+    // Si el admin pidió una category explícita, respeta su intención y NO
+    // apliques transactions_filter del cliente (que excluiría income/expense
+    // según config del cliente). El filtro del cliente solo aplica cuando el
+    // caller no especificó category.
+    let filtered = query.category
+      ? items
+      : applyClientFilter(items, client.transactionsFilter, query.filter)
+
+    // Filtro por qbo_txn_id exacto si se especifica
+    if (query.qboTxnId) {
+      filtered = filtered.filter((t) => t.qboTxnId === query.qboTxnId)
+    }
+
     return {
-      items: filtered.map(serializeTxn),
+      items: filtered.map((t) =>
+        serializeTxn(t, responseIndex.get(`${t.qboTxnType}:${t.qboTxnId}`)),
+      ),
       total: filtered.length,
     }
   }

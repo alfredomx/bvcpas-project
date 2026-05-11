@@ -17,7 +17,7 @@ import { CustomerSupportDashboardService } from './customer-support-dashboard.se
  * detalle por cliente vive en `ClientUncatsController` bajo
  * `/v1/clients/:id/uncats`.
  */
-@ApiTags('Views')
+@ApiTags('Views - Uncats')
 @ApiBearerAuth('bearer')
 @Controller('views/uncats')
 @Roles('admin')

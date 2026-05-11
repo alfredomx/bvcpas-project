@@ -12,6 +12,7 @@ import { ClientPublicLinksService } from './public-links/client-public-links.ser
 import { ClientTransactionResponsesController } from './responses/client-transaction-responses.controller'
 import { ClientTransactionResponsesRepository } from './responses/client-transaction-responses.repository'
 import { ClientTransactionResponsesService } from './responses/client-transaction-responses.service'
+import { QboWritebackService } from './responses/qbo-writeback.service'
 import { ClientTransactionsController } from './transactions/client-transactions.controller'
 import { ClientTransactionsRepository } from './transactions/client-transactions.repository'
 import { TransactionsSyncService } from './transactions/transactions-sync.service'
@@ -43,10 +44,12 @@ import { TransactionsSyncService } from './transactions/transactions-sync.servic
     TransactionsSyncService,
     ClientTransactionResponsesRepository,
     ClientTransactionResponsesService,
+    QboWritebackService,
     ClientPeriodFollowupsRepository,
     ClientPeriodFollowupsService,
     ClientPublicLinksRepository,
     ClientPublicLinksService,
   ],
+  exports: [ClientPublicLinksRepository],
 })
 export class CustomerSupportModule {}

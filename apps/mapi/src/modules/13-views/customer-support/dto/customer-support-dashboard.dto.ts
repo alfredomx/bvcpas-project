@@ -85,6 +85,16 @@ const DetailClientSchema = z.object({
   cc_email: z.string().nullable(),
 })
 
+const PublicLinkSchema = z
+  .object({
+    token: z.string(),
+    url: z.string().url(),
+    label: z.string().nullable(),
+    expires_at: z.string().datetime().nullable(),
+    created_at: z.string().datetime(),
+  })
+  .nullable()
+
 const DetailResponseSchema = z.object({
   period: z.object({
     from: z.string(),
@@ -94,6 +104,7 @@ const DetailResponseSchema = z.object({
   followup: DetailFollowupSchema,
   stats: DetailStatsSchema,
   monthly: MonthlySchema,
+  public_link: PublicLinkSchema,
 })
 
 export class CustomerSupportDetailResponseDto extends createZodDto(DetailResponseSchema) {}

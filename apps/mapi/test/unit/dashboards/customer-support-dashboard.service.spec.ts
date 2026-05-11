@@ -5,6 +5,8 @@ import {
 } from '../../../src/modules/13-views/customer-support/customer-support-dashboard.service'
 import type { CustomerSupportDashboardRepository } from '../../../src/modules/13-views/customer-support/customer-support-dashboard.repository'
 import type { ClientsRepository } from '../../../src/modules/11-clients/clients.repository'
+import type { ClientPublicLinksRepository } from '../../../src/modules/12-customer-support/public-links/client-public-links.repository'
+import type { AppConfigService } from '../../../src/core/config/config.service'
 import { ClientNotFoundError } from '../../../src/modules/11-clients/clients.errors'
 import type { Client } from '../../../src/db/schema/clients'
 
@@ -51,6 +53,8 @@ function buildClient(overrides: Partial<Client> = {}): Client {
 interface Mocks {
   repo: jest.Mocked<CustomerSupportDashboardRepository>
   clientsRepo: jest.Mocked<ClientsRepository>
+  publicLinksRepo: { findActiveByClientAndPurpose: jest.Mock }
+  cfg: { publicUrl: string }
 }
 
 function makeMocks(): Mocks {
@@ -63,11 +67,20 @@ function makeMocks(): Mocks {
     clientsRepo: {
       findById: jest.fn(),
     } as unknown as jest.Mocked<ClientsRepository>,
+    publicLinksRepo: {
+      findActiveByClientAndPurpose: jest.fn().mockResolvedValue(null),
+    },
+    cfg: { publicUrl: 'http://localhost:4000' },
   }
 }
 
 function buildService(m: Mocks): CustomerSupportDashboardService {
-  return new CustomerSupportDashboardService(m.repo, m.clientsRepo)
+  return new CustomerSupportDashboardService(
+    m.repo,
+    m.clientsRepo,
+    m.publicLinksRepo as unknown as ClientPublicLinksRepository,
+    m.cfg as unknown as AppConfigService,
+  )
 }
 
 describe('CustomerSupportDashboardService', () => {

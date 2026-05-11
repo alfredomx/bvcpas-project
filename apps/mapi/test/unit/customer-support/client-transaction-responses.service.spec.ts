@@ -2,7 +2,11 @@ import { ClientTransactionResponsesService } from '../../../src/modules/12-custo
 import type { ClientTransactionResponsesRepository } from '../../../src/modules/12-customer-support/responses/client-transaction-responses.repository'
 import type { ClientTransactionsRepository } from '../../../src/modules/12-customer-support/transactions/client-transactions.repository'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
-import { TransactionNotFoundInSnapshotError } from '../../../src/modules/12-customer-support/customer-support.errors'
+import type { QboWritebackService } from '../../../src/modules/12-customer-support/responses/qbo-writeback.service'
+import {
+  QboAccountIdRequiredError,
+  TransactionNotFoundInSnapshotError,
+} from '../../../src/modules/12-customer-support/customer-support.errors'
 import type { ClientTransaction } from '../../../src/db/schema/client-transactions'
 import type { ClientTransactionResponse } from '../../../src/db/schema/client-transaction-responses'
 
@@ -23,7 +27,7 @@ function buildTxn(overrides: Partial<ClientTransaction> = {}): ClientTransaction
   return {
     id: TXN_UUID,
     realmId: 'r-1',
-    qboTxnType: 'Expense',
+    qboTxnType: 'Purchase',
     qboTxnId: '101',
     clientId: 'c-1',
     txnDate: '2026-04-15',
@@ -31,6 +35,7 @@ function buildTxn(overrides: Partial<ClientTransaction> = {}): ClientTransaction
     vendorName: 'Acme',
     memo: 'lunch',
     splitAccount: 'Bank',
+    qboAccountId: null,
     category: 'uncategorized_expense',
     amount: '50.00',
     syncedAt: NOW,
@@ -45,7 +50,7 @@ function buildResponse(
     id: 'resp-1',
     clientId: 'c-1',
     realmId: 'r-1',
-    qboTxnType: 'Expense',
+    qboTxnType: 'Purchase',
     qboTxnId: '101',
     txnDate: '2026-04-15',
     vendorName: 'Acme',
@@ -54,8 +59,12 @@ function buildResponse(
     category: 'uncategorized_expense',
     amount: '50.00',
     clientNote: 'lunch with vendor',
+    appendedText: null,
+    qboAccountId: null,
+    completed: false,
     respondedAt: NOW,
     syncedToQboAt: null,
+    deletedAt: null,
     createdAt: NOW,
     updatedAt: NOW,
     ...overrides,
@@ -66,6 +75,7 @@ interface Mocks {
   responsesRepo: jest.Mocked<ClientTransactionResponsesRepository>
   txnRepo: jest.Mocked<ClientTransactionsRepository>
   events: { log: jest.Mock }
+  writeback: { writeback: jest.Mock }
 }
 
 function makeMocks(): Mocks {
@@ -74,11 +84,13 @@ function makeMocks(): Mocks {
       findByTxn: jest.fn(),
       upsert: jest.fn(),
       listByClient: jest.fn(),
+      markSyncedToQbo: jest.fn(),
     } as unknown as jest.Mocked<ClientTransactionResponsesRepository>,
     txnRepo: {
       findById: jest.fn(),
     } as unknown as jest.Mocked<ClientTransactionsRepository>,
     events: { log: jest.fn().mockResolvedValue(undefined) },
+    writeback: { writeback: jest.fn().mockResolvedValue(undefined) },
   }
 }
 
@@ -87,6 +99,7 @@ function buildService(m: Mocks): ClientTransactionResponsesService {
     m.responsesRepo,
     m.txnRepo,
     m.events as unknown as EventLogService,
+    m.writeback as unknown as QboWritebackService,
   )
 }
 
@@ -118,7 +131,7 @@ describe('ClientTransactionResponsesService', () => {
       expect(upsertArg).toMatchObject({
         clientId: 'c-1',
         realmId: 'r-1',
-        qboTxnType: 'Expense',
+        qboTxnType: 'Purchase',
         qboTxnId: '101',
         txnDate: '2026-04-15',
         vendorName: 'Acme',
@@ -165,6 +178,69 @@ describe('ClientTransactionResponsesService', () => {
         undefined,
         expect.any(Object),
       )
+    })
+  })
+
+  describe('CR-cs-014 — qboSync sin qboAccountId', () => {
+    it('lanza QboAccountIdRequiredError antes de tocar DB', async () => {
+      const m = makeMocks()
+      m.txnRepo.findById.mockResolvedValueOnce(buildTxn())
+
+      const svc = buildService(m)
+      await expect(
+        svc.saveResponse({
+          txnId: TXN_UUID,
+          note: 'algo',
+          qboSync: true,
+          userId: 'u-1',
+        }),
+      ).rejects.toBeInstanceOf(QboAccountIdRequiredError)
+      expect(m.responsesRepo.upsert).not.toHaveBeenCalled()
+      expect(m.writeback.writeback).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('CR-cs-015 — qboSync happy path', () => {
+    it('hace upsert (respeta completed del input), llama writeback, marca synced y emite evento', async () => {
+      const m = makeMocks()
+      m.txnRepo.findById.mockResolvedValueOnce(buildTxn())
+      m.responsesRepo.findByTxn.mockResolvedValueOnce(null)
+      const inserted = buildResponse({ qboAccountId: '82', completed: false })
+      m.responsesRepo.upsert.mockResolvedValueOnce(inserted)
+      m.responsesRepo.markSyncedToQbo.mockResolvedValueOnce(
+        buildResponse({ qboAccountId: '82', completed: false, syncedToQboAt: NOW }),
+      )
+
+      const svc = buildService(m)
+      const result = await svc.saveResponse({
+        txnId: TXN_UUID,
+        note: 'office supplies',
+        qboAccountId: '82',
+        completed: false,
+        qboSync: true,
+        userId: 'u-1',
+      })
+
+      expect(m.responsesRepo.upsert.mock.calls[0]?.[0]?.completed).toBe(false)
+      expect(m.writeback.writeback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          realmId: 'r-1',
+          clientId: 'c-1',
+          userId: 'u-1',
+          qboTxnType: 'Purchase',
+          qboTxnId: '101',
+          qboAccountId: '82',
+          note: 'office supplies',
+        }),
+      )
+      expect(m.responsesRepo.markSyncedToQbo).toHaveBeenCalledWith(inserted.id)
+      expect(m.events.log).toHaveBeenCalledWith(
+        'client_transaction_response.qbo_synced',
+        expect.objectContaining({ qboAccountId: '82' }),
+        'u-1',
+        expect.any(Object),
+      )
+      expect(result.syncedToQboAt).not.toBeNull()
     })
   })
 })

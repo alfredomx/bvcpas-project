@@ -99,6 +99,7 @@ export class CustomerSupportDashboardRepository {
           WHERE r.client_id = c.id
             AND r.category IN ('uncategorized_expense', 'uncategorized_income')
             AND r.txn_date BETWEEN ${filters.from} AND ${filters.to}
+            AND r.completed = true
         )::int AS responded_count,
 
         MAX(t.synced_at) FILTER (

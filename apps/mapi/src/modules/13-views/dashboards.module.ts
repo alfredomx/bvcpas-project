@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common'
 import { ClientsModule } from '../11-clients/clients.module'
+import { CustomerSupportModule } from '../12-customer-support/customer-support.module'
 import { ClientUncatsController } from './customer-support/client-uncats.controller'
 import { CustomerSupportDashboardRepository } from './customer-support/customer-support-dashboard.repository'
 import { CustomerSupportDashboardService } from './customer-support/customer-support-dashboard.service'
@@ -22,7 +23,7 @@ import { UncatsViewController } from './customer-support/uncats-view.controller'
  * - /v1/clients/:id/recon, /v1/clients/:id/w9, etc.
  */
 @Module({
-  imports: [ClientsModule],
+  imports: [ClientsModule, CustomerSupportModule],
   controllers: [UncatsViewController, ClientUncatsController],
   providers: [CustomerSupportDashboardRepository, CustomerSupportDashboardService],
 })

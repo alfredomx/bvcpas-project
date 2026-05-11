@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common'
 import { ClientsRepository } from '../../11-clients/clients.repository'
 import { ClientNotFoundError } from '../../11-clients/clients.errors'
+import { ClientPublicLinksRepository } from '../../12-customer-support/public-links/client-public-links.repository'
+import type { ClientPublicLink } from '../../../db/schema/client-public-links'
+import { AppConfigService } from '../../../core/config/config.service'
 import {
   type ClientStatsRow,
   CustomerSupportDashboardRepository,
@@ -65,6 +68,13 @@ export interface ClientDashboardDetail {
     silent_streak_days: number
   }
   monthly: ClientDashboardListItem['monthly']
+  public_link: {
+    token: string
+    url: string
+    label: string | null
+    expires_at: string | null
+    created_at: string
+  } | null
 }
 
 @Injectable()
@@ -72,6 +82,8 @@ export class CustomerSupportDashboardService {
   constructor(
     private readonly repo: CustomerSupportDashboardRepository,
     private readonly clientsRepo: ClientsRepository,
+    private readonly publicLinksRepo: ClientPublicLinksRepository,
+    private readonly cfg: AppConfigService,
   ) {}
 
   async listAll(filters: DashboardFilters): Promise<ClientDashboardListItem[]> {
@@ -88,10 +100,16 @@ export class CustomerSupportDashboardService {
     const client = await this.clientsRepo.findById(clientId)
     if (!client) throw new ClientNotFoundError(clientId)
 
-    const [stats, monthly, previousYear] = await Promise.all([
+    const [stats, monthly, previousYear, activeLink]: [
+      ClientStatsRow[],
+      MonthlyHistogramRow[],
+      PreviousYearTotalRow[],
+      ClientPublicLink | null,
+    ] = await Promise.all([
       this.repo.getStatsByClient(filters),
       this.repo.getMonthlyHistogram(filters),
       this.repo.getPreviousYearTotals(filters),
+      this.publicLinksRepo.findActiveByClientAndPurpose(clientId, 'uncats'),
     ])
 
     const clientStats = stats.find((s) => s.client_id === clientId)
@@ -103,6 +121,20 @@ export class CustomerSupportDashboardService {
       coerceDate(clientStats?.followup_last_reply_at),
       coerceDate(clientStats?.followup_sent_at),
     )
+
+    const publicUrl = this.cfg.publicUrl
+    const publicLink =
+      activeLink && publicUrl
+        ? {
+            token: activeLink.token,
+            url: `${publicUrl}/v1/public/uncats/${activeLink.token}`,
+            label:
+              ((activeLink.metadata as Record<string, unknown> | null)?.label as string | null) ??
+              null,
+            expires_at: activeLink.expiresAt ? activeLink.expiresAt.toISOString() : null,
+            created_at: activeLink.createdAt.toISOString(),
+          }
+        : null
 
     return {
       client: {
@@ -124,6 +156,7 @@ export class CustomerSupportDashboardService {
       },
       stats: { ...listItem.stats, silent_streak_days: silentStreakDays },
       monthly: listItem.monthly,
+      public_link: publicLink,
     }
   }
 }

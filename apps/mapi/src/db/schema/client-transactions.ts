@@ -51,6 +51,7 @@ export const clientTransactions = pgTable(
     vendorName: text('vendor_name'),
     memo: text('memo'),
     splitAccount: text('split_account'),
+    qboAccountId: text('qbo_account_id'), // ID del GL account de la categoría (ColData[7].id) — Uncategorized Expense, AMA, etc.
     category: text('category', { enum: CLIENT_TRANSACTION_CATEGORIES }).notNull(),
     amount: numeric('amount', { precision: 15, scale: 2 }).notNull(),
 
