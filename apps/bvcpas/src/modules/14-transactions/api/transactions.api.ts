@@ -63,6 +63,24 @@ export async function saveTransactionNote(
   return data
 }
 
+/**
+ * Soft-delete del response asociado a una transacción.
+ * Mapi marca la fila con `deleted_at` pero no la borra físicamente.
+ * Idempotente: si ya estaba borrado, devuelve 204 también.
+ */
+export async function deleteTransactionResponse(
+  clientId: string,
+  txnId: string,
+): Promise<void> {
+  const { error } = await api.DELETE(
+    '/v1/clients/{id}/transactions/responses/{txnId}',
+    {
+      params: { path: { id: clientId, txnId } },
+    },
+  )
+  if (error) throw error
+}
+
 export async function syncTransactions(
   clientId: string,
   body: SyncBody,
