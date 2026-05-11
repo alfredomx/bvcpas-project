@@ -20,6 +20,7 @@ import { CsConfigSheet } from './cs-config-sheet'
 export interface CsHeaderProps {
   client: UncatsDetailResponse['client']
   followup: UncatsDetailResponse['followup']
+  publicLink: UncatsDetailResponse['public_link']
 }
 
 function formatDateShort(iso: string | null): string {
@@ -32,7 +33,7 @@ function formatDateShort(iso: string | null): string {
   return `${mm}-${dd}-${yy}`
 }
 
-export function CsHeader({ client, followup }: CsHeaderProps) {
+export function CsHeader({ client, followup, publicLink }: CsHeaderProps) {
   const [configOpen, setConfigOpen] = useState(false)
 
   return (
@@ -40,9 +41,14 @@ export function CsHeader({ client, followup }: CsHeaderProps) {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           {client.tier === 'platinum' || client.tier === 'gold' ? (
-            <Badge variant="secondary">★ {client.tier.toUpperCase()}</Badge>
+            <Badge variant="secondary">★ {client.tier}</Badge>
           ) : (
-            <Badge variant="outline">{client.tier.toUpperCase()}</Badge>
+            <Badge variant="outline">{client.tier}</Badge>
+          )}
+          {publicLink && publicLink.revoked_at === null ? (
+            <Badge variant="secondary">🔓 public link</Badge>
+          ) : (
+            <Badge variant="outline">🔒 public link</Badge>
           )}
           <Badge variant="outline">{formatFollowupStatus(followup.status)}</Badge>
         </div>
@@ -64,7 +70,12 @@ export function CsHeader({ client, followup }: CsHeaderProps) {
         Configure
       </Button>
 
-      <CsConfigSheet open={configOpen} onOpenChange={setConfigOpen} client={client} />
+      <CsConfigSheet
+        open={configOpen}
+        onOpenChange={setConfigOpen}
+        client={client}
+        publicLink={publicLink}
+      />
     </div>
   )
 }
