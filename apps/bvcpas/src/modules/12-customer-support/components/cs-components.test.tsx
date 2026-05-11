@@ -103,7 +103,7 @@ describe('<CsHeader>', () => {
 describe('<CsStatsGrid>', () => {
   it('renders the 6 KPIs with formatted values', () => {
     render(<CsStatsGrid stats={sample.stats} />)
-    expect(screen.getByText('$62.6k')).toBeInTheDocument()
+    expect(screen.getByText('$62,600.00')).toBeInTheDocument()
     expect(screen.getByText('Total uncats')).toBeInTheDocument()
     expect(screen.getByText('26')).toBeInTheDocument() // uncats_count
     expect(screen.getByText("AMA's")).toBeInTheDocument()
