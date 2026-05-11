@@ -82,15 +82,31 @@ const sample: UncatsDetailResponse = {
 
 describe('<CsHeader>', () => {
   it('renders legal name + contact + tier + followup status', () => {
-    render(withQueryClient(<CsHeader client={sample.client} followup={sample.followup} />))
+    render(
+      withQueryClient(
+        <CsHeader
+          client={sample.client}
+          followup={sample.followup}
+          publicLink={sample.public_link}
+        />,
+      ),
+    )
     expect(screen.getByText('Elite Fence & Welding, LLC')).toBeInTheDocument()
     expect(screen.getByText(/Hector Zavala/)).toBeInTheDocument()
-    expect(screen.getByText(/PLATINUM/)).toBeInTheDocument()
+    expect(screen.getByText(/platinum/)).toBeInTheDocument()
     expect(screen.getByText(/awaiting reply/)).toBeInTheDocument()
   })
 
   it('shows Configure button that opens the CsConfigSheet', async () => {
-    render(withQueryClient(<CsHeader client={sample.client} followup={sample.followup} />))
+    render(
+      withQueryClient(
+        <CsHeader
+          client={sample.client}
+          followup={sample.followup}
+          publicLink={sample.public_link}
+        />,
+      ),
+    )
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /configure/i }))

@@ -61,7 +61,11 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <CsHeader client={data.client} followup={data.followup} />
+      <CsHeader
+        client={data.client}
+        followup={data.followup}
+        publicLink={data.public_link}
+      />
       <CsQuickLinks />
       <CsActivityTimeline monthly={data.monthly} mode={tab} />
       <CsStatsGrid stats={data.stats} />
