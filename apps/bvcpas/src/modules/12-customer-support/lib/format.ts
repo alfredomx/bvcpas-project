@@ -2,17 +2,23 @@
 // Cero clases CSS — solo strings.
 
 /**
- * Formato compacto de monto en USD: $X, $X.Xk, $X.XM.
- * `value` viene como string desde mapi (decimal Postgres, D-bvcpas-020).
+ * Formato preciso de monto en USD: $X,XXX.XX con 2 decimales y separador
+ * de miles. `value` viene como string desde mapi (decimal Postgres,
+ * D-bvcpas-020). Conserva el signo negativo si aplica.
+ *
+ * Ejemplos: "200.00" → "$200.00"; "60401.23" → "$60,401.23";
+ * "-32.5" → "-$32.50".
  */
 export function formatAmount(value: string): string {
   const n = Number(value)
-  if (!Number.isFinite(n)) return '$0'
+  if (!Number.isFinite(n)) return '$0.00'
   const sign = n < 0 ? '-' : ''
   const abs = Math.abs(n)
-  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`
-  if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}k`
-  return `${sign}$${Math.round(abs)}`
+  const formatted = abs.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+  return `${sign}$${formatted}`
 }
 
 /** Convierte días en meses enteros (truncando). */

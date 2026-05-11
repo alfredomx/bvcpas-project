@@ -82,7 +82,7 @@ describe('<CustomerSupportScreen>', () => {
     await waitFor(() => {
       expect(screen.getByText('Acme LLC')).toBeInTheDocument()
     })
-    expect(screen.getByText('$15.0k')).toBeInTheDocument()
+    expect(screen.getByText('$15,000.00')).toBeInTheDocument()
     expect(screen.getByText("AMA's")).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /draft follow-up/i })).toBeInTheDocument()
   })

@@ -200,4 +200,35 @@ describe('transactions.api', () => {
       ).rejects.toBeDefined()
     })
   })
+
+  describe('deleteTransactionResponse', () => {
+    it('DELETEs /v1/clients/:id/transactions/responses/:txnId', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(new Response(null, { status: 204 }))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { deleteTransactionResponse } = await importApi()
+      await deleteTransactionResponse('c-1', 't-1')
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      const [calledRequest] = fetchMock.mock.calls[0]
+      expect(calledRequest.url).toBe(
+        `${TEST_BASE_URL}/v1/clients/c-1/transactions/responses/t-1`,
+      )
+      expect(calledRequest.method).toBe('DELETE')
+    })
+
+    it('throws on 404', async () => {
+      const fetchMock = vi
+        .fn()
+        .mockResolvedValue(
+          jsonResponse(404, { statusCode: 404, code: 'NOT_FOUND' }),
+        )
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { deleteTransactionResponse } = await importApi()
+      await expect(deleteTransactionResponse('c-1', 't-x')).rejects.toBeDefined()
+    })
+  })
 })

@@ -911,7 +911,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * DELETE /v1/clients/:id/transactions/responses/:txnId
+         * @description Soft-delete del response asociado a una transacción. La fila se marca con `deleted_at` pero NO se borra. Si el cliente vuelve a guardar nota sobre esa transacción, el response se reactiva automáticamente (transparente para frontend). El listado público y el listado admin estándar ocultan responses borrados.
+         */
+        delete: operations["ClientTransactionResponsesController_softDelete"];
         options?: never;
         head?: never;
         /**
@@ -3436,6 +3440,34 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TransactionResponsesListDto"];
                 };
+            };
+        };
+    };
+    ClientTransactionResponsesController_softDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                txnId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response borrado o ya estaba borrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transacción no encontrada en el snapshot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

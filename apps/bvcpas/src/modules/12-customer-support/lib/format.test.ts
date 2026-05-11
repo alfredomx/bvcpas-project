@@ -10,26 +10,27 @@ import {
 } from './format'
 
 describe('formatAmount', () => {
-  it('formats thousands with k suffix and one decimal', () => {
-    expect(formatAmount('62600.00')).toBe('$62.6k')
-    expect(formatAmount('1500.00')).toBe('$1.5k')
+  it('formats amounts with 2 decimals and thousands separator', () => {
+    expect(formatAmount('62600.00')).toBe('$62,600.00')
+    expect(formatAmount('1500.00')).toBe('$1,500.00')
   })
 
-  it('formats hundreds without k', () => {
-    expect(formatAmount('900.00')).toBe('$900')
-    expect(formatAmount('0.00')).toBe('$0')
+  it('formats hundreds with 2 decimals', () => {
+    expect(formatAmount('900.00')).toBe('$900.00')
+    expect(formatAmount('0.00')).toBe('$0.00')
   })
 
-  it('formats millions with M suffix', () => {
-    expect(formatAmount('1500000.00')).toBe('$1.5M')
+  it('formats millions with comma separator', () => {
+    expect(formatAmount('1500000.00')).toBe('$1,500,000.00')
   })
 
   it('handles negative amounts', () => {
-    expect(formatAmount('-1500.00')).toBe('-$1.5k')
+    expect(formatAmount('-1500.00')).toBe('-$1,500.00')
+    expect(formatAmount('-32.5')).toBe('-$32.50')
   })
 
-  it('returns "$0" for invalid input', () => {
-    expect(formatAmount('not-a-number')).toBe('$0')
+  it('returns "$0.00" for invalid input', () => {
+    expect(formatAmount('not-a-number')).toBe('$0.00')
   })
 })
 

@@ -301,6 +301,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.5   | 12-customer-support | ✅ | Modal de detalle de transacción + QBO accounts dropdown + nota con sufijo localStorage — D-042/043/044/045 | bvcpas-v0.5.5 | [12-customer-support/v0.5.5.md](12-customer-support/v0.5.5.md) |
 | 0.5.6   | 12-customer-support | ✅ | Modal funcional (PATCH responses), combobox search, completed en frontend, layout ajustado — D-046/047/048/049/050 | bvcpas-v0.5.6 | [12-customer-support/v0.5.6.md](12-customer-support/v0.5.6.md) |
 | 0.5.7   | 12-customer-support | ✅ | Writeback a QBO (?qbo_sync=true) + appended_text + mapeo de errores específicos — D-051/052/053/054 | bvcpas-v0.5.7 | [12-customer-support/v0.5.7.md](12-customer-support/v0.5.7.md) |
+| 0.5.8   | 12-customer-support | ✅ | Delete response (soft-delete) + AlertDialog + formatAmount preciso — D-055/056/057/058 | bvcpas-v0.5.8 | [12-customer-support/v0.5.8.md](12-customer-support/v0.5.8.md) |
 
 ---
 
@@ -362,6 +363,10 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-bvcpas-052 | Mensajes de error específicos por `error.code` (QBO_ACCOUNT_ID_REQUIRED, TXN_TYPE_NOT_SUPPORTED, INTUIT_STALE_SYNC_TOKEN, INTUIT_API_ERROR) | 0.5.7   | No          |
 | D-bvcpas-053 | `appended_text` siempre en body del PATCH; mapi lo ignora si `qbo_sync=false` y lo concatena a `client_note` si `true`. Input siempre se rellena con localStorage | 0.5.7   | No          |
 | D-bvcpas-054 | `buildAppendedText(suffix, now)` devuelve "{sufijo} ({MM-DD-YYYY})"; el frontend calcula la fecha para evitar manejo de zona horaria en mapi | 0.5.7   | No          |
+| D-bvcpas-055 | Botón Delete del modal solo visible si `transaction.response !== null` (ocultar evita confusión cuando no hay nota guardada)  | 0.5.8   | No          |
+| D-bvcpas-056 | Confirmación previa con `<AlertDialog>` shadcn (no `confirm()` nativo); destructivo aunque reversible                       | 0.5.8   | No          |
+| D-bvcpas-057 | Layout del footer del modal: `[Delete]  [☐ Update in QB's]              [Cancel] [Save]`                                  | 0.5.8   | No          |
+| D-bvcpas-058 | `formatAmount` con 2 decimales y separador de miles (`$X,XXX.XX`) en todos los lugares; reemplaza el formato compacto v0.5.0 | 0.5.8   | Sí          |
 
 ---
 
