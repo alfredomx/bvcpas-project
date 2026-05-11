@@ -10,6 +10,16 @@ import { useEffect, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -37,6 +47,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import {
+  deleteTransactionResponse,
   saveTransactionNote,
   type Transaction,
 } from '@/modules/14-transactions/api/transactions.api'
@@ -96,6 +107,8 @@ export function TxDetailModal({
   const [selectedAccount, setSelectedAccount] = useState('')
   const [comboOpen, setComboOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [updateInQb, setUpdateInQbState] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
     return window.localStorage.getItem('bvcpas.updateInQb') === 'true'
@@ -126,6 +139,23 @@ export function TxDetailModal({
   if (!transaction) return null
 
   const preview = buildNotePreview(note, suffix)
+
+  const handleDelete = async () => {
+    if (!transaction) return
+    setIsDeleting(true)
+    try {
+      await deleteTransactionResponse(transaction.client_id, transaction.id)
+      queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
+      queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      toast.success('Response deleted.')
+      setConfirmDeleteOpen(false)
+      onClose()
+    } catch {
+      toast.error('Could not delete. Try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const handleSave = async () => {
     if (!note.trim()) {
@@ -324,15 +354,27 @@ export function TxDetailModal({
         </div>
 
         <DialogFooter className="flex items-center justify-between sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="update-in-qb"
-              checked={updateInQb}
-              onCheckedChange={(v) => setUpdateInQb(v === true)}
-            />
-            <Label htmlFor="update-in-qb" className="cursor-pointer font-normal">
-              Update in QB&apos;s
-            </Label>
+          <div className="flex items-center gap-4">
+            {transaction.response && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConfirmDeleteOpen(true)}
+                disabled={isDeleting}
+              >
+                Delete
+              </Button>
+            )}
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="update-in-qb"
+                checked={updateInQb}
+                onCheckedChange={(v) => setUpdateInQb(v === true)}
+              />
+              <Label htmlFor="update-in-qb" className="cursor-pointer font-normal">
+                Update in QB&apos;s
+              </Label>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
@@ -344,6 +386,29 @@ export function TxDetailModal({
           </div>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this response?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The transaction will return to its original state.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                void handleDelete()
+              }}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting…' : 'Yes, delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   )
 }

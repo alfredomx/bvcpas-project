@@ -11,6 +11,7 @@ import type { Transaction } from '@/modules/14-transactions/api/transactions.api
 
 const getQboAccountsMock = vi.fn()
 const saveTransactionNoteMock = vi.fn()
+const deleteTransactionResponseMock = vi.fn()
 const toastSuccessMock = vi.fn()
 const toastErrorMock = vi.fn()
 const toastWarningMock = vi.fn()
@@ -21,6 +22,8 @@ vi.mock('@/modules/14-transactions/api/qbo-accounts.api', () => ({
 
 vi.mock('@/modules/14-transactions/api/transactions.api', () => ({
   saveTransactionNote: (...args: unknown[]) => saveTransactionNoteMock(...args),
+  deleteTransactionResponse: (...args: unknown[]) =>
+    deleteTransactionResponseMock(...args),
 }))
 
 vi.mock('sonner', () => ({
@@ -61,6 +64,7 @@ describe('<TxDetailModal>', () => {
     saveTransactionNoteMock.mockReset()
     toastSuccessMock.mockReset()
     toastErrorMock.mockReset()
+    deleteTransactionResponseMock.mockReset()
     toastWarningMock.mockReset()
     window.localStorage.clear()
     getQboAccountsMock.mockResolvedValue([
@@ -85,7 +89,7 @@ describe('<TxDetailModal>', () => {
     )
 
     expect(screen.getByText('Paypal')).toBeInTheDocument()
-    expect(screen.getByText('-$146')).toBeInTheDocument()
+    expect(screen.getByText('-$146.00')).toBeInTheDocument()
     expect(
       screen.getByText('PAYPAL *SANANTONIOR.O XXX-XXX-7733 CA 02/05'),
     ).toBeInTheDocument()
@@ -358,4 +362,123 @@ describe('<TxDetailModal>', () => {
       expect(onClose).not.toHaveBeenCalled()
     },
   )
+
+  describe('Delete button', () => {
+    const sampleTxWithResponse: Transaction = {
+      ...sampleTx,
+      response: {
+        client_note: 'office supplies',
+        qbo_account_id: '84',
+        appended_text: " - as per client's notes (05-10-2026)",
+        completed: true,
+        responded_at: '2026-05-10T00:00:00.000Z',
+        synced_to_qbo_at: null,
+      },
+    }
+
+    it('does NOT render Delete button when transaction.response is null', () => {
+      render(
+        <TxDetailModal
+          transaction={sampleTx}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={() => {}}
+        />,
+        { wrapper },
+      )
+
+      expect(screen.queryByRole('button', { name: /^delete$/i })).not.toBeInTheDocument()
+    })
+
+    it('renders Delete button when transaction.response exists', () => {
+      render(
+        <TxDetailModal
+          transaction={sampleTxWithResponse}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={() => {}}
+        />,
+        { wrapper },
+      )
+
+      expect(screen.getByRole('button', { name: /^delete$/i })).toBeInTheDocument()
+    })
+
+    it('click Delete opens AlertDialog confirmation', async () => {
+      render(
+        <TxDetailModal
+          transaction={sampleTxWithResponse}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={() => {}}
+        />,
+        { wrapper },
+      )
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: /^delete$/i }))
+
+      expect(screen.getByText(/Delete this response\?/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/return to its original state/i),
+      ).toBeInTheDocument()
+    })
+
+    it('confirming delete calls API, invalidates caches and closes modal', async () => {
+      deleteTransactionResponseMock.mockResolvedValue(undefined)
+      const onClose = vi.fn()
+
+      render(
+        <TxDetailModal
+          transaction={sampleTxWithResponse}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={onClose}
+        />,
+        { wrapper },
+      )
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: /^delete$/i }))
+      await user.click(screen.getByRole('button', { name: /^yes, delete$/i }))
+
+      await waitFor(() => {
+        expect(deleteTransactionResponseMock).toHaveBeenCalledWith(
+          sampleTxWithResponse.client_id,
+          sampleTxWithResponse.id,
+        )
+        expect(toastSuccessMock).toHaveBeenCalledWith('Response deleted.')
+        expect(onClose).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    it('shows error toast when delete API rejects', async () => {
+      deleteTransactionResponseMock.mockRejectedValue(new Error('boom'))
+      const onClose = vi.fn()
+
+      render(
+        <TxDetailModal
+          transaction={sampleTxWithResponse}
+          realmId="9000"
+          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          open={true}
+          onClose={onClose}
+        />,
+        { wrapper },
+      )
+
+      const user = userEvent.setup()
+      await user.click(screen.getByRole('button', { name: /^delete$/i }))
+      await user.click(screen.getByRole('button', { name: /^yes, delete$/i }))
+
+      await waitFor(() => {
+        expect(toastErrorMock).toHaveBeenCalledWith(expect.stringMatching(/could not delete/i))
+      })
+      expect(onClose).not.toHaveBeenCalled()
+    })
+  })
 })
