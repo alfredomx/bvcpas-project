@@ -4,12 +4,23 @@
 // follow-ups al cliente. Primera implementación del patrón
 // D-bvcpas-033 (settings por pestaña).
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,10 +37,17 @@ import { Switch } from '@/components/ui/switch'
 import { useUpdateClient } from '@/modules/11-clients/hooks/use-update-client'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
+import {
+  createPublicLink,
+  revokePublicLink,
+  updatePublicLink,
+} from '../api/public-links.api'
+
 export interface CsConfigSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   client: UncatsDetailResponse['client']
+  publicLink: UncatsDetailResponse['public_link']
 }
 
 // Validación + normalización de emails CSV (D-bvcpas-039, D-bvcpas-040).
@@ -82,8 +100,108 @@ const schema = z.object({
 type FormInput = z.input<typeof schema>
 type FormOutput = z.output<typeof schema>
 
-export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps) {
+export function CsConfigSheet({
+  open,
+  onOpenChange,
+  client,
+  publicLink,
+}: CsConfigSheetProps) {
   const update = useUpdateClient(client.id)
+  const queryClient = useQueryClient()
+
+  const invalidateDetail = () => {
+    // Invalidamos cualquier query que empiece con 'uncats-detail' (la key real
+    // del hook es ['uncats-detail', clientId, from, to]; usar solo el prefijo
+    // garantiza match aunque el clientId de la URL difiera del id que mapi
+    // devuelve, ej. por formato).
+    queryClient.invalidateQueries({ queryKey: ['uncats-detail'] })
+  }
+
+  const createMutation = useMutation({
+    mutationFn: (opts?: { force?: boolean }) =>
+      createPublicLink(client.id, { force: opts?.force }),
+    onSuccess: () => invalidateDetail(),
+  })
+
+  const revokeMutation = useMutation({
+    mutationFn: (linkId: string) => revokePublicLink(client.id, linkId),
+    onSuccess: () => invalidateDetail(),
+  })
+
+  const unrevokeMutation = useMutation({
+    mutationFn: (linkId: string) =>
+      updatePublicLink(client.id, linkId, { revokedAt: null }),
+    onSuccess: () => invalidateDetail(),
+  })
+
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
+  const [regenDialogOpen, setRegenDialogOpen] = useState(false)
+
+  const hasPublicLink = publicLink !== null
+  const isLinkEnabled = hasPublicLink && publicLink!.revoked_at === null
+
+  const handleGenerate = () => {
+    createMutation.mutate(undefined, {
+      onError: () => toast.error('Could not generate link.'),
+    })
+  }
+
+  const handleSwitchChange = (checked: boolean) => {
+    if (!publicLink) return
+    if (checked && !isLinkEnabled) {
+      // OFF (revocado) → ON: PATCH revokedAt:null.
+      unrevokeMutation.mutate(publicLink.id, {
+        onError: () => toast.error('Could not enable link.'),
+      })
+    } else if (!checked && isLinkEnabled) {
+      // ON → OFF: pedir confirm.
+      setRevokeDialogOpen(true)
+    }
+  }
+
+  const confirmRevoke = () => {
+    if (!publicLink) return
+    revokeMutation.mutate(publicLink.id, {
+      onSuccess: () => {
+        setRevokeDialogOpen(false)
+      },
+      onError: () => {
+        toast.error('Could not disable link.')
+        setRevokeDialogOpen(false)
+      },
+    })
+  }
+
+  const confirmRegenerate = () => {
+    createMutation.mutate(
+      { force: true },
+      {
+        onSuccess: () => {
+          setRegenDialogOpen(false)
+        },
+        onError: () => {
+          toast.error('Could not regenerate link.')
+          setRegenDialogOpen(false)
+        },
+      },
+    )
+  }
+
+  const handleCopy = async () => {
+    if (!publicLink) return
+    try {
+      await navigator.clipboard.writeText(publicLink.url)
+      toast.success('Link copied.')
+    } catch {
+      toast.error('Could not copy.')
+    }
+  }
+
+  const formattedCreatedAt = publicLink
+    ? new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(
+        new Date(publicLink.created_at),
+      )
+    : ''
 
   const defaultValues: FormInput = {
     primaryContactName: client.primary_contact_name ?? '',
@@ -145,12 +263,17 @@ export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps
         <form onSubmit={onSubmit} className="flex h-full flex-col">
           <SheetHeader>
             <SheetTitle>Configure</SheetTitle>
-            <SheetDescription>
-              Settings that affect the follow-up email sent to this client.
-            </SheetDescription>
           </SheetHeader>
+          
 
-          <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4">
+          <div className="flex flex-1 flex-col gap-5 overflow-y-auto p-4 border-t">
+            <div className="flex flex-col gap-1">
+              <Label>Follow-up</Label>
+              <p className="text-xs text-muted-foreground">
+                Settings that affect the follow-up email sent to this client.
+              </p>
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="primaryContactName">Contact name</Label>
               <Input id="primaryContactName" {...register('primaryContactName')} />
@@ -225,7 +348,135 @@ export function CsConfigSheet({ open, onOpenChange, client }: CsConfigSheetProps
                 }
               />
             </div>
+
+            <div className="flex flex-col gap-3 border-t pt-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Public link</Label>
+                <p className="text-xs text-muted-foreground">
+                  Shareable URL the client uses to view and categorize their
+                  uncats without logging in.
+                </p>
+              </div>
+              
+              {hasPublicLink && (
+                <p className="text-xs text-muted-foreground">
+                  Created {formattedCreatedAt}
+                </p>
+              )}
+
+              <div className="flex items-center gap-1.5">
+                <Input
+                  readOnly
+                  value={publicLink?.url ?? ''}
+                  aria-label="Public link URL"
+                  className="font-mono text-xs"
+                  placeholder="No link generated yet"
+                />
+                {hasPublicLink && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                  >
+                    Copy
+                  </Button>
+                )}
+              </div>
+
+              {hasPublicLink && (
+                <div className="flex items-center justify-between gap-2">
+                  <Label htmlFor="publicLinkEnabled" className="font-normal">
+                    Enabled
+                  </Label>
+                  <Switch
+                    id="publicLinkEnabled"
+                    checked={isLinkEnabled}
+                    disabled={
+                      revokeMutation.isPending || unrevokeMutation.isPending
+                    }
+                    onCheckedChange={handleSwitchChange}
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end pt-1">
+                {hasPublicLink ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRegenDialogOpen(true)}
+                    disabled={createMutation.isPending}
+                  >
+                    Regenerate
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerate}
+                    disabled={createMutation.isPending}
+                  >
+                    {createMutation.isPending ? 'Generating…' : 'Generate'}
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
+
+          <AlertDialog open={revokeDialogOpen} onOpenChange={setRevokeDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Disable public link?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  The current URL will stop working immediately. The client will
+                  no longer be able to access their uncats.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={revokeMutation.isPending}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault()
+                    confirmRevoke()
+                  }}
+                  disabled={revokeMutation.isPending}
+                >
+                  {revokeMutation.isPending ? 'Disabling…' : 'Disable'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          <AlertDialog open={regenDialogOpen} onOpenChange={setRegenDialogOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Regenerate link?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  The current URL will stop working immediately. A new URL will
+                  be generated.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={createMutation.isPending}>
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={(e) => {
+                    e.preventDefault()
+                    confirmRegenerate()
+                  }}
+                  disabled={createMutation.isPending}
+                >
+                  {createMutation.isPending ? 'Regenerating…' : 'Regenerate'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <SheetFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
