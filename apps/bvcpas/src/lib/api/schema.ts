@@ -995,6 +995,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/clients/{id}/public-links/{linkId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /v1/clients/:id/public-links/:linkId
+         * @description Edita un link existente. Campos opcionales: `expiresAt`, `maxUses`, `metadata`. Para anular una revocación: mandar `revokedAt: null` (única forma soportada de des-revocar). Si al des-revocar ya hay otro link activo del mismo `purpose`, devuelve 409. `token` y `purpose` son inmutables — para rotar el token usar POST con `force: true`.
+         */
+        patch: operations["ClientPublicLinksController_update"];
+        trace?: never;
+    };
     "/v1/public/uncats/{token}": {
         parameters: {
             query?: never;
@@ -1977,6 +1997,20 @@ export interface components {
                 created_by_user_id: string | null;
             }[];
         };
+        /** @description PATCH parcial de un link público. Solo se aplican los campos presentes. Para anular revocación, mandar `revokedAt: null` (validará que no haya otro activo del mismo purpose, si lo hay → 409). */
+        UpdatePublicLinkDto: {
+            /** Format: date-time */
+            expiresAt?: string | null;
+            maxUses?: number | null;
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * @description Único valor permitido: null. Anula la revocación. Para revocar usar POST /:linkId/revoke.
+             * @enum {null}
+             */
+            revokedAt?: null;
+        };
         PublicTransactionsResponseDto: {
             client: {
                 /** Format: uuid */
@@ -2091,12 +2125,18 @@ export interface components {
                 }[];
             };
             public_link: {
+                /** Format: uuid */
+                id: string;
                 token: string;
                 /** Format: uri */
                 url: string;
                 label: string | null;
+                max_uses: number | null;
+                use_count: number;
                 /** Format: date-time */
                 expires_at: string | null;
+                /** Format: date-time */
+                revoked_at: string | null;
                 /** Format: date-time */
                 created_at: string;
             } | null;
@@ -3636,6 +3676,46 @@ export interface operations {
         responses: {
             /** @description Link revocado */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientPublicLinksController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                linkId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePublicLinkDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicLinkDto"];
+                };
+            };
+            /** @description Link no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ya existe otro link activo con el mismo purpose para el cliente */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };
