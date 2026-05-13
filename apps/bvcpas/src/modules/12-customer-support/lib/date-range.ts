@@ -72,3 +72,13 @@ export function dashboardMonth(now: Date): DashboardMonth {
     label: MONTH_LABELS[month - 1],
   }
 }
+
+/**
+ * Período del backend para `/v1/clients/:id/followups/:period`.
+ * Formato `YYYY-MM` — corresponde al mes del dashboard (mes anterior).
+ * Si hoy es 2026-05-09 → '2026-04'.
+ */
+export function currentPeriod(now: Date): string {
+  const { month, year } = dashboardMonth(now)
+  return `${year}-${pad2(month)}`
+}

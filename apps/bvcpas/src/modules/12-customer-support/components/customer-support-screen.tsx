@@ -15,6 +15,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useUncatsDetail } from '@/modules/13-dashboards/hooks/use-uncats-detail'
 import { useQboAccounts } from '@/modules/14-transactions/hooks/use-qbo-accounts'
 
+import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
+
 import { CsActivityTimeline } from './cs-activity-timeline'
 import { CsHeader } from './cs-header'
 import { CsQuickLinks } from './cs-quick-links'
@@ -28,6 +30,29 @@ import {
 
 export interface CustomerSupportScreenProps {
   clientId: string
+}
+
+/**
+ * El card "Suggested next action" se muestra si:
+ *  - hay uncats pendientes, y
+ *  - el cliente no ha sido notificado en el mes/año actual (incluye
+ *    `sent_at = null`).
+ *
+ * Se considera "mes anterior" cualquier fecha estrictamente menor al
+ * primer día del mes actual (mes/año).
+ */
+function shouldShowSuggested(
+  stats: UncatsDetailResponse['stats'],
+  followup: UncatsDetailResponse['followup'],
+  now: Date = new Date(),
+): boolean {
+  if (stats.uncats_count <= 0) return false
+  if (!followup.sent_at) return true
+  const sent = new Date(followup.sent_at)
+  if (Number.isNaN(sent.getTime())) return true
+  const currentYM = now.getUTCFullYear() * 12 + now.getUTCMonth()
+  const sentYM = sent.getUTCFullYear() * 12 + sent.getUTCMonth()
+  return sentYM < currentYM
 }
 
 export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) {
@@ -66,14 +91,9 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
         followup={data.followup}
         publicLink={data.public_link}
       />
-      <CsQuickLinks />
+      <CsQuickLinks client={data.client} publicLink={data.public_link} />
       <CsActivityTimeline monthly={data.monthly} mode={tab} />
       <CsStatsGrid stats={data.stats} />
-      <CsSuggestedAction
-        client={data.client}
-        followup={data.followup}
-        stats={data.stats}
-      />
       <CsTransactions
         clientId={data.client.id}
         realmId={data.client.qbo_realm_id}
@@ -81,6 +101,16 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
         clientFilter={data.client.transactions_filter as ClientFilter}
         tab={tab}
         onTabChange={setTab}
+        middleSlot={
+          shouldShowSuggested(data.stats, data.followup) ? (
+            <CsSuggestedAction
+              client={data.client}
+              followup={data.followup}
+              stats={data.stats}
+              publicLink={data.public_link}
+            />
+          ) : null
+        }
       />
     </div>
   )

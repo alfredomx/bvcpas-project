@@ -38,6 +38,8 @@ export interface CsTransactionsProps {
   clientFilter: ClientFilter
   tab: TransactionsTab
   onTabChange: (tab: TransactionsTab) => void
+  /** Slot opcional que se renderiza entre los tabs y el botón Sync. */
+  middleSlot?: React.ReactNode
 }
 
 function filterLegend(filter: ClientFilter): string {
@@ -143,6 +145,7 @@ export function CsTransactions({
   clientFilter,
   tab,
   onTabChange,
+  middleSlot,
 }: CsTransactionsProps) {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
 
@@ -190,16 +193,21 @@ export function CsTransactions({
   return (
     <div className="flex flex-col gap-3">
       <Tabs value={tab} onValueChange={(value) => onTabChange(value as TransactionsTab)}>
-        <div className="flex items-center justify-between gap-2">
-          <TabsList>
-            <TabsTrigger value="uncategorized">
-              Uncategorized ({uncategorizedItems.length})
-            </TabsTrigger>
-            <TabsTrigger value="amas">AMA&apos;s ({amaQuery.items.length})</TabsTrigger>
-          </TabsList>
-          <Button onClick={handleSync} disabled={sync.isPending}>
-            {sync.isPending ? 'Syncing…' : 'Sync'}
-          </Button>
+        <div className="flex items-end gap-4">
+          <div className="flex w-1/3 justify-start">
+            <TabsList>
+              <TabsTrigger value="uncategorized">
+                Uncategorized ({uncategorizedItems.length})
+              </TabsTrigger>
+              <TabsTrigger value="amas">AMA&apos;s ({amaQuery.items.length})</TabsTrigger>
+            </TabsList>
+          </div>
+          <div className="w-1/3">{middleSlot}</div>
+          <div className="flex w-1/3 justify-end">
+            <Button onClick={handleSync} disabled={sync.isPending}>
+              {sync.isPending ? 'Syncing…' : 'Sync'}
+            </Button>
+          </div>
         </div>
         <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
           {filterLegend(clientFilter)}
