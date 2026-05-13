@@ -8,6 +8,20 @@ import type { ReactNode } from 'react'
 
 import { TxDetailModal } from './tx-detail-modal'
 import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
+import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
+
+function makeAccount(
+  partial: Partial<QboAccount> & Pick<QboAccount, 'Id' | 'Name'>,
+): QboAccount {
+  return {
+    AcctNum: null,
+    AccountType: 'Expense',
+    SubAccount: false,
+    ParentId: null,
+    FullyQualifiedName: partial.Name,
+    ...partial,
+  }
+}
 
 const getQboAccountsMock = vi.fn()
 const saveTransactionNoteMock = vi.fn()
@@ -68,7 +82,7 @@ describe('<TxDetailModal>', () => {
     toastWarningMock.mockReset()
     window.localStorage.clear()
     getQboAccountsMock.mockResolvedValue([
-      { Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' },
+      makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }),
     ])
   })
 
@@ -81,7 +95,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -100,7 +114,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -132,7 +146,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -161,7 +175,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={onClose}
       />,
@@ -191,7 +205,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -212,7 +226,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -232,7 +246,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={onClose}
       />,
@@ -251,7 +265,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -276,7 +290,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -303,7 +317,7 @@ describe('<TxDetailModal>', () => {
       <TxDetailModal
         transaction={sampleTx}
         realmId="9000"
-        accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+        accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
         open={true}
         onClose={() => {}}
       />,
@@ -339,7 +353,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTx}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={onClose}
         />,
@@ -381,7 +395,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTx}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={() => {}}
         />,
@@ -396,7 +410,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTxWithResponse}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={() => {}}
         />,
@@ -411,7 +425,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTxWithResponse}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={() => {}}
         />,
@@ -435,7 +449,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTxWithResponse}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={onClose}
         />,
@@ -464,7 +478,7 @@ describe('<TxDetailModal>', () => {
         <TxDetailModal
           transaction={sampleTxWithResponse}
           realmId="9000"
-          accounts={[{ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' }]}
+          accounts={[makeAccount({ Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' })]}
           open={true}
           onClose={onClose}
         />,

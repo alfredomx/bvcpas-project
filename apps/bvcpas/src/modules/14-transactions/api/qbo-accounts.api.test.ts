@@ -17,9 +17,32 @@ function jsonResponse(status: number, body: unknown): Response {
 const sampleQboResponse = {
   QueryResponse: {
     Account: [
-      { Id: '116', Name: 'Accounts Payable (A/P)', AccountType: 'Accounts Payable' },
-      { Id: '84', Name: 'Administrative Charges', AccountType: 'Expense' },
-      { Id: '98', Name: 'Ask My Accountant', AccountType: 'Expense' },
+      {
+        Id: '116',
+        Name: 'Accounts Payable (A/P)',
+        AcctNum: '2000',
+        AccountType: 'Accounts Payable',
+        SubAccount: false,
+        FullyQualifiedName: 'Accounts Payable (A/P)',
+        Active: true,
+      },
+      {
+        Id: '84',
+        Name: 'Administrative Charges',
+        AccountType: 'Expense',
+        SubAccount: false,
+        FullyQualifiedName: 'Administrative Charges',
+        Active: true,
+      },
+      {
+        Id: '98',
+        Name: 'Ask My Accountant',
+        AccountType: 'Expense',
+        SubAccount: true,
+        ParentRef: { value: '84' },
+        FullyQualifiedName: 'Administrative Charges:Ask My Accountant',
+        Active: true,
+      },
     ],
     startPosition: 1,
     maxResults: 3,
@@ -59,7 +82,24 @@ describe('qbo-accounts.api', () => {
     expect(body.method).toBe('GET')
     expect(body.path).toContain('Account')
     expect(result).toHaveLength(3)
-    expect(result[0]).toEqual({ Id: '116', Name: 'Accounts Payable (A/P)', AccountType: 'Accounts Payable' })
+    expect(result[0]).toEqual({
+      Id: '116',
+      Name: 'Accounts Payable (A/P)',
+      AcctNum: '2000',
+      AccountType: 'Accounts Payable',
+      SubAccount: false,
+      ParentId: null,
+      FullyQualifiedName: 'Accounts Payable (A/P)',
+    })
+    expect(result[2]).toEqual({
+      Id: '98',
+      Name: 'Ask My Accountant',
+      AcctNum: null,
+      AccountType: 'Expense',
+      SubAccount: true,
+      ParentId: '84',
+      FullyQualifiedName: 'Administrative Charges:Ask My Accountant',
+    })
   })
 
   it('returns empty array when QueryResponse has no Account key', async () => {

@@ -6,7 +6,7 @@
 // v0.5.5: diseño completo, guardado es placeholder hasta que mapi
 // exponga el endpoint autenticado (D-bvcpas-045).
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
@@ -52,6 +52,7 @@ import {
   type Transaction,
 } from '@/modules/14-transactions/api/transactions.api'
 import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
+import { buildAccountTree } from '@/modules/14-transactions/lib/qbo-accounts-tree'
 
 import { updateFollowup } from '../api/followups.api'
 import {
@@ -154,6 +155,7 @@ export function TxDetailModal({
 
   const selectedAccountName =
     accounts.find((a) => a.Id === selectedAccount)?.Name ?? ''
+  const accountRows = useMemo(() => buildAccountTree(accounts), [accounts])
 
   if (!transaction) return null
 
@@ -376,18 +378,23 @@ export function TxDetailModal({
                     <CommandList>
                       <CommandEmpty>No account found.</CommandEmpty>
                       <CommandGroup>
-                        {accounts.map((acc) => (
+                        {accountRows.map((row) => (
                           <CommandItem
-                            key={acc.Id}
-                            value={acc.Name}
+                            key={row.Id}
+                            value={row.searchText}
                             onSelect={() => {
-                              setSelectedAccount(acc.Id)
+                              setSelectedAccount(row.Id)
                               setComboOpen(false)
                             }}
                           >
-                            <span className="flex-1">{acc.Name}</span>
-                            <span className="ml-2 text-xs text-muted-foreground">
-                              {acc.AccountType}
+                            <span
+                              className={`flex-1 ${row.depth === 0 ? 'font-medium' : ''}`}
+                              style={{ paddingLeft: row.depth * 16 }}
+                            >
+                              {row.displayName}
+                            </span>
+                            <span className="ml-2 text-xs italic text-muted-foreground">
+                              {row.rightLabel}
                             </span>
                           </CommandItem>
                         ))}
