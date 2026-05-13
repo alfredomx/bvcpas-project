@@ -1,17 +1,22 @@
-// Card "Suggested next action". Muestra mensaje basado en followup
-// status + silent streak. CTA "Draft follow-up" → toast (placeholder).
+'use client'
 
-import { toast } from 'sonner'
+// Card "Suggested next action". Muestra mensaje basado en followup
+// status + silent streak. CTA "Draft follow-up" abre `<DraftFollowupDialog>`.
+
+import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { silentStreakInMonths } from '../lib/format'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
+import { DraftFollowupDialog } from './draft-followup-dialog'
+
 export interface CsSuggestedActionProps {
   client: UncatsDetailResponse['client']
   followup: UncatsDetailResponse['followup']
   stats: UncatsDetailResponse['stats']
+  publicLink: UncatsDetailResponse['public_link']
 }
 
 function buildMessage(
@@ -30,23 +35,37 @@ function buildMessage(
   return `Review the latest activity for ${contact}.`
 }
 
-export function CsSuggestedAction({ client, followup, stats }: CsSuggestedActionProps) {
-  const handleClick = () => {
-    toast.message('Draft follow-up coming soon.')
-  }
+export function CsSuggestedAction({
+  client,
+  followup,
+  stats,
+  publicLink,
+}: CsSuggestedActionProps) {
+  const [dialogOpen, setDialogOpen] = useState(false)
 
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">
-            Suggested next action
-          </p>
-          <p className="text-sm font-medium">Send follow-up email</p>
-          <p className="text-sm text-muted-foreground">{buildMessage(client, followup, stats)}</p>
-        </div>
-        <Button onClick={handleClick}>Draft follow-up →</Button>
-      </CardContent>
-    </Card>
+    <>
+      <Card>
+        <CardContent className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-1">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">
+              Suggested next action
+            </p>
+            <p className="text-sm font-medium">Send follow-up email</p>
+            <p className="text-sm text-muted-foreground">
+              {buildMessage(client, followup, stats)}
+            </p>
+          </div>
+          <Button onClick={() => setDialogOpen(true)}>Draft follow-up →</Button>
+        </CardContent>
+      </Card>
+
+      <DraftFollowupDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        client={client}
+        publicLink={publicLink}
+      />
+    </>
   )
 }

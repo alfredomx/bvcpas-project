@@ -130,45 +130,71 @@ describe('<CsStatsGrid>', () => {
 })
 
 describe('<CsSuggestedAction>', () => {
-  it('shows toast on click', async () => {
-    toastMessageMock.mockReset()
+  it('opens DraftFollowupDialog on click', async () => {
     render(
-      <CsSuggestedAction
-        client={sample.client}
-        followup={sample.followup}
-        stats={sample.stats}
-      />,
+      withQueryClient(
+        <CsSuggestedAction
+          client={sample.client}
+          followup={sample.followup}
+          stats={sample.stats}
+          publicLink={sample.public_link}
+        />,
+      ),
     )
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /draft follow-up/i }))
 
-    expect(toastMessageMock).toHaveBeenCalledTimes(1)
+    expect(
+      await screen.findByRole('dialog', { name: /send follow-up email/i }),
+    ).toBeInTheDocument()
   })
 
   it('mentions the contact name in the message', () => {
     render(
-      <CsSuggestedAction
-        client={sample.client}
-        followup={sample.followup}
-        stats={sample.stats}
-      />,
+      withQueryClient(
+        <CsSuggestedAction
+          client={sample.client}
+          followup={sample.followup}
+          stats={sample.stats}
+          publicLink={sample.public_link}
+        />,
+      ),
     )
     expect(screen.getByText(/Hector Zavala/)).toBeInTheDocument()
   })
 })
 
 describe('<CsQuickLinks>', () => {
-  it('renders 6 buttons; click dispatches toast', async () => {
+  it('renders 6 buttons; placeholder click dispatches toast', async () => {
     toastMessageMock.mockReset()
-    render(<CsQuickLinks />)
+    render(
+      withQueryClient(
+        <CsQuickLinks client={sample.client} publicLink={sample.public_link} />,
+      ),
+    )
 
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(6)
 
     const user = userEvent.setup()
-    await user.click(buttons[0])
+    await user.click(screen.getByRole('button', { name: /^sheet$/i }))
     expect(toastMessageMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('Follow-up email button opens DraftFollowupDialog', async () => {
+    render(
+      withQueryClient(
+        <CsQuickLinks client={sample.client} publicLink={sample.public_link} />,
+      ),
+    )
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /follow-up email/i }))
+
+    expect(
+      await screen.findByRole('dialog', { name: /send follow-up email/i }),
+    ).toBeInTheDocument()
   })
 })
 
