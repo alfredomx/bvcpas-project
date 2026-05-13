@@ -12,7 +12,7 @@ export interface QboAccount {
 }
 
 const QBO_ACCOUNT_QUERY =
-  'select Id, Name, AccountType from Account MAXRESULTS 200'
+  'select Id, Name, AccountType from Account MAXRESULTS 1000'
 
 export async function getQboAccounts(realmId: string): Promise<QboAccount[]> {
   const { data, error } = await api.POST('/v1/intuit/realms/{realmId}/call', {
