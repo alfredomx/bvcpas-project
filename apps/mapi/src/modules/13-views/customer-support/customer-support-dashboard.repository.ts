@@ -100,6 +100,7 @@ export class CustomerSupportDashboardRepository {
             AND r.category IN ('uncategorized_expense', 'uncategorized_income')
             AND r.txn_date BETWEEN ${filters.from} AND ${filters.to}
             AND r.completed = true
+            AND r.deleted_at IS NULL
         )::int AS responded_count,
 
         MAX(t.synced_at) FILTER (
