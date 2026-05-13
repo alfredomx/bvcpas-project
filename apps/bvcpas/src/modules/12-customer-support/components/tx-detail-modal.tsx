@@ -53,12 +53,18 @@ import {
 } from '@/modules/14-transactions/api/transactions.api'
 import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 
+import { updateFollowup } from '../api/followups.api'
 import {
   buildAppendedText,
   buildNotePreview,
   useNoteSuffix,
 } from '../hooks/use-note-suffix'
+import { currentPeriod } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
+import {
+  computeNextFollowupStatus,
+  type FollowupStatus,
+} from '../lib/followup-status'
 
 export interface TxDetailModalProps {
   transaction: Transaction | null
@@ -67,6 +73,15 @@ export interface TxDetailModalProps {
   accounts: QboAccount[]
   open: boolean
   onClose: () => void
+  /**
+   * Datos del período para recalcular `followup.status` tras Save/Delete
+   * sin esperar el refetch del detail (fix-followup-status-transitions).
+   * Si alguno falta (ej. tests aislados), el bump del status se omite.
+   */
+  respondedCount?: number
+  totalCount?: number
+  followupStatus?: FollowupStatus
+  followupSentAt?: string | null
 }
 
 function formatDate(iso: string): string {
@@ -97,6 +112,10 @@ export function TxDetailModal({
   accounts,
   open,
   onClose,
+  respondedCount,
+  totalCount,
+  followupStatus,
+  followupSentAt,
 }: TxDetailModalProps) {
   const queryClient = useQueryClient()
   const accountsLoading = false
@@ -140,13 +159,66 @@ export function TxDetailModal({
 
   const preview = buildNotePreview(note, suffix)
 
+  /**
+   * Dispara PATCH /followups/:period con el status calculado por
+   * `computeNextFollowupStatus` si difiere del actual. Si el padre no
+   * pasó las props del período, no hace nada (caso tests aislados).
+   *
+   * `delta` es el cambio en `responded_count`: +1 si esta operación
+   * marcó un completed nuevo, -1 si quitó uno completed, 0 si no
+   * cambia el conteo.
+   *
+   * El total (`uncats_count`) NO cambia ni en Save ni en Delete de
+   * response — la transacción QBO sigue siendo uncategorized en
+   * ambos casos. Solo cambiaría si el operador desincronizara el
+   * snapshot en QBO y volviera a sincronizar.
+   *
+   * Replica exactamente la fórmula de mapi:
+   *   `progress_pct = round(responded / uncats * 100)`
+   * (solo `uncats`, NO incluye AMAs).
+   */
+  const bumpFollowupStatusIfNeeded = async (delta: -1 | 0 | 1) => {
+    if (
+      respondedCount === undefined ||
+      totalCount === undefined ||
+      followupStatus === undefined ||
+      !transaction
+    ) {
+      return
+    }
+    if (totalCount <= 0) return
+    const nextResponded = Math.max(0, respondedCount + delta)
+    const progressPct = Math.round((nextResponded / totalCount) * 100)
+    const nextStatus = computeNextFollowupStatus({
+      progressPct,
+      sentAt: followupSentAt ?? null,
+    })
+    if (nextStatus === followupStatus) return
+    try {
+      await updateFollowup(transaction.client_id, currentPeriod(new Date()), {
+        status: nextStatus,
+      })
+    } catch {
+      // No-op: el cambio principal (save/delete) ya tuvo éxito. Si el
+      // bump falla, el badge quedará desactualizado hasta el próximo
+      // refetch. No queremos ensuciar el feedback al operador.
+    }
+  }
+
   const handleDelete = async () => {
     if (!transaction) return
     setIsDeleting(true)
     try {
       await deleteTransactionResponse(transaction.client_id, transaction.id)
+
+      // La transacción QBO sigue válida (no se borra del snapshot), solo
+      // pierde su response. Por eso `uncats_count` no cambia; solo baja
+      // `responded_count` si la response que se borró estaba completed.
+      const wasCompleted = transaction.response?.completed === true
+      await bumpFollowupStatusIfNeeded(wasCompleted ? -1 : 0)
+
       queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
-      queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      queryClient.invalidateQueries({ queryKey: ['uncats-detail'] })
       toast.success('Response deleted.')
       setConfirmDeleteOpen(false)
       onClose()
@@ -186,10 +258,20 @@ export function TxDetailModal({
         },
         { qboSync: updateInQb },
       )
+      // Delta del `responded_count` con base en el estado previo vs el nuevo:
+      // +1 si pasa de no-completed a completed, -1 si vuelve a no-completed,
+      // 0 si no cambia.
+      const wasCompleted = transaction.response?.completed === true
+      const delta: -1 | 0 | 1 = completed && !wasCompleted
+        ? 1
+        : !completed && wasCompleted
+          ? -1
+          : 0
+      await bumpFollowupStatusIfNeeded(delta)
       // Invalida el cache de transacciones para que al reabrir el modal
       // los datos reflejen el response recién guardado.
       queryClient.invalidateQueries({ queryKey: ['transactions', transaction.client_id] })
-      queryClient.invalidateQueries({ queryKey: ['uncats-detail', transaction.client_id] })
+      queryClient.invalidateQueries({ queryKey: ['uncats-detail'] })
       toast.success('Note saved.')
       onClose()
     } catch (err) {

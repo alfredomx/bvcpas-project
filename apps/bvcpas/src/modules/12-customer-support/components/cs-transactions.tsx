@@ -27,6 +27,7 @@ import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 import { updateFollowup } from '../api/followups.api'
 import { computeRange, currentPeriod } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
+import { computeNextFollowupStatus, type FollowupStatus } from '../lib/followup-status'
 import { TxDetailModal } from './tx-detail-modal'
 
 export type ClientFilter = 'all' | 'income' | 'expense'
@@ -43,11 +44,22 @@ export interface CsTransactionsProps {
   /** Slot opcional que se renderiza entre los tabs y el botón Sync. */
   middleSlot?: React.ReactNode
   /**
-   * Progress actual del período (0–100). Después de un sync exitoso,
-   * solo se bumpea el followup a `ready_to_send` si era 0 — ver
-   * fix-sync-bumps-status.md.
+   * Progress actual del período (0–100). Se usa para decidir el bump
+   * del `followup.status` tras un sync exitoso — ver
+   * fix-sync-bumps-status.md y fix-followup-status-transitions.md.
    */
   progressPct: number
+  /** `stats.responded_count` actual — se propaga al modal para recalcular status. */
+  respondedCount: number
+  /**
+   * Total de uncats del período (NO incluye AMAs). Misma fórmula que
+   * usa mapi para `progress_pct = responded / uncats * 100`.
+   */
+  totalCount: number
+  /** Status actual del followup — el modal lo compara con el nuevo. */
+  followupStatus: FollowupStatus
+  /** Cuándo se envió el follow-up este período — regla "mismo mes" en computeNextFollowupStatus. */
+  followupSentAt: string | null
 }
 
 function filterLegend(filter: ClientFilter): string {
@@ -155,6 +167,10 @@ export function CsTransactions({
   onTabChange,
   middleSlot,
   progressPct,
+  respondedCount,
+  totalCount,
+  followupStatus,
+  followupSentAt,
 }: CsTransactionsProps) {
   const queryClient = useQueryClient()
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
@@ -177,15 +193,15 @@ export function CsTransactions({
 
   const sync = useSyncTransactions(clientId)
 
-  // Bumpear status del followup a `ready_to_send` tras un sync exitoso.
-  // Solo cuando progressPct === 0 (ver fix-sync-bumps-status.md). Si ya
-  // hay progreso (partial_reply / complete), no se toca el status para
-  // no degradar el avance del usuario.
+  // Bumpear status del followup tras un sync exitoso usando la misma
+  // regla que el modal (fix-followup-status-transitions). El sync no
+  // cambia el progreso del período por sí mismo — el cálculo usa el
+  // progressPct actual. La regla decide si baja a 'ready_to_send' (no
+  // se ha enviado este mes), queda 'sent' (ya se envió este mes y
+  // progress=0), o se queda donde está (progress > 0).
   const bumpFollowup = useMutation({
-    mutationFn: () =>
-      updateFollowup(clientId, currentPeriod(new Date()), {
-        status: 'ready_to_send',
-      }),
+    mutationFn: (status: FollowupStatus) =>
+      updateFollowup(clientId, currentPeriod(new Date()), { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['uncats-detail'] })
     },
@@ -200,8 +216,12 @@ export function CsTransactions({
           toast.success(
             `Sync complete: ${result.inserted_count} inserted, ${result.deleted_count} replaced.`,
           )
-          if (progressPct === 0) {
-            bumpFollowup.mutate()
+          const nextStatus = computeNextFollowupStatus({
+            progressPct,
+            sentAt: followupSentAt,
+          })
+          if (nextStatus !== followupStatus) {
+            bumpFollowup.mutate(nextStatus)
           }
         },
         onError: (err) => {
@@ -265,6 +285,10 @@ export function CsTransactions({
         accounts={accounts}
         open={selectedTx !== null}
         onClose={() => setSelectedTx(null)}
+        respondedCount={respondedCount}
+        totalCount={totalCount}
+        followupStatus={followupStatus}
+        followupSentAt={followupSentAt}
       />
     </div>
   )

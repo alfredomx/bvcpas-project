@@ -66,6 +66,10 @@ export async function saveTransactionNote(
 /**
  * Soft-delete del response asociado a una transacción.
  * Mapi marca la fila con `deleted_at` pero no la borra físicamente.
+ * La transacción del snapshot QBO sigue válida en el listado (solo
+ * pierde su `response`). Si el operador vuelve a guardar nota sobre
+ * esa transacción, el response se reactiva automáticamente.
+ *
  * Idempotente: si ya estaba borrado, devuelve 204 también.
  */
 export async function deleteTransactionResponse(

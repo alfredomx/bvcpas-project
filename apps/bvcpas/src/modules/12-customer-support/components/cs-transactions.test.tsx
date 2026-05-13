@@ -20,8 +20,21 @@ import type {
 
 // Wrapper para tests: maneja el state controlled de tab.
 function CsTransactionsHarness(
-  props: Omit<CsTransactionsProps, 'tab' | 'onTabChange' | 'progressPct'> & {
+  props: Omit<
+    CsTransactionsProps,
+    | 'tab'
+    | 'onTabChange'
+    | 'progressPct'
+    | 'respondedCount'
+    | 'totalCount'
+    | 'followupStatus'
+    | 'followupSentAt'
+  > & {
     progressPct?: number
+    respondedCount?: number
+    totalCount?: number
+    followupStatus?: CsTransactionsProps['followupStatus']
+    followupSentAt?: string | null
   },
 ) {
   const [tab, setTab] = useState<TransactionsTab>('uncategorized')
@@ -33,6 +46,10 @@ function CsTransactionsHarness(
       realmId={null}
       accounts={[]}
       progressPct={props.progressPct ?? 0}
+      respondedCount={props.respondedCount ?? 0}
+      totalCount={props.totalCount ?? 0}
+      followupStatus={props.followupStatus ?? 'ready_to_send'}
+      followupSentAt={props.followupSentAt ?? null}
     />
   )
 }
@@ -190,7 +207,7 @@ describe('<CsTransactions>', () => {
     })
   })
 
-  it('after successful sync with progress_pct=0, bumps followup to ready_to_send', async () => {
+  it('sync with progress=0 and no sent_at → bumps to ready_to_send (from "sent")', async () => {
     syncTransactionsMock.mockResolvedValue({
       client_id: 'c-1',
       start_date: '2025-01-01',
@@ -208,6 +225,8 @@ describe('<CsTransactions>', () => {
         realmId={null}
         accounts={[]}
         progressPct={0}
+        followupStatus="sent"
+        followupSentAt={null}
       />,
       { wrapper },
     )
@@ -224,7 +243,7 @@ describe('<CsTransactions>', () => {
     expect(calledBody).toEqual({ status: 'ready_to_send' })
   })
 
-  it('after successful sync with progress_pct > 0, does NOT bump followup', async () => {
+  it('sync with progress > 0 and current status partial_reply → no bump (same target)', async () => {
     syncTransactionsMock.mockResolvedValue({
       client_id: 'c-1',
       start_date: '2025-01-01',
@@ -241,6 +260,7 @@ describe('<CsTransactions>', () => {
         realmId={null}
         accounts={[]}
         progressPct={42}
+        followupStatus="partial_reply"
       />,
       { wrapper },
     )

@@ -102,6 +102,10 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
         tab={tab}
         onTabChange={setTab}
         progressPct={data.stats.progress_pct}
+        respondedCount={data.stats.responded_count}
+        totalCount={data.stats.uncats_count}
+        followupStatus={data.followup.status}
+        followupSentAt={data.followup.sent_at}
         middleSlot={
           shouldShowSuggested(data.stats, data.followup) ? (
             <CsSuggestedAction
