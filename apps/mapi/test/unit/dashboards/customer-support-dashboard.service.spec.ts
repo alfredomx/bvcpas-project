@@ -53,7 +53,7 @@ function buildClient(overrides: Partial<Client> = {}): Client {
 interface Mocks {
   repo: jest.Mocked<CustomerSupportDashboardRepository>
   clientsRepo: jest.Mocked<ClientsRepository>
-  publicLinksRepo: { findActiveByClientAndPurpose: jest.Mock }
+  publicLinksRepo: { findLatestByClientAndPurpose: jest.Mock }
   cfg: { publicUrl: string }
 }
 
@@ -68,7 +68,7 @@ function makeMocks(): Mocks {
       findById: jest.fn(),
     } as unknown as jest.Mocked<ClientsRepository>,
     publicLinksRepo: {
-      findActiveByClientAndPurpose: jest.fn().mockResolvedValue(null),
+      findLatestByClientAndPurpose: jest.fn().mockResolvedValue(null),
     },
     cfg: { publicUrl: 'http://localhost:4000' },
   }

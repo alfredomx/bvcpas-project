@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common'
@@ -21,6 +22,8 @@ import {
   CreatePublicLinkSchema,
   PublicLinkDto,
   PublicLinksListDto,
+  UpdatePublicLinkDto,
+  UpdatePublicLinkSchema,
 } from '../dto/customer-support.dto'
 import { ClientPublicLinksService } from './client-public-links.service'
 
@@ -97,5 +100,38 @@ export class ClientPublicLinksController {
     @CurrentUser() actor: SessionContext,
   ): Promise<void> {
     await this.service.revoke(linkId, actor.userId)
+  }
+
+  @Patch(':linkId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'PATCH /v1/clients/:id/public-links/:linkId',
+    description:
+      'Edita un link existente. Campos opcionales: `expiresAt`, `maxUses`, `metadata`. ' +
+      'Para anular una revocación: mandar `revokedAt: null` (única forma soportada de des-revocar). ' +
+      'Si al des-revocar ya hay otro link activo del mismo `purpose`, devuelve 409. ' +
+      '`token` y `purpose` son inmutables — para rotar el token usar POST con `force: true`.',
+  })
+  @ApiResponse({ status: 200, type: PublicLinkDto })
+  @ApiResponse({ status: 404, description: 'Link no encontrado' })
+  @ApiResponse({
+    status: 409,
+    description: 'Ya existe otro link activo con el mismo purpose para el cliente',
+  })
+  async update(
+    @Param('id', ParseUUIDPipe) _clientId: string,
+    @Param('linkId', ParseUUIDPipe) linkId: string,
+    @Body(new ZodValidationPipe(UpdatePublicLinkSchema)) dto: UpdatePublicLinkDto,
+    @CurrentUser() actor: SessionContext,
+  ): Promise<PublicLinkDto> {
+    const updated = await this.service.updateLink(linkId, actor.userId, {
+      ...(dto.expiresAt !== undefined
+        ? { expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : null }
+        : {}),
+      ...(dto.maxUses !== undefined ? { maxUses: dto.maxUses } : {}),
+      ...(dto.metadata !== undefined ? { metadata: dto.metadata } : {}),
+      ...(dto.revokedAt === null ? { unrevoke: true } : {}),
+    })
+    return serialize(updated)
   }
 }

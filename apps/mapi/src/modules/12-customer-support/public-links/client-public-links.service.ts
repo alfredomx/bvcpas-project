@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 import { Injectable } from '@nestjs/common'
 import { EventLogService } from '../../95-event-log/event-log.service'
 import {
+  PublicLinkActiveConflictError,
   PublicLinkExpiredError,
   PublicLinkInvalidError,
   PublicLinkPurposeMismatchError,
@@ -111,6 +112,56 @@ export class ClientPublicLinksService {
       actorUserId,
       { type: 'client', id: link.clientId },
     )
+  }
+
+  /** PATCH parcial del link. Permite cambiar expiresAt, maxUses, metadata
+   * y anular revocación (revokedAt: null). Para revocar usar `revoke()`,
+   * no este método. Si anula revocación pero ya hay otro activo del mismo
+   * purpose, lanza PublicLinkActiveConflictError (409). */
+  async updateLink(
+    linkId: string,
+    actorUserId: string,
+    patch: {
+      expiresAt?: Date | null
+      maxUses?: number | null
+      metadata?: Record<string, unknown> | null
+      unrevoke?: boolean
+    },
+  ): Promise<ClientPublicLink> {
+    const link = await this.repo.findById(linkId)
+    if (!link) throw new PublicLinkInvalidError()
+
+    // Si se pide anular la revocación, validar que no haya otro activo del
+    // mismo purpose.
+    if (patch.unrevoke && link.revokedAt) {
+      const otherActive = await this.repo.findActiveByClientAndPurpose(link.clientId, link.purpose)
+      if (otherActive && otherActive.id !== linkId) {
+        throw new PublicLinkActiveConflictError(link.purpose)
+      }
+    }
+
+    const updated = await this.repo.update(linkId, {
+      ...(patch.expiresAt !== undefined ? { expiresAt: patch.expiresAt } : {}),
+      ...(patch.maxUses !== undefined ? { maxUses: patch.maxUses } : {}),
+      ...(patch.metadata !== undefined ? { metadata: patch.metadata } : {}),
+      ...(patch.unrevoke ? { revokedAt: null } : {}),
+    })
+    if (!updated) throw new PublicLinkInvalidError()
+
+    const changedFields: string[] = []
+    if (patch.expiresAt !== undefined) changedFields.push('expiresAt')
+    if (patch.maxUses !== undefined) changedFields.push('maxUses')
+    if (patch.metadata !== undefined) changedFields.push('metadata')
+    if (patch.unrevoke) changedFields.push('revokedAt')
+
+    await this.events.log(
+      'client_public_link.updated',
+      { clientId: link.clientId, linkId, changedFields, unrevoked: patch.unrevoke === true },
+      actorUserId,
+      { type: 'client', id: link.clientId },
+    )
+
+    return updated
   }
 
   async listByClient(clientId: string): Promise<ClientPublicLink[]> {

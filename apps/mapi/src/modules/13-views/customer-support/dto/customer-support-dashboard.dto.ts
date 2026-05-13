@@ -87,10 +87,14 @@ const DetailClientSchema = z.object({
 
 const PublicLinkSchema = z
   .object({
+    id: z.string().uuid(),
     token: z.string(),
     url: z.string().url(),
     label: z.string().nullable(),
+    max_uses: z.number().int().nullable(),
+    use_count: z.number().int(),
     expires_at: z.string().datetime().nullable(),
+    revoked_at: z.string().datetime().nullable(),
     created_at: z.string().datetime(),
   })
   .nullable()

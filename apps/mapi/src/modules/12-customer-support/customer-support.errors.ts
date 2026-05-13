@@ -42,6 +42,15 @@ export class PublicLinkPurposeMismatchError extends DomainError {
   }
 }
 
+export class PublicLinkActiveConflictError extends DomainError {
+  readonly code = 'PUBLIC_LINK_ACTIVE_CONFLICT'
+  constructor(purpose: string) {
+    super(
+      `Ya existe otro link activo para este cliente con purpose='${purpose}'. Revoca el otro antes de anular este.`,
+    )
+  }
+}
+
 export class TransactionNotFoundInSnapshotError extends DomainError {
   readonly code = 'TRANSACTION_NOT_FOUND_IN_SNAPSHOT'
   constructor(qboTxnId: string) {

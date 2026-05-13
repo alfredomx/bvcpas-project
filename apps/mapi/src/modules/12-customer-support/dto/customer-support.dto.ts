@@ -175,6 +175,26 @@ export const CreatePublicLinkSchema = z
 
 export class CreatePublicLinkDto extends createZodDto(CreatePublicLinkSchema) {}
 
+export const UpdatePublicLinkSchema = z
+  .object({
+    expiresAt: z.string().datetime().nullable().optional(),
+    maxUses: z.number().int().positive().nullable().optional(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+    revokedAt: z
+      .literal(null)
+      .optional()
+      .describe(
+        'Único valor permitido: null. Anula la revocación. Para revocar usar POST /:linkId/revoke.',
+      ),
+  })
+  .strict()
+  .describe(
+    'PATCH parcial de un link público. Solo se aplican los campos presentes. ' +
+      'Para anular revocación, mandar `revokedAt: null` (validará que no haya otro activo del mismo purpose, si lo hay → 409).',
+  )
+
+export class UpdatePublicLinkDto extends createZodDto(UpdatePublicLinkSchema) {}
+
 const PublicLinkSchema = z.object({
   id: z.string().uuid(),
   client_id: z.string().uuid(),

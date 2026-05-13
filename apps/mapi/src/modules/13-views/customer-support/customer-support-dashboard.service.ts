@@ -69,10 +69,14 @@ export interface ClientDashboardDetail {
   }
   monthly: ClientDashboardListItem['monthly']
   public_link: {
+    id: string
     token: string
     url: string
     label: string | null
+    max_uses: number | null
+    use_count: number
     expires_at: string | null
+    revoked_at: string | null
     created_at: string
   } | null
 }
@@ -100,7 +104,7 @@ export class CustomerSupportDashboardService {
     const client = await this.clientsRepo.findById(clientId)
     if (!client) throw new ClientNotFoundError(clientId)
 
-    const [stats, monthly, previousYear, activeLink]: [
+    const [stats, monthly, previousYear, latestLink]: [
       ClientStatsRow[],
       MonthlyHistogramRow[],
       PreviousYearTotalRow[],
@@ -109,7 +113,9 @@ export class CustomerSupportDashboardService {
       this.repo.getStatsByClient(filters),
       this.repo.getMonthlyHistogram(filters),
       this.repo.getPreviousYearTotals(filters),
-      this.publicLinksRepo.findActiveByClientAndPurpose(clientId, 'uncats'),
+      // Trae el más reciente sin importar si está revocado — el frontend
+      // necesita verlo para ofrecer "anular revocación".
+      this.publicLinksRepo.findLatestByClientAndPurpose(clientId, 'uncats'),
     ])
 
     const clientStats = stats.find((s) => s.client_id === clientId)
@@ -124,15 +130,19 @@ export class CustomerSupportDashboardService {
 
     const publicUrl = this.cfg.publicUrl
     const publicLink =
-      activeLink && publicUrl
+      latestLink && publicUrl
         ? {
-            token: activeLink.token,
-            url: `${publicUrl}/v1/public/uncats/${activeLink.token}`,
+            id: latestLink.id,
+            token: latestLink.token,
+            url: `${publicUrl}/v1/public/uncats/${latestLink.token}`,
             label:
-              ((activeLink.metadata as Record<string, unknown> | null)?.label as string | null) ??
+              ((latestLink.metadata as Record<string, unknown> | null)?.label as string | null) ??
               null,
-            expires_at: activeLink.expiresAt ? activeLink.expiresAt.toISOString() : null,
-            created_at: activeLink.createdAt.toISOString(),
+            max_uses: latestLink.maxUses,
+            use_count: latestLink.useCount,
+            expires_at: latestLink.expiresAt ? latestLink.expiresAt.toISOString() : null,
+            revoked_at: latestLink.revokedAt ? latestLink.revokedAt.toISOString() : null,
+            created_at: latestLink.createdAt.toISOString(),
           }
         : null
 
