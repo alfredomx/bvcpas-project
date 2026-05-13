@@ -1,7 +1,7 @@
 // Grid de KPIs del cliente. 6 stats: At risk, Total uncats,
 // Silent streak, AMA's, Total backlog, Progress.
 
-import { formatAmount, silentStreakInMonths } from '../lib/format'
+import { formatAmount } from '../lib/format'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
 export interface CsStatsGridProps {
@@ -24,9 +24,7 @@ function StatCell({ label, value }: StatCellProps) {
 
 export function CsStatsGrid({ stats }: CsStatsGridProps) {
   const totalBacklog = stats.uncats_count + stats.amas_count
-  const silentMonths = silentStreakInMonths(stats.silent_streak_days)
-  const silentDisplay =
-    silentMonths > 0 ? `${silentMonths}mo` : `${Math.max(0, Math.floor(stats.silent_streak_days))}d`
+  const silentDisplay = `${Math.max(0, Math.floor(stats.silent_streak_days))}d`
 
   return (
     <div className="grid grid-cols-2 divide-x rounded-md border md:grid-cols-6">

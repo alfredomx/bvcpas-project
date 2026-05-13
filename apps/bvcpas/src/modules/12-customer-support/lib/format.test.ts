@@ -6,7 +6,6 @@ import {
   formatAmount,
   formatFollowupStatus,
   formatSilentStreak,
-  silentStreakInMonths,
 } from './format'
 
 describe('formatAmount', () => {
@@ -34,30 +33,17 @@ describe('formatAmount', () => {
   })
 })
 
-describe('silentStreakInMonths', () => {
-  it('returns 0 for less than 30 days', () => {
-    expect(silentStreakInMonths(15)).toBe(0)
-  })
-
-  it('returns whole months', () => {
-    expect(silentStreakInMonths(30)).toBe(1)
-    expect(silentStreakInMonths(95)).toBe(3)
-  })
-
-  it('returns 0 for negative input', () => {
-    expect(silentStreakInMonths(-5)).toBe(0)
-  })
-})
-
 describe('formatSilentStreak', () => {
-  it('returns months suffix when >= 30 days', () => {
-    expect(formatSilentStreak(95)).toBe('3mo silent')
-    expect(formatSilentStreak(30)).toBe('1mo silent')
-  })
-
-  it('returns days when less than 30 days', () => {
+  it('always returns days', () => {
+    expect(formatSilentStreak(95)).toBe('95d silent')
+    expect(formatSilentStreak(30)).toBe('30d silent')
     expect(formatSilentStreak(15)).toBe('15d silent')
     expect(formatSilentStreak(0)).toBe('0d silent')
+  })
+
+  it('floors fractional days and clamps negatives to 0', () => {
+    expect(formatSilentStreak(15.7)).toBe('15d silent')
+    expect(formatSilentStreak(-5)).toBe('0d silent')
   })
 })
 

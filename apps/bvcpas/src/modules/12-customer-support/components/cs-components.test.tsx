@@ -125,7 +125,7 @@ describe('<CsStatsGrid>', () => {
     expect(screen.getByText("AMA's")).toBeInTheDocument()
     expect(screen.getByText('30')).toBeInTheDocument() // total backlog 26+4
     expect(screen.getByText('0%')).toBeInTheDocument() // progress
-    expect(screen.getByText('3mo')).toBeInTheDocument() // silent streak
+    expect(screen.getByText('95d')).toBeInTheDocument() // silent streak
   })
 })
 

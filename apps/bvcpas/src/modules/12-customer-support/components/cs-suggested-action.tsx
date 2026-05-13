@@ -7,7 +7,6 @@ import { useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { silentStreakInMonths } from '../lib/format'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
 import { DraftFollowupDialog } from './draft-followup-dialog'
@@ -25,9 +24,9 @@ function buildMessage(
   stats: UncatsDetailResponse['stats'],
 ): string {
   const contact = client.primary_contact_name ?? 'this client'
-  const months = silentStreakInMonths(stats.silent_streak_days)
-  if (followup.status === 'awaiting_reply' && months > 0) {
-    return `No reply from ${contact} in ${months} month${months === 1 ? '' : 's'}. Consider escalating to phone or via the account owner.`
+  const days = Math.max(0, Math.floor(stats.silent_streak_days))
+  if (followup.status === 'awaiting_reply' && days > 0) {
+    return `No reply from ${contact} in ${days} day${days === 1 ? '' : 's'}. Consider escalating to phone or via the account owner.`
   }
   if (followup.status === 'pending') {
     return `Send the first follow-up to ${contact} to start the period.`
