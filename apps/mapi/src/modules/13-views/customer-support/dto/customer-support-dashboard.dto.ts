@@ -35,6 +35,7 @@ const StatsSchema = z.object({
   progress_pct: z.number(),
   amount_total: z.string(),
   last_synced_at: z.string().datetime().nullable(),
+  last_response_at: z.string().datetime().nullable(),
 })
 
 const MonthlySchema = z.object({
@@ -66,6 +67,7 @@ const DetailFollowupSchema = z.object({
   status: z.enum(FOLLOWUP_STATUSES),
   sent_at: z.string().datetime().nullable(),
   last_reply_at: z.string().datetime().nullable(),
+  last_fully_responded_at: z.string().datetime().nullable(),
   internal_notes: z.string().nullable(),
 })
 

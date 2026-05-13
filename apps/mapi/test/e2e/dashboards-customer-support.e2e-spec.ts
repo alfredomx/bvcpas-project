@@ -103,13 +103,14 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
       `
 
       // Seed 2 respuestas (de las 7 uncats totales en el rango)
+      // completed=true para que cuenten en responded_count del dashboard
       await c`
         INSERT INTO client_transaction_responses (
           client_id, realm_id, qbo_txn_type, qbo_txn_id, txn_date,
-          category, amount, client_note
+          category, amount, client_note, completed
         ) VALUES
-          (${clientId}, 'realm-dash', 'Expense', 'tx-a1', '2026-04-01', 'uncategorized_expense', '100.00', 'lunch'),
-          (${clientId}, 'realm-dash', 'Expense', 'tx-a2', '2026-04-05', 'uncategorized_expense', '200.00', 'rent')
+          (${clientId}, 'realm-dash', 'Expense', 'tx-a1', '2026-04-01', 'uncategorized_expense', '100.00', 'lunch', true),
+          (${clientId}, 'realm-dash', 'Expense', 'tx-a2', '2026-04-05', 'uncategorized_expense', '200.00', 'rent', true)
       `
     } finally {
       await c.end()
@@ -177,8 +178,11 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
       expect(body.client.id).toBe(clientId)
       expect(body.client.legal_name).toBe('Dash Co')
       expect(body.followup.status).toBe('pending') // sin row, default
-      expect(body.stats.silent_streak_days).toBe(0)
       expect(body.stats.uncats_count).toBe(10)
+      // v0.13.0: sin followup row (lastFullyRespondedAt=null) + uncat más vieja
+      // 2025-06-01 → C4 usa primer día del mes (2025-06-01) → varios días según
+      // fecha actual. Solo verificamos que es > 0 (no 0 como antes).
+      expect(body.stats.silent_streak_days).toBeGreaterThan(0)
     })
   })
 

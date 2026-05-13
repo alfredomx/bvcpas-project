@@ -42,6 +42,16 @@ export const clientPeriodFollowups = pgTable(
     status: text('status', { enum: FOLLOWUP_STATUSES }).notNull().default('pending'),
     sentAt: timestamp('sent_at', { withTimezone: true }),
     lastReplyAt: timestamp('last_reply_at', { withTimezone: true }),
+    /**
+     * Última vez que el cliente estuvo al 100% de uncats respondidas en este
+     * período específico. Se setea a NOW() cuando responded_activas >= uncats
+     * en el período. NO se borra si después baja del 100% — queda como marca
+     * histórica del último día limpio.
+     *
+     * Usado por `computeSilentStreakDays` (v0.13.0+) para calcular el atraso
+     * operativo del libro contable de manera justa.
+     */
+    lastFullyRespondedAt: timestamp('last_fully_responded_at', { withTimezone: true }),
     sentByUserId: uuid('sent_by_user_id').references(() => users.id, { onDelete: 'set null' }),
     internalNotes: text('internal_notes'),
 

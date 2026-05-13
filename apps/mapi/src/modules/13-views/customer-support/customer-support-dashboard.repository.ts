@@ -21,6 +21,7 @@ export interface ClientStatsRow {
   followup_status: string | null
   followup_sent_at: Date | null
   followup_last_reply_at: Date | null
+  followup_last_fully_responded_at: Date | null
   followup_internal_notes: string | null
 
   uncats_count: number
@@ -28,6 +29,8 @@ export interface ClientStatsRow {
   responded_count: number
   amount_total: string
   last_synced_at: Date | null
+  oldest_uncat_txn_date: string | null
+  last_response_at: Date | null
 }
 
 export interface MonthlyHistogramRow {
@@ -105,7 +108,38 @@ export class CustomerSupportDashboardRepository {
 
         MAX(t.synced_at) FILTER (
           WHERE t.txn_date BETWEEN ${filters.from} AND ${filters.to}
-        ) AS last_synced_at
+        ) AS last_synced_at,
+
+        MIN(t.txn_date) FILTER (
+          WHERE t.category IN ('uncategorized_expense', 'uncategorized_income')
+            AND t.txn_date BETWEEN ${filters.from} AND ${filters.to}
+        )::text AS oldest_uncat_txn_date,
+
+        (SELECT MAX(r.responded_at) FROM client_transaction_responses r
+          WHERE r.client_id = c.id
+            AND r.deleted_at IS NULL
+        ) AS last_response_at,
+
+        /*
+         * last_fully_responded_at del período de la uncat más vieja del cliente
+         * en el rango. Si esa uncat es de 2026-03 y existe followup row de
+         * '2026-03' con marca, la trae. Si no, NULL → C4 aplica.
+         *
+         * Cuidado: si la uncat más vieja es del rango 2026-03 pero el cliente
+         * cerró un período POSTERIOR (2026-04), NO usamos esa marca — el
+         * período viejo sigue abierto y no debe contarse como "estuvo al día".
+         */
+        (SELECT f2.last_fully_responded_at FROM client_period_followups f2
+          WHERE f2.client_id = c.id
+            AND f2.period = TO_CHAR(
+              (SELECT MIN(t2.txn_date) FROM client_transactions t2
+                WHERE t2.client_id = c.id
+                  AND t2.category IN ('uncategorized_expense', 'uncategorized_income')
+                  AND t2.txn_date BETWEEN ${filters.from} AND ${filters.to}),
+              'YYYY-MM'
+            )
+          LIMIT 1
+        ) AS followup_last_fully_responded_at
       FROM clients c
       LEFT JOIN client_period_followups f ON f.client_id = c.id
       LEFT JOIN client_transactions t ON t.client_id = c.id

@@ -4,10 +4,16 @@ import {
   QboAccountIdRequiredError,
   TransactionNotFoundInSnapshotError,
 } from '../customer-support.errors'
+import { ClientPeriodFollowupsRepository } from '../followups/client-period-followups.repository'
 import { ClientTransactionsRepository } from '../transactions/client-transactions.repository'
 import { ClientTransactionResponsesRepository } from './client-transaction-responses.repository'
 import { QboWritebackService } from './qbo-writeback.service'
 import type { ClientTransactionResponse } from '../../../db/schema/client-transaction-responses'
+
+/** Deriva el período 'YYYY-MM' de una txn_date (formato 'YYYY-MM-DD'). */
+function deriveFollowupPeriod(txnDate: string): string {
+  return txnDate.slice(0, 7)
+}
 
 export interface SaveResponseInput {
   txnId: string // id UUID interno de client_transactions
@@ -38,6 +44,7 @@ export class ClientTransactionResponsesService {
   constructor(
     private readonly responsesRepo: ClientTransactionResponsesRepository,
     private readonly txnRepo: ClientTransactionsRepository,
+    private readonly followupsRepo: ClientPeriodFollowupsRepository,
     private readonly events: EventLogService,
     private readonly writeback: QboWritebackService,
   ) {}
@@ -89,6 +96,13 @@ export class ClientTransactionResponsesService {
       },
       undefined,
       { type: 'client', id: txn.clientId },
+    )
+
+    // Si después del save el cliente llegó al 100% en el período de la
+    // transacción, marcar last_fully_responded_at (v0.13.0).
+    await this.followupsRepo.maybeMarkFullyResponded(
+      txn.clientId,
+      deriveFollowupPeriod(txn.txnDate),
     )
 
     if (input.qboSync && input.qboAccountId && input.userId) {
@@ -154,6 +168,13 @@ export class ClientTransactionResponsesService {
         },
         undefined,
         { type: 'client', id: txn.clientId },
+      )
+
+      // v0.13.0: idempotente; si por algún edge case quedó al 100%
+      // (ej: tx huérfana), marca. Si no, no hace nada.
+      await this.followupsRepo.maybeMarkFullyResponded(
+        txn.clientId,
+        deriveFollowupPeriod(txn.txnDate),
       )
     }
 

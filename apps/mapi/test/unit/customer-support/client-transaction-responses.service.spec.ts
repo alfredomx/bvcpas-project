@@ -1,6 +1,7 @@
 import { ClientTransactionResponsesService } from '../../../src/modules/12-customer-support/responses/client-transaction-responses.service'
 import type { ClientTransactionResponsesRepository } from '../../../src/modules/12-customer-support/responses/client-transaction-responses.repository'
 import type { ClientTransactionsRepository } from '../../../src/modules/12-customer-support/transactions/client-transactions.repository'
+import type { ClientPeriodFollowupsRepository } from '../../../src/modules/12-customer-support/followups/client-period-followups.repository'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import type { QboWritebackService } from '../../../src/modules/12-customer-support/responses/qbo-writeback.service'
 import {
@@ -74,6 +75,7 @@ function buildResponse(
 interface Mocks {
   responsesRepo: jest.Mocked<ClientTransactionResponsesRepository>
   txnRepo: jest.Mocked<ClientTransactionsRepository>
+  followupsRepo: { maybeMarkFullyResponded: jest.Mock }
   events: { log: jest.Mock }
   writeback: { writeback: jest.Mock }
 }
@@ -89,6 +91,7 @@ function makeMocks(): Mocks {
     txnRepo: {
       findById: jest.fn(),
     } as unknown as jest.Mocked<ClientTransactionsRepository>,
+    followupsRepo: { maybeMarkFullyResponded: jest.fn().mockResolvedValue(false) },
     events: { log: jest.fn().mockResolvedValue(undefined) },
     writeback: { writeback: jest.fn().mockResolvedValue(undefined) },
   }
@@ -98,6 +101,7 @@ function buildService(m: Mocks): ClientTransactionResponsesService {
   return new ClientTransactionResponsesService(
     m.responsesRepo,
     m.txnRepo,
+    m.followupsRepo as unknown as ClientPeriodFollowupsRepository,
     m.events as unknown as EventLogService,
     m.writeback as unknown as QboWritebackService,
   )

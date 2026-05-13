@@ -39,6 +39,7 @@ export interface ClientDashboardListItem {
     progress_pct: number
     amount_total: string
     last_synced_at: string | null
+    last_response_at: string | null
   }
   monthly: {
     previous_year_total: PreviousYearTotal
@@ -62,6 +63,7 @@ export interface ClientDashboardDetail {
     status: string
     sent_at: string | null
     last_reply_at: string | null
+    last_fully_responded_at: string | null
     internal_notes: string | null
   }
   stats: ClientDashboardListItem['stats'] & {
@@ -123,10 +125,13 @@ export class CustomerSupportDashboardService {
       ? buildListItem(clientStats, monthly, previousYear)
       : buildEmptyListItem(client)
 
-    const silentStreakDays = computeSilentStreakDays(
-      coerceDate(clientStats?.followup_last_reply_at),
-      coerceDate(clientStats?.followup_sent_at),
-    )
+    const silentStreakDays = computeSilentStreakDays({
+      uncatsCount: clientStats?.uncats_count ?? 0,
+      oldestUncatTxnDate: clientStats?.oldest_uncat_txn_date ?? null,
+      lastFullyRespondedAt: coerceDate(clientStats?.followup_last_fully_responded_at),
+      sentAt: coerceDate(clientStats?.followup_sent_at),
+      now: new Date(),
+    })
 
     const publicUrl = this.cfg.publicUrl
     const publicLink =
@@ -162,6 +167,7 @@ export class CustomerSupportDashboardService {
         status: clientStats?.followup_status ?? 'pending',
         sent_at: toIsoOrNull(clientStats?.followup_sent_at),
         last_reply_at: toIsoOrNull(clientStats?.followup_last_reply_at),
+        last_fully_responded_at: toIsoOrNull(clientStats?.followup_last_fully_responded_at),
         internal_notes: clientStats?.followup_internal_notes ?? null,
       },
       stats: { ...listItem.stats, silent_streak_days: silentStreakDays },
@@ -195,6 +201,7 @@ function buildListItem(
       progress_pct: computeProgressPct(s.responded_count, s.uncats_count),
       amount_total: s.amount_total,
       last_synced_at: toIsoOrNull(s.last_synced_at),
+      last_response_at: toIsoOrNull(s.last_response_at),
     },
     monthly: {
       previous_year_total: {
@@ -225,6 +232,7 @@ function buildEmptyListItem(client: {
       progress_pct: 0,
       amount_total: '0.00',
       last_synced_at: null,
+      last_response_at: null,
     },
     monthly: {
       previous_year_total: { uncats: 0, amas: 0 },
@@ -273,11 +281,66 @@ export function computeProgressPct(responded: number, uncats: number): number {
   return Math.round((responded / uncats) * 100)
 }
 
-export function computeSilentStreakDays(lastReplyAt: Date | null, sentAt: Date | null): number {
-  // Prioriza last_reply_at; si null, usa sent_at; si ambos null, 0.
-  const reference = lastReplyAt ?? sentAt
-  if (!reference) return 0
-  const diffMs = Date.now() - reference.getTime()
+export interface SilentStreakInput {
+  /** Uncats activas del cliente en el rango from/to del dashboard. */
+  uncatsCount: number
+  /** Fecha de la uncat más vieja en el rango ('YYYY-MM-DD'), null si no hay uncats. */
+  oldestUncatTxnDate: string | null
+  /** Última vez que el cliente estuvo al 100% en cualquier período (o el actual). */
+  lastFullyRespondedAt: Date | null
+  /** sent_at del followup (cuándo se mandó email al cliente). */
+  sentAt: Date | null
+  /** Referencia de "ahora" para tests deterministas. */
+  now: Date
+}
+
+/**
+ * Días que el libro contable lleva sin estar al 100% de uncats respondidas.
+ *
+ * Mes activo (bookkeeping) = mes del reloj - 1. Es el mes que se está
+ * trabajando: el operador siempre va un mes atrasado al cierre.
+ *
+ * Reglas:
+ *  - Sin uncats → 0.
+ *  - Caso 1: hay uncats con `txn_date` anterior al primer día del mes activo
+ *        (uncats de meses viejos sin cerrar) → primer día del mes de la uncat
+ *        más vieja.
+ *  - Caso 2: todas las uncats están dentro del mes activo (o más recientes) →
+ *        desde `sentAt` (si null → 0).
+ *
+ * Nota: `lastFullyRespondedAt` NO se usa en esta versión. Solo se preserva
+ * en la tabla como marca histórica para futuras métricas.
+ */
+export function computeSilentStreakDays(input: SilentStreakInput): number {
+  const { uncatsCount, oldestUncatTxnDate, sentAt, now } = input
+
+  if (uncatsCount === 0 || !oldestUncatTxnDate) return 0
+
+  const oldest = new Date(`${oldestUncatTxnDate}T00:00:00Z`)
+  if (Number.isNaN(oldest.getTime())) return 0
+
+  // Mes activo = mes del reloj - 1 (en UTC para evitar deriva por TZ).
+  const activeMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1))
+
+  if (oldest.getTime() < activeMonthStart.getTime()) {
+    // Caso 1: hay uncats anteriores al mes activo → desde primer día del mes
+    // de la uncat más vieja.
+    return diffInDays(now, firstDayOfMonth(oldest))
+  }
+
+  // Caso 2: todas las uncats están dentro del mes activo o posteriores.
+  if (sentAt !== null) {
+    return diffInDays(now, sentAt)
+  }
+  return 0
+}
+
+function diffInDays(now: Date, reference: Date): number {
+  const diffMs = now.getTime() - reference.getTime()
   const days = Math.floor(diffMs / (24 * 3600 * 1000))
   return Math.max(0, days)
+}
+
+function firstDayOfMonth(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1))
 }

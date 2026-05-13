@@ -186,9 +186,7 @@ describe('Customer Support E2E (Tipo B)', () => {
         .expect(200)
       const token = (link.body as PublicLinkShape).token
 
-      const res = await request(app.getHttpServer())
-        .get(`/v1/public/transactions/${token}`)
-        .expect(200)
+      const res = await request(app.getHttpServer()).get(`/v1/public/uncats/${token}`).expect(200)
       const body = res.body as PublicResponseShape
       expect(body.items).toHaveLength(2)
       // No hay tx-003 (es AMA). Verificamos por categories.
@@ -206,21 +204,19 @@ describe('Customer Support E2E (Tipo B)', () => {
       const token = (link.body as PublicLinkShape).token
 
       await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/${txn001Id}`)
+        .patch(`/v1/public/uncats/${token}/${txn001Id}`)
         .send({ note: 'gasto de mi viaje' })
         .expect(200)
 
       // Vuelve a leer; ahora debe traer el client_note.
-      const res = await request(app.getHttpServer())
-        .get(`/v1/public/transactions/${token}`)
-        .expect(200)
+      const res = await request(app.getHttpServer()).get(`/v1/public/uncats/${token}`).expect(200)
       const body = res.body as PublicResponseShape
       const t1 = body.items.find((t) => t.id === txn001Id)
       expect(t1?.client_note).toBe('gasto de mi viaje')
 
       // Edición sobreescribe (UPDATE)
       await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/${txn001Id}`)
+        .patch(`/v1/public/uncats/${token}/${txn001Id}`)
         .send({ note: 'editado' })
         .expect(200)
 
@@ -251,7 +247,7 @@ describe('Customer Support E2E (Tipo B)', () => {
 
       const fakeUuid = '00000000-0000-0000-0000-000000000000'
       const res = await request(app.getHttpServer())
-        .patch(`/v1/public/transactions/${token}/${fakeUuid}`)
+        .patch(`/v1/public/uncats/${token}/${fakeUuid}`)
         .send({ note: 'no existe' })
         .expect(404)
       expect((res.body as { code: string }).code).toBe('TRANSACTION_NOT_FOUND_IN_SNAPSHOT')
@@ -273,9 +269,7 @@ describe('Customer Support E2E (Tipo B)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(204)
 
-      const res = await request(app.getHttpServer())
-        .get(`/v1/public/transactions/${token}`)
-        .expect(410)
+      const res = await request(app.getHttpServer()).get(`/v1/public/uncats/${token}`).expect(410)
       expect((res.body as { code: string }).code).toBe('PUBLIC_LINK_REVOKED')
     })
   })

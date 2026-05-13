@@ -12,6 +12,7 @@ export interface FollowupView {
   status: FollowupStatus
   sentAt: Date | null
   lastReplyAt: Date | null
+  lastFullyRespondedAt: Date | null
   sentByUserId: string | null
   internalNotes: string | null
 }
@@ -20,6 +21,7 @@ export interface UpdateFollowupInput {
   status?: FollowupStatus
   sentAt?: Date | null
   lastReplyAt?: Date | null
+  lastFullyRespondedAt?: Date | null
   sentByUserId?: string | null
   internalNotes?: string | null
 }
@@ -48,6 +50,7 @@ export class ClientPeriodFollowupsService {
       status: 'pending',
       sentAt: null,
       lastReplyAt: null,
+      lastFullyRespondedAt: null,
       sentByUserId: null,
       internalNotes: null,
     }
@@ -70,6 +73,10 @@ export class ClientPeriodFollowupsService {
       sentAt: input.sentAt !== undefined ? input.sentAt : (before?.sentAt ?? null),
       lastReplyAt:
         input.lastReplyAt !== undefined ? input.lastReplyAt : (before?.lastReplyAt ?? null),
+      lastFullyRespondedAt:
+        input.lastFullyRespondedAt !== undefined
+          ? input.lastFullyRespondedAt
+          : (before?.lastFullyRespondedAt ?? null),
       sentByUserId:
         input.sentByUserId !== undefined ? input.sentByUserId : (before?.sentByUserId ?? null),
       internalNotes:
@@ -96,6 +103,7 @@ function toView(row: ClientPeriodFollowup): FollowupView {
     status: row.status,
     sentAt: row.sentAt,
     lastReplyAt: row.lastReplyAt,
+    lastFullyRespondedAt: row.lastFullyRespondedAt,
     sentByUserId: row.sentByUserId,
     internalNotes: row.internalNotes,
   }

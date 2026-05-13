@@ -100,42 +100,85 @@ describe('CustomerSupportDashboardService', () => {
     })
   })
 
-  describe('CR-dash-003 — silent_streak con last_reply_at', () => {
-    it('usa last_reply_at si existe', () => {
-      const tenDaysAgo = new Date(NOW.getTime() - 10 * 24 * 3600 * 1000)
-      const twentyDaysAgo = new Date(NOW.getTime() - 20 * 24 * 3600 * 1000)
-      // last_reply_at gana sobre sent_at incluso si sent_at es más reciente
-      const sentAtFiveDaysAgo = new Date(NOW.getTime() - 5 * 24 * 3600 * 1000)
-
-      jest.useFakeTimers().setSystemTime(NOW)
-      try {
-        expect(computeSilentStreakDays(tenDaysAgo, sentAtFiveDaysAgo)).toBe(10)
-        expect(computeSilentStreakDays(twentyDaysAgo, null)).toBe(20)
-      } finally {
-        jest.useRealTimers()
-      }
+  describe('CR-dash-003 — silent_streak sin uncats → 0', () => {
+    it('uncatsCount = 0 devuelve 0', () => {
+      expect(
+        computeSilentStreakDays({
+          uncatsCount: 0,
+          oldestUncatTxnDate: null,
+          lastFullyRespondedAt: null,
+          sentAt: null,
+          now: NOW,
+        }),
+      ).toBe(0)
     })
   })
 
-  describe('CR-dash-004 — silent_streak fallback a sent_at', () => {
-    it('usa sent_at cuando last_reply_at es null', () => {
-      const fifteenDaysAgo = new Date(NOW.getTime() - 15 * 24 * 3600 * 1000)
-      jest.useFakeTimers().setSystemTime(NOW)
-      try {
-        expect(computeSilentStreakDays(null, fifteenDaysAgo)).toBe(15)
-      } finally {
-        jest.useRealTimers()
-      }
+  describe('CR-dash-004 — Caso 2: todas las uncats dentro del mes activo', () => {
+    // NOW = 2026-05-04 → mes activo = abril 2026.
+    it('uncats todas en abril + sentAt → días desde sentAt (Bilia)', () => {
+      const fixedNow = new Date('2026-05-13T12:00:00Z')
+      const sentAt = new Date('2026-05-13T05:00:00Z')
+      expect(
+        computeSilentStreakDays({
+          uncatsCount: 10,
+          oldestUncatTxnDate: '2026-04-01',
+          lastFullyRespondedAt: null,
+          sentAt,
+          now: fixedNow,
+        }),
+      ).toBe(0)
+    })
+
+    it('uncats en mes activo sin sentAt → 0', () => {
+      const fixedNow = new Date('2026-05-13T12:00:00Z')
+      expect(
+        computeSilentStreakDays({
+          uncatsCount: 5,
+          oldestUncatTxnDate: '2026-04-10',
+          lastFullyRespondedAt: null,
+          sentAt: null,
+          now: fixedNow,
+        }),
+      ).toBe(0)
     })
   })
 
-  describe('CR-dash-005 — silent_streak = 0 con ambos null', () => {
-    it('cuando no hay sent ni reply', () => {
-      expect(computeSilentStreakDays(null, null)).toBe(0)
+  describe('CR-dash-005 — Caso 1: hay uncats anteriores al mes activo', () => {
+    // NOW = 2026-05-04 → mes activo = abril 2026.
+    it('uncat más vieja en marzo → primer día del mes (2026-03-01) sin importar sentAt', () => {
+      // 2026-05-04 - 2026-03-01 = 64 días.
+      const fixedNow = new Date('2026-05-04T00:00:00Z')
+      const sentAtReciente = new Date('2026-05-13T05:00:00Z')
+      expect(
+        computeSilentStreakDays({
+          uncatsCount: 6,
+          oldestUncatTxnDate: '2026-03-15',
+          lastFullyRespondedAt: null,
+          sentAt: sentAtReciente,
+          now: fixedNow,
+        }),
+      ).toBe(64)
+    })
+
+    it('uncats repartidas (marzo + abril) → desde marzo, NO desde sentAt (Art & Beauty)', () => {
+      // Hoy = 2026-05-13. Mes activo = abril. Uncat más vieja = 2026-03-21.
+      // Días = 2026-05-13 - 2026-03-01 = 73.
+      const fixedNow = new Date('2026-05-13T12:00:00Z')
+      const sentAt = new Date('2026-05-13T05:00:00Z')
+      expect(
+        computeSilentStreakDays({
+          uncatsCount: 6,
+          oldestUncatTxnDate: '2026-03-21',
+          lastFullyRespondedAt: null,
+          sentAt,
+          now: fixedNow,
+        }),
+      ).toBe(73)
     })
   })
 
-  describe('CR-dash-006 — getForClient lanza si cliente no existe', () => {
+  describe('CR-dash-007 — getForClient lanza si cliente no existe', () => {
     it('ClientNotFoundError', async () => {
       const m = makeMocks()
       m.clientsRepo.findById.mockResolvedValueOnce(null)
@@ -146,7 +189,7 @@ describe('CustomerSupportDashboardService', () => {
     })
   })
 
-  describe('CR-dash-007 — cliente sin transacciones', () => {
+  describe('CR-dash-008 — cliente sin transacciones', () => {
     it('devuelve stats con ceros cuando no hay datos del cliente', async () => {
       const m = makeMocks()
       m.clientsRepo.findById.mockResolvedValueOnce(buildClient({ id: 'c-1' }))
@@ -168,7 +211,7 @@ describe('CustomerSupportDashboardService', () => {
     })
   })
 
-  describe('CR-dash-008 — listAll combina datos correctamente', () => {
+  describe('CR-dash-009 — listAll combina datos correctamente', () => {
     it('cliente con stats + monthly + previousYear', async () => {
       const m = makeMocks()
       m.repo.getStatsByClient.mockResolvedValueOnce([
@@ -185,12 +228,15 @@ describe('CustomerSupportDashboardService', () => {
           followup_status: 'sent',
           followup_sent_at: NOW,
           followup_last_reply_at: null,
+          followup_last_fully_responded_at: null,
           followup_internal_notes: null,
           uncats_count: 26,
           amas_count: 4,
           responded_count: 13,
           amount_total: '1500.00',
           last_synced_at: NOW,
+          oldest_uncat_txn_date: '2026-01-05',
+          last_response_at: null,
         },
       ])
       m.repo.getMonthlyHistogram.mockResolvedValueOnce([

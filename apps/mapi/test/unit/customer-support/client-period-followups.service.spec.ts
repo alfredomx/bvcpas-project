@@ -23,6 +23,7 @@ function buildRow(overrides: Partial<ClientPeriodFollowup> = {}): ClientPeriodFo
     status: 'pending',
     sentAt: null,
     lastReplyAt: null,
+    lastFullyRespondedAt: null,
     sentByUserId: null,
     internalNotes: null,
     createdAt: NOW,
@@ -65,6 +66,7 @@ describe('ClientPeriodFollowupsService', () => {
         status: 'pending',
         sentAt: null,
         lastReplyAt: null,
+        lastFullyRespondedAt: null,
         sentByUserId: null,
         internalNotes: null,
       })
