@@ -20,6 +20,7 @@
 - [v0.5.7](v0.5.7.md) — writeback a QuickBooks (`?qbo_sync=true`), `appended_text` en body del PATCH, mapeo de errores específicos (QBO_ACCOUNT_ID_REQUIRED, TXN_TYPE_NOT_SUPPORTED, INTUIT_STALE_SYNC_TOKEN, INTUIT_API_ERROR).
 - [v0.5.8](v0.5.8.md) — botón Delete en modal (soft-delete del response) + AlertDialog de confirmación + `formatAmount` preciso (`$X,XXX.XX`) en todos los lugares.
 - [v0.5.9](v0.5.9.md) — gestión de public links en `<CsConfigSheet>` (Generate / Regenerate / switch Enabled con revoke/unrevoke) + badge `🔓/🔒 public link` en el header + badges en minúsculas.
+- [v0.6.0](v0.6.0.md) — Suggested Next Action funcional: `<DraftFollowupDialog>` reusable, Send simulado que mueve `followup.status → sent` + `sent_at`, condición de visibilidad del card, layout 1/3 × 3 (Tabs / Suggested / Sync), botón "Follow-up email" en Quick Links.
 
 **Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
 **Última revisión:** 2026-05-10
