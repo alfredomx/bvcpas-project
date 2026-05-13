@@ -48,21 +48,11 @@ export function CsQuickLinks({ client, publicLink }: CsQuickLinksProps) {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => handleClick('@ Email thread')}
-        >
-          @ Email thread
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
           onClick={() => setDraftOpen(true)}
         >
           Follow-up email
         </Button>
-        {PLACEHOLDER_LINKS.filter(
-          (link) => link.key !== 'sheet' && link.key !== 'email',
-        ).map((link) => (
+        {PLACEHOLDER_LINKS.filter((link) => link.key !== 'sheet').map((link) => (
           <Button
             key={link.key}
             type="button"
