@@ -22,8 +22,8 @@
 - [v0.5.9](v0.5.9.md) — gestión de public links en `<CsConfigSheet>` (Generate / Regenerate / switch Enabled con revoke/unrevoke) + badge `🔓/🔒 public link` en el header + badges en minúsculas.
 - [v0.6.0](v0.6.0.md) — Suggested Next Action funcional: `<DraftFollowupDialog>` reusable, Send simulado que mueve `followup.status → sent` + `sent_at`, condición de visibilidad del card, layout 1/3 × 3 (Tabs / Suggested / Sync), botón "Follow-up email" en Quick Links.
 
-**Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md)
-**Última revisión:** 2026-05-10
+**Fixes:** [fix-rename-customer-support-tab.md](fix-rename-customer-support-tab.md), [fix-sync-bumps-status.md](fix-sync-bumps-status.md)
+**Última revisión:** 2026-05-12
 
 ---
 

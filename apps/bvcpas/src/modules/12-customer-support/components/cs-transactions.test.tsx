@@ -20,14 +20,26 @@ import type {
 
 // Wrapper para tests: maneja el state controlled de tab.
 function CsTransactionsHarness(
-  props: Omit<CsTransactionsProps, 'tab' | 'onTabChange'>,
+  props: Omit<CsTransactionsProps, 'tab' | 'onTabChange' | 'progressPct'> & {
+    progressPct?: number
+  },
 ) {
   const [tab, setTab] = useState<TransactionsTab>('uncategorized')
-  return <CsTransactions {...props} tab={tab} onTabChange={setTab} realmId={null} accounts={[]} />
+  return (
+    <CsTransactions
+      {...props}
+      tab={tab}
+      onTabChange={setTab}
+      realmId={null}
+      accounts={[]}
+      progressPct={props.progressPct ?? 0}
+    />
+  )
 }
 
 const listTransactionsMock = vi.fn()
 const syncTransactionsMock = vi.fn()
+const updateFollowupMock = vi.fn()
 const toastSuccessMock = vi.fn()
 const toastErrorMock = vi.fn()
 
@@ -38,6 +50,10 @@ vi.mock('@/modules/14-transactions/api/transactions.api', () => ({
 
 vi.mock('@/modules/14-transactions/api/qbo-accounts.api', () => ({
   getQboAccounts: vi.fn().mockResolvedValue([]),
+}))
+
+vi.mock('../api/followups.api', () => ({
+  updateFollowup: (...args: unknown[]) => updateFollowupMock(...args),
 }))
 
 vi.mock('sonner', () => ({
@@ -81,6 +97,7 @@ describe('<CsTransactions>', () => {
   beforeEach(() => {
     listTransactionsMock.mockReset()
     syncTransactionsMock.mockReset()
+    updateFollowupMock.mockReset()
     toastSuccessMock.mockReset()
     toastErrorMock.mockReset()
     listTransactionsMock.mockImplementation((_clientId: string, params?: { category: TransactionCategory }) => {
@@ -171,6 +188,70 @@ describe('<CsTransactions>', () => {
       startDate: expect.stringMatching(/^\d{4}-01-01$/),
       endDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     })
+  })
+
+  it('after successful sync with progress_pct=0, bumps followup to ready_to_send', async () => {
+    syncTransactionsMock.mockResolvedValue({
+      client_id: 'c-1',
+      start_date: '2025-01-01',
+      end_date: '2026-04-30',
+      deleted_count: 0,
+      inserted_count: 3,
+      duration_ms: 100,
+    })
+    updateFollowupMock.mockResolvedValue({})
+
+    render(
+      <CsTransactionsHarness
+        clientId="c-1"
+        clientFilter="all"
+        realmId={null}
+        accounts={[]}
+        progressPct={0}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /^sync$/i }))
+
+    await waitFor(() => {
+      expect(updateFollowupMock).toHaveBeenCalledTimes(1)
+    })
+    const [calledClientId, calledPeriod, calledBody] = updateFollowupMock.mock.calls[0]
+    expect(calledClientId).toBe('c-1')
+    expect(calledPeriod).toMatch(/^\d{4}-\d{2}$/)
+    expect(calledBody).toEqual({ status: 'ready_to_send' })
+  })
+
+  it('after successful sync with progress_pct > 0, does NOT bump followup', async () => {
+    syncTransactionsMock.mockResolvedValue({
+      client_id: 'c-1',
+      start_date: '2025-01-01',
+      end_date: '2026-04-30',
+      deleted_count: 0,
+      inserted_count: 3,
+      duration_ms: 100,
+    })
+
+    render(
+      <CsTransactionsHarness
+        clientId="c-1"
+        clientFilter="all"
+        realmId={null}
+        accounts={[]}
+        progressPct={42}
+      />,
+      { wrapper },
+    )
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: /^sync$/i }))
+
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalled()
+    })
+    expect(updateFollowupMock).not.toHaveBeenCalled()
   })
 
   it('shows specific error toast when sync returns 400 (no QBO)', async () => {

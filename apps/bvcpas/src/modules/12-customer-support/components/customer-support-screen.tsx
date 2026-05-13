@@ -101,6 +101,7 @@ export function CustomerSupportScreen({ clientId }: CustomerSupportScreenProps) 
         clientFilter={data.client.transactions_filter as ClientFilter}
         tab={tab}
         onTabChange={setTab}
+        progressPct={data.stats.progress_pct}
         middleSlot={
           shouldShowSuggested(data.stats, data.followup) ? (
             <CsSuggestedAction

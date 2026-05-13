@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Check, X } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -23,7 +24,8 @@ import { useTransactions } from '@/modules/14-transactions/hooks/use-transaction
 import type { Transaction } from '@/modules/14-transactions/api/transactions.api'
 import type { QboAccount } from '@/modules/14-transactions/api/qbo-accounts.api'
 
-import { computeRange } from '../lib/date-range'
+import { updateFollowup } from '../api/followups.api'
+import { computeRange, currentPeriod } from '../lib/date-range'
 import { formatAmount } from '../lib/format'
 import { TxDetailModal } from './tx-detail-modal'
 
@@ -40,6 +42,12 @@ export interface CsTransactionsProps {
   onTabChange: (tab: TransactionsTab) => void
   /** Slot opcional que se renderiza entre los tabs y el botón Sync. */
   middleSlot?: React.ReactNode
+  /**
+   * Progress actual del período (0–100). Después de un sync exitoso,
+   * solo se bumpea el followup a `ready_to_send` si era 0 — ver
+   * fix-sync-bumps-status.md.
+   */
+  progressPct: number
 }
 
 function filterLegend(filter: ClientFilter): string {
@@ -146,7 +154,9 @@ export function CsTransactions({
   tab,
   onTabChange,
   middleSlot,
+  progressPct,
 }: CsTransactionsProps) {
+  const queryClient = useQueryClient()
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
 
   const expenseQuery = useTransactions(clientId, 'uncategorized_expense')
@@ -167,6 +177,20 @@ export function CsTransactions({
 
   const sync = useSyncTransactions(clientId)
 
+  // Bumpear status del followup a `ready_to_send` tras un sync exitoso.
+  // Solo cuando progressPct === 0 (ver fix-sync-bumps-status.md). Si ya
+  // hay progreso (partial_reply / complete), no se toca el status para
+  // no degradar el avance del usuario.
+  const bumpFollowup = useMutation({
+    mutationFn: () =>
+      updateFollowup(clientId, currentPeriod(new Date()), {
+        status: 'ready_to_send',
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['uncats-detail'] })
+    },
+  })
+
   const handleSync = () => {
     const range = computeRange(new Date())
     sync.mutate(
@@ -176,6 +200,9 @@ export function CsTransactions({
           toast.success(
             `Sync complete: ${result.inserted_count} inserted, ${result.deleted_count} replaced.`,
           )
+          if (progressPct === 0) {
+            bumpFollowup.mutate()
+          }
         },
         onError: (err) => {
           const status = (err as { statusCode?: number; status?: number } | undefined)
