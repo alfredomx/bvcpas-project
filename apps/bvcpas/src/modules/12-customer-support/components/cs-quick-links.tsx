@@ -1,8 +1,8 @@
 'use client'
 
-// Botones de quick links. La mayoría son placeholders (toast
-// "Coming soon"); "Follow-up email" abre `<DraftFollowupDialog>`
-// — la misma puerta que ofrece `<CsSuggestedAction>`.
+// Botones de quick links. "Sheet" sigue siendo placeholder (toast
+// "coming soon"); "Follow-up email" abre `<DraftFollowupDialog>` y
+// "Log a call" abre `<CallLogDialog>`.
 
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import type { UncatsDetailResponse } from '@/modules/13-dashboards/api/uncats-detail.api'
 
+import { CallLogDialog } from './call-log-dialog'
 import { DraftFollowupDialog } from './draft-followup-dialog'
 
 export interface CsQuickLinksProps {
@@ -17,20 +18,9 @@ export interface CsQuickLinksProps {
   publicLink: UncatsDetailResponse['public_link']
 }
 
-const PLACEHOLDER_LINKS = [
-  { key: 'sheet', label: 'Sheet' },
-  { key: 'email', label: '@ Email thread' },
-  { key: 'call', label: 'Call log' },
-  { key: 'note', label: 'Add note' },
-  { key: 'snooze', label: 'Snooze' },
-] as const
-
 export function CsQuickLinks({ client, publicLink }: CsQuickLinksProps) {
   const [draftOpen, setDraftOpen] = useState(false)
-
-  const handleClick = (label: string) => {
-    toast.message(`${label} coming soon.`)
-  }
+  const [callLogOpen, setCallLogOpen] = useState(false)
 
   return (
     <div className="flex flex-col gap-2">
@@ -40,7 +30,7 @@ export function CsQuickLinks({ client, publicLink }: CsQuickLinksProps) {
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => handleClick('Sheet')}
+          onClick={() => toast.message('Sheet coming soon.')}
         >
           Sheet
         </Button>
@@ -52,17 +42,14 @@ export function CsQuickLinks({ client, publicLink }: CsQuickLinksProps) {
         >
           Follow-up email
         </Button>
-        {PLACEHOLDER_LINKS.filter((link) => link.key !== 'sheet').map((link) => (
-          <Button
-            key={link.key}
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => handleClick(link.label)}
-          >
-            {link.label}
-          </Button>
-        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setCallLogOpen(true)}
+        >
+          Log a call
+        </Button>
       </div>
 
       <DraftFollowupDialog
@@ -70,6 +57,12 @@ export function CsQuickLinks({ client, publicLink }: CsQuickLinksProps) {
         onOpenChange={setDraftOpen}
         client={client}
         publicLink={publicLink}
+      />
+
+      <CallLogDialog
+        open={callLogOpen}
+        onOpenChange={setCallLogOpen}
+        clientId={client.id}
       />
     </div>
   )

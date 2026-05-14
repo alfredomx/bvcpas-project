@@ -33,3 +33,29 @@ export function formatSilentStreak(days: number): string {
 export function formatFollowupStatus(status: string): string {
   return status.replace(/_/g, ' ')
 }
+
+/**
+ * Fecha relativa para el listado de call logs:
+ *  - Hace <60 min  → "Xm ago"
+ *  - Hace <24h     → "Xh ago"
+ *  - Hace <7 días  → "Xd ago"
+ *  - Más viejo     → "Mar 12, 2026"
+ *
+ * `now` se inyecta solo para test.
+ */
+export function formatRelativeShort(iso: string, now: Date = new Date()): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  const diffMs = now.getTime() - d.getTime()
+  if (diffMs < 0) {
+    // Fecha futura — caemos a formato absoluto, no negativos.
+    return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(d)
+  }
+  const min = Math.floor(diffMs / 60_000)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  const day = Math.floor(hr / 24)
+  if (day < 7) return `${day}d ago`
+  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(d)
+}

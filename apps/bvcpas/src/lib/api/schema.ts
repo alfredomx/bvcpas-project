@@ -1095,6 +1095,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/clients/{id}/call-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/clients/:id/call-logs
+         * @description Lista call logs del cliente ordenados por called_at DESC. Excluye soft-deleted. Paginación con limit/offset.
+         */
+        get: operations["CallLogsController_list"];
+        put?: never;
+        /**
+         * POST /v1/clients/:id/call-logs
+         * @description Registra una llamada al cliente. `user_id` se toma del JWT. `called_at` default = now() si no se manda.
+         */
+        post: operations["CallLogsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/clients/{id}/call-logs/{logId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /v1/clients/:id/call-logs/:logId
+         * @description Soft delete del call log (marca deleted_at). Queda en DB para auditoría pero deja de aparecer en GET.
+         */
+        delete: operations["CallLogsController_delete"];
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /v1/clients/:id/call-logs/:logId
+         * @description Actualiza un call log. Al menos un campo requerido. Cualquier admin del despacho puede editarlo.
+         */
+        patch: operations["CallLogsController_update"];
+        trace?: never;
+    };
     "/v1/healthz": {
         parameters: {
             query?: never;
@@ -2061,6 +2109,8 @@ export interface components {
                     amount_total: string;
                     /** Format: date-time */
                     last_synced_at: string | null;
+                    /** Format: date-time */
+                    last_response_at: string | null;
                 };
                 monthly: {
                     previous_year_total: {
@@ -2101,6 +2151,8 @@ export interface components {
                 sent_at: string | null;
                 /** Format: date-time */
                 last_reply_at: string | null;
+                /** Format: date-time */
+                last_fully_responded_at: string | null;
                 internal_notes: string | null;
             };
             stats: {
@@ -2111,6 +2163,8 @@ export interface components {
                 amount_total: string;
                 /** Format: date-time */
                 last_synced_at: string | null;
+                /** Format: date-time */
+                last_response_at: string | null;
                 silent_streak_days: number;
             };
             monthly: {
@@ -2140,6 +2194,29 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             } | null;
+        };
+        /** @description Body para registrar una llamada (clientId va en path, user_id se toma del JWT) */
+        CreateCallLogBodyDto: {
+            /**
+             * @description Resultado de la llamada. Uno de: responded, no_answer, voicemail, refused, other
+             * @enum {string}
+             */
+            outcome: "responded" | "no_answer" | "voicemail" | "refused" | "other";
+            /** @description Notas libres sobre la llamada. Max 2000 caracteres. */
+            notes?: string;
+            /**
+             * Format: date-time
+             * @description Timestamp ISO 8601 de cuándo se hizo la llamada. Default: now()
+             */
+            called_at?: string;
+        };
+        /** @description Body para actualizar un call log. Al menos un campo requerido. */
+        UpdateCallLogBodyDto: {
+            /** @enum {string} */
+            outcome?: "responded" | "no_answer" | "voicemail" | "refused" | "other";
+            notes?: string | null;
+            /** Format: date-time */
+            called_at?: string;
         };
         /** @description Respuesta del healthcheck principal */
         HealthResponseDto: {
@@ -3843,6 +3920,134 @@ export interface operations {
                 };
             };
             /** @description Cliente no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallLogsController_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de call logs. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallLogsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCallLogBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Call log creado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Body inválido (outcome fuera de enum o notes >2000). */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cliente no existe o el usuario no tiene acceso. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallLogsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                logId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Call log eliminado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Call log no existe o ya fue eliminado. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CallLogsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                logId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCallLogBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Call log actualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Body inválido o sin campos. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Call log no existe o ya fue eliminado. */
             404: {
                 headers: {
                     [name: string]: unknown;

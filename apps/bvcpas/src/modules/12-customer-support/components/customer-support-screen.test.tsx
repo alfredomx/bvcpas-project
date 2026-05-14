@@ -36,6 +36,7 @@ function makeResponse(): UncatsDetailResponse {
       status: 'pending',
       sent_at: null,
       last_reply_at: null,
+      last_fully_responded_at: null,
       internal_notes: null,
     },
     stats: {
@@ -45,6 +46,7 @@ function makeResponse(): UncatsDetailResponse {
       progress_pct: 0,
       amount_total: '15000.00',
       last_synced_at: null,
+      last_response_at: null,
       silent_streak_days: 0,
     },
     monthly: {

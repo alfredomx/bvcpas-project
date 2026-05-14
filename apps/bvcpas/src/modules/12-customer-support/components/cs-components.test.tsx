@@ -49,6 +49,7 @@ const sample: UncatsDetailResponse = {
     status: 'awaiting_reply',
     sent_at: '2026-04-13T10:00:00.000Z',
     last_reply_at: null,
+    last_fully_responded_at: null,
     internal_notes: null,
   },
   stats: {
@@ -58,6 +59,7 @@ const sample: UncatsDetailResponse = {
     progress_pct: 0,
     amount_total: '62600.00',
     last_synced_at: '2026-04-30T23:59:00.000Z',
+    last_response_at: null,
     silent_streak_days: 95,
   },
   monthly: {

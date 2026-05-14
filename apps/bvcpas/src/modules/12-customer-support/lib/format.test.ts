@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 import {
   formatAmount,
   formatFollowupStatus,
+  formatRelativeShort,
   formatSilentStreak,
 } from './format'
 
@@ -44,6 +45,31 @@ describe('formatSilentStreak', () => {
   it('floors fractional days and clamps negatives to 0', () => {
     expect(formatSilentStreak(15.7)).toBe('15d silent')
     expect(formatSilentStreak(-5)).toBe('0d silent')
+  })
+})
+
+describe('formatRelativeShort', () => {
+  const now = new Date('2026-05-14T12:00:00.000Z')
+
+  it('returns minutes for <1h', () => {
+    expect(formatRelativeShort('2026-05-14T11:30:00.000Z', now)).toBe('30m ago')
+  })
+
+  it('returns hours for <24h', () => {
+    expect(formatRelativeShort('2026-05-14T05:00:00.000Z', now)).toBe('7h ago')
+  })
+
+  it('returns days for <7d', () => {
+    expect(formatRelativeShort('2026-05-12T12:00:00.000Z', now)).toBe('2d ago')
+  })
+
+  it('returns absolute date for >=7d', () => {
+    const result = formatRelativeShort('2026-05-01T12:00:00.000Z', now)
+    expect(result).toMatch(/May 1, 2026/)
+  })
+
+  it('returns "—" for invalid input', () => {
+    expect(formatRelativeShort('not-a-date', now)).toBe('—')
   })
 })
 
