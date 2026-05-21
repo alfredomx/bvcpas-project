@@ -220,8 +220,17 @@ export class PublicLinksListDto extends createZodDto(PublicLinksListSchema) {}
 
 // ───── public (cliente con token) ────────────────────────────────────────
 
+const PublicTransactionResponseInlineSchema = z
+  .object({
+    client_note: z.string(),
+    completed: z.boolean(),
+    responded_at: z.string().datetime(),
+  })
+  .nullable()
+
 const PublicTransactionSchema = z.object({
   id: z.string().uuid(),
+  qbo_txn_type: z.string(),
   txn_date: z.string(),
   docnum: z.string().nullable(),
   vendor_name: z.string().nullable(),
@@ -229,8 +238,7 @@ const PublicTransactionSchema = z.object({
   split_account: z.string().nullable(),
   category: z.enum(['uncategorized_expense', 'uncategorized_income']), // públicas excluyen AMA
   amount: z.string(),
-  client_note: z.string().nullable(),
-  responded_at: z.string().datetime().nullable(),
+  response: PublicTransactionResponseInlineSchema,
 })
 
 export class PublicTransactionDto extends createZodDto(PublicTransactionSchema) {}
@@ -242,6 +250,7 @@ const PublicTransactionsResponseSchema = z.object({
     transactions_filter: z.enum(CLIENT_TRANSACTIONS_FILTERS),
   }),
   items: z.array(PublicTransactionSchema),
+  total: z.number().int(),
 })
 
 export class PublicTransactionsResponseDto extends createZodDto(PublicTransactionsResponseSchema) {}

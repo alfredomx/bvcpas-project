@@ -37,9 +37,14 @@ interface TransactionShape {
 
 interface PublicTransactionShape {
   id: string
+  qbo_txn_type: string
   category: string
   amount: string
-  client_note: string | null
+  response: {
+    client_note: string
+    completed: boolean
+    responded_at: string
+  } | null
 }
 
 interface TransactionsListShape {
@@ -50,6 +55,7 @@ interface TransactionsListShape {
 interface PublicResponseShape {
   client: { id: string; legal_name: string; transactions_filter: string }
   items: PublicTransactionShape[]
+  total: number
 }
 
 interface PublicLinkShape {
@@ -212,7 +218,7 @@ describe('Customer Support E2E (Tipo B)', () => {
       const res = await request(app.getHttpServer()).get(`/v1/public/uncats/${token}`).expect(200)
       const body = res.body as PublicResponseShape
       const t1 = body.items.find((t) => t.id === txn001Id)
-      expect(t1?.client_note).toBe('gasto de mi viaje')
+      expect(t1?.response?.client_note).toBe('gasto de mi viaje')
 
       // Edición sobreescribe (UPDATE)
       await request(app.getHttpServer())
