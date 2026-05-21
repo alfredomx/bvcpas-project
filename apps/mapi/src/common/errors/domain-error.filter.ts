@@ -64,6 +64,9 @@ const STATUS_BY_CODE: Record<string, number> = {
 
   // 21-connections api_key (v0.11.0)
   CREDENTIALS_SHAPE_INVALID: 400,
+
+  // 14-call-logs (v0.13.0)
+  CALL_LOG_NOT_FOUND: 404,
 }
 
 interface ErrorBody {

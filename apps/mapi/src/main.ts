@@ -70,6 +70,11 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     displayName: 'Uncats',
     description: 'Detalle de uncats del cliente para el dashboard',
   },
+  {
+    name: 'Clients - Call Logs',
+    displayName: 'Call Logs',
+    description: 'Bitácora de llamadas/contactos al cliente',
+  },
 
   // Views — vistas globales agregadas cross-cliente. Cuando entren recon/w-9
   // se agregan más sub-tags al grupo.
@@ -147,6 +152,7 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
       'Clients - Public Links',
       'Clients - Intuit',
       'Clients - Uncats',
+      'Clients - Call Logs',
     ],
   },
   { name: 'Views', tags: ['Views - Uncats'] },

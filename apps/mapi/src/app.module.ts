@@ -17,6 +17,7 @@ import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module
 import { ClientsModule } from './modules/11-clients/clients.module'
 import { CustomerSupportModule } from './modules/12-customer-support/customer-support.module'
 import { DashboardsModule } from './modules/13-views/dashboards.module'
+import { CallLogsModule } from './modules/14-call-logs/call-logs.module'
 import { ConnectionsModule } from './modules/21-connections/connections.module'
 
 @Module({
@@ -33,6 +34,7 @@ import { ConnectionsModule } from './modules/21-connections/connections.module'
     IntuitOauthModule,
     CustomerSupportModule,
     DashboardsModule,
+    CallLogsModule,
     ConnectionsModule,
     HealthModule,
   ],
