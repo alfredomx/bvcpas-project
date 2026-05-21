@@ -6,7 +6,7 @@
 
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Check, X } from 'lucide-react'
+import { Check, Hourglass, X } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { Button } from '@/components/ui/button'
@@ -145,11 +145,36 @@ function TxTable({ items, isLoading, isError, onRowClick, accounts }: TxTablePro
             </TableCell>
             <TableCell className="text-right font-mono">{formatSignedAmount(t)}</TableCell>
             <TableCell className="text-center">
-              {t.response?.completed ? (
-                <Check className="size-4 text-green-600" />
-              ) : (
-                <X className="size-4 text-muted-foreground" />
-              )}
+              {(() => {
+                if (!t.response) {
+                  return (
+                    <X
+                      className="inline size-4 text-muted-foreground"
+                      aria-label="Pending"
+                    >
+                      <title>Pending — client has not answered yet</title>
+                    </X>
+                  )
+                }
+                if (!t.response.completed) {
+                  return (
+                    <Hourglass
+                      className="inline size-4 text-amber-600"
+                      aria-label="Awaiting QBO sync"
+                    >
+                      <title>Client answered — pending writeback to QuickBooks</title>
+                    </Hourglass>
+                  )
+                }
+                return (
+                  <Check
+                    className="inline size-4 text-green-600"
+                    aria-label="Synced"
+                  >
+                    <title>Synced to QuickBooks</title>
+                  </Check>
+                )
+              })()}
             </TableCell>
           </TableRow>
         ))}
