@@ -271,25 +271,26 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo              | Estado | Tema                                                                           | Tag          | Archivo                                                        |
-| ------- | ------------------- | ------ | ------------------------------------------------------------------------------ | ------------ | -------------------------------------------------------------- |
-| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify          | mapi-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
-| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                          | mapi-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
-| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas  | mapi-v0.3.0  | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)         |
-| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)           | mapi-v0.3.1  | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)         |
-| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B         | mapi-v0.3.2  | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)         |
-| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests              | mapi-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
-| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=      | mapi-v0.5.0  | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                   |
-| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links       | mapi-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
-| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                | mapi-v0.6.1  | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)             |
-| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2  | (carpeta y archivo borrados en v0.7.0)                         |
-| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0  | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)           |
-| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)           |
-| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)           |
-| 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)         |
-| 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar           | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)         |
-| 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location              | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)         |
-| 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)             |
+| Versión | Módulo              | Estado | Tema                                                                           | Tag          | Archivo                                                          |
+| ------- | ------------------- | ------ | ------------------------------------------------------------------------------ | ------------ | ---------------------------------------------------------------- |
+| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify          | mapi-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)               |
+| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                          | mapi-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)                 |
+| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas  | mapi-v0.3.0  | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)           |
+| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)           | mapi-v0.3.1  | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)           |
+| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B         | mapi-v0.3.2  | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)           |
+| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests              | mapi-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                     |
+| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=      | mapi-v0.5.0  | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                     |
+| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links       | mapi-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md)   |
+| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                | mapi-v0.6.1  | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)               |
+| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                 | mapi-v0.6.2  | (carpeta y archivo borrados en v0.7.0)                           |
+| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)           | mapi-v0.7.0  | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)             |
+| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)             |
+| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                             | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)             |
+| 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)           |
+| 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar           | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)           |
+| 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location              | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)           |
+| 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
+| 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total` | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
 
 ---
 

@@ -44,6 +44,7 @@ function serializeForPublic(
   }
   return {
     id: t.id,
+    qbo_txn_type: t.qboTxnType,
     txn_date: t.txnDate,
     docnum: t.docnum,
     vendor_name: t.vendorName,
@@ -51,8 +52,13 @@ function serializeForPublic(
     split_account: t.splitAccount,
     category: t.category,
     amount: t.amount,
-    client_note: r?.clientNote ?? null,
-    responded_at: r?.respondedAt ? r.respondedAt.toISOString() : null,
+    response: r
+      ? {
+          client_note: r.clientNote,
+          completed: r.completed,
+          responded_at: r.respondedAt.toISOString(),
+        }
+      : null,
   }
 }
 
@@ -111,8 +117,8 @@ export class PublicTransactionsController {
     const client = await this.clientsRepo.findById(link.clientId)
     if (!client) throw new ClientNotFoundError(link.clientId)
 
-    const items = await this.txnRepo.list({ clientId: client.id })
-    const filtered = applyFilter(items, client.transactionsFilter)
+    const raw = await this.txnRepo.list({ clientId: client.id })
+    const filtered = applyFilter(raw, client.transactionsFilter)
 
     // Indexar respuestas por id de transacción del snapshot. Si una respuesta
     // existe pero ya no está en snapshot, no aparece en la vista pública.
@@ -127,9 +133,11 @@ export class PublicTransactionsController {
       if (r) responseByTxnId.set(t.id, r)
     }
 
+    const items = filtered.map((t) => serializeForPublic(t, responseByTxnId))
     return {
       client: clientPublicView(client),
-      items: filtered.map((t) => serializeForPublic(t, responseByTxnId)),
+      items,
+      total: items.length,
     }
   }
 
