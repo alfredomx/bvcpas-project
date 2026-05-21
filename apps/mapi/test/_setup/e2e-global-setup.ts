@@ -36,6 +36,7 @@ export default async function globalSetup(): Promise<void> {
     // Drop completo de tablas + drizzle metadata antes de aplicar migrations.
     // Garantiza estado limpio entre runs (importante: mapi_test es compartida).
     await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS client_call_logs CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS client_public_links CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS client_period_followups CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS client_transaction_responses CASCADE`)

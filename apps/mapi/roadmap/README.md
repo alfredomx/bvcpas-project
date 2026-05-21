@@ -18,6 +18,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 **Módulos activos:**
 
 - `21-connections` ✅ (v0.8.0 a v0.12.0 — OAuth providers + sharing + auth_type=api_key + Clover api_token + Square OAuth).
+- `14-call-logs` ✅ (v0.13.0 — bitácora de llamadas a clientes; CRUD básico con hard delete).
 - `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
 - `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
 - `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
@@ -288,6 +289,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)         |
 | 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar           | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)         |
 | 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location              | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)         |
+| 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)             |
 
 ---
 
