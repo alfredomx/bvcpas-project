@@ -187,10 +187,19 @@ export function CsConfigSheet({
     )
   }
 
+  // URL pública del frontend (no la del backend en publicLink.url, que
+  // apunta al JSON del endpoint API). El origin se lee del propio
+  // navegador con un guard por SSR.
+  const publicUrl = publicLink
+    ? typeof window !== 'undefined'
+      ? `${window.location.origin}/p/uncats/${publicLink.token}`
+      : ''
+    : ''
+
   const handleCopy = async () => {
-    if (!publicLink) return
+    if (!publicUrl) return
     try {
-      await navigator.clipboard.writeText(publicLink.url)
+      await navigator.clipboard.writeText(publicUrl)
       toast.success('Link copied.')
     } catch {
       toast.error('Could not copy.')
@@ -367,7 +376,7 @@ export function CsConfigSheet({
               <div className="flex items-center gap-1.5">
                 <Input
                   readOnly
-                  value={publicLink?.url ?? ''}
+                  value={publicUrl}
                   aria-label="Public link URL"
                   className="font-mono text-xs"
                   placeholder="No link generated yet"
