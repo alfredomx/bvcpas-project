@@ -1045,7 +1045,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * /v1/public/uncats/:token/:txnId
+         * @description El cliente borra su nota para una transacción (soft-delete del response). La transacción vuelve a estado "sin contestar" en el GET. Idempotente: si no hay nota o ya estaba borrada, también responde 204.
+         */
+        delete: operations["PublicTransactionsController_deleteNote"];
         options?: never;
         head?: never;
         /**
@@ -1131,7 +1135,7 @@ export interface paths {
         post?: never;
         /**
          * DELETE /v1/clients/:id/call-logs/:logId
-         * @description Soft delete del call log (marca deleted_at). Queda en DB para auditoría pero deja de aparecer en GET.
+         * @description Hard delete del call log: lo elimina físicamente de la DB. El evento call_log.deleted queda en event_log para auditoría.
          */
         delete: operations["CallLogsController_delete"];
         options?: never;
@@ -2070,6 +2074,7 @@ export interface components {
             items: {
                 /** Format: uuid */
                 id: string;
+                qbo_txn_type: string;
                 txn_date: string;
                 docnum: string | null;
                 vendor_name: string | null;
@@ -2078,10 +2083,14 @@ export interface components {
                 /** @enum {string} */
                 category: "uncategorized_expense" | "uncategorized_income";
                 amount: string;
-                client_note: string | null;
-                /** Format: date-time */
-                responded_at: string | null;
+                response: {
+                    client_note: string;
+                    completed: boolean;
+                    /** Format: date-time */
+                    responded_at: string;
+                } | null;
             }[];
+            total: number;
         };
         CustomerSupportListResponseDto: {
             period: {
@@ -3835,6 +3844,41 @@ export interface operations {
             };
         };
     };
+    PublicTransactionsController_deleteNote: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+                txnId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response borrado o ya estaba borrado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Transacción no existe en snapshot actual */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Token revocado o expirado */
+            410: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     PublicTransactionsController_saveNote: {
         parameters: {
             query?: never;
@@ -4008,7 +4052,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Call log no existe o ya fue eliminado. */
+            /** @description Call log no existe. */
             404: {
                 headers: {
                     [name: string]: unknown;
