@@ -30,6 +30,9 @@ vi.mock('sonner', () => ({
 describe('<Topbar>', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Default: modo sidebar — el picker dropdown no se renderiza,
+    // así que no hace falta mockear useClients ni useParams.
+    window.localStorage.removeItem('bvcpas.sidebarCollapsed')
   })
 
   afterEach(() => {

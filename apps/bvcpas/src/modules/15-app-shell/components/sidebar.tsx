@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { ChevronsLeft, Search } from 'lucide-react'
+import { ChevronUp, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useClients } from '@/modules/11-clients/hooks/use-clients'
 
 import { useSidebarCollapsed } from '../hooks/use-sidebar-collapsed'
-import { SidebarCollapsed } from './sidebar-collapsed'
 import { SidebarRow } from './sidebar-row'
 
 const ROW_HEIGHT = 48
@@ -45,7 +44,9 @@ export function Sidebar() {
   }
 
   if (collapsed) {
-    return <SidebarCollapsed onExpand={() => setCollapsed(false)} />
+    // En modo "topbar" la sidebar desaparece — el picker vive en
+    // <Topbar>. Sin estado intermedio (barra angosta) ya no existe.
+    return null
   }
 
   return (
@@ -59,9 +60,9 @@ export function Sidebar() {
           variant="ghost"
           size="icon-sm"
           onClick={() => setCollapsed(true)}
-          aria-label="Collapse sidebar"
+          aria-label="Move client picker to topbar"
         >
-          <ChevronsLeft />
+          <ChevronUp />
         </Button>
       </div>
 

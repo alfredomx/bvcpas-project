@@ -181,29 +181,28 @@ describe('<Sidebar>', () => {
     expect(screen.getByText(/^all\b/i)).toBeInTheDocument()
   })
 
-  it('collapses to <SidebarCollapsed> when the collapse button is clicked', async () => {
+  it('renders null when collapsed (modo topbar takes over)', async () => {
     listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme')]))
 
-    render(<Sidebar />, { wrapper })
+    const { container } = render(<Sidebar />, { wrapper })
     await waitFor(() => expect(screen.getByText('Acme')).toBeInTheDocument())
 
     const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: /collapse sidebar/i }))
+    await user.click(
+      screen.getByRole('button', { name: /move client picker to topbar/i }),
+    )
 
-    // En modo colapsado: la fila ya no es visible y el botón de expandir aparece.
+    // En modo colapsado el sidebar no renderiza nada — el picker
+    // vive en <Topbar>.
     expect(screen.queryByText('Acme')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /expand sidebar/i })).toBeInTheDocument()
+    expect(container.querySelector('aside')).toBeNull()
   })
 
-  it('expands again when the expand button is clicked', async () => {
-    window.localStorage.setItem('bvcpas.sidebarCollapsed', 'true')
+  it('renders the list again when the user returns to sidebar mode', async () => {
+    window.localStorage.setItem('bvcpas.sidebarCollapsed', 'false')
     listClientsMock.mockResolvedValue(makeResponse([makeClient('Acme')]))
 
     render(<Sidebar />, { wrapper })
-
-    // Arranca colapsada por el localStorage.
-    const user = userEvent.setup()
-    await user.click(screen.getByRole('button', { name: /expand sidebar/i }))
 
     await waitFor(() => expect(screen.getByText('Acme')).toBeInTheDocument())
   })
