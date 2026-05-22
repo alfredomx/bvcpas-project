@@ -165,7 +165,7 @@ export function PuTransactionDetail({
 
       {/* Meta grid */}
       <dl className="grid grid-cols-2 gap-x-8 gap-y-5 border-b border-gray-200 py-6">
-        <div className="hidden flex-col gap-1 md:flex">
+        <div className="hidden flex-col gap-1">
           <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             ID
           </dt>
@@ -183,7 +183,7 @@ export function PuTransactionDetail({
           </dt>
           <dd className="font-mono text-sm">{transaction.split_account ?? '—'}</dd>
         </div>
-        <div className="hidden flex-col gap-1 md:flex">
+        <div className="hidden flex-col gap-1">
           <dt className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
             Current category
           </dt>
