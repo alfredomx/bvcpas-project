@@ -291,6 +291,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location              | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)           |
 | 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
 | 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total` | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
+| 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                     | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
 
 ---
 

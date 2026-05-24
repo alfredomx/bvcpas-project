@@ -1,4 +1,14 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch } from '@nestjs/common'
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+} from '@nestjs/common'
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { Public } from '../../../common/decorators/public.decorator'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
@@ -175,5 +185,34 @@ export class PublicTransactionsController {
       note: body.note,
     })
     return serializeResponse(saved)
+  }
+
+  @Public()
+  @Delete(':token/:txnId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: '/v1/public/uncats/:token/:txnId',
+    description:
+      'El cliente borra su nota para una transacción (soft-delete del response). La transacción vuelve a estado "sin contestar" en el GET. Idempotente: si no hay nota o ya estaba borrada, también responde 204.',
+  })
+  @ApiResponse({ status: 204, description: 'Response borrado o ya estaba borrado' })
+  @ApiResponse({ status: 404, description: 'Transacción no existe en snapshot actual' })
+  @ApiResponse({ status: 410, description: 'Token revocado o expirado' })
+  async deleteNote(
+    @Param('token') token: string,
+    @Param('txnId', ParseUUIDPipe) txnId: string,
+  ): Promise<void> {
+    const link = await this.linksService.validateToken(token, 'uncats')
+
+    const txn = await this.txnRepo.findById(txnId)
+    if (!txn) throw new TransactionNotFoundInSnapshotError(txnId)
+    if (txn.clientId !== link.clientId) throw new PublicLinkInvalidError()
+
+    // AMAs no se manejan desde endpoint público.
+    if (txn.category === 'ask_my_accountant') {
+      throw new TransactionNotFoundInSnapshotError(txnId)
+    }
+
+    await this.responsesService.softDeleteByTxnId(txnId)
   }
 }
