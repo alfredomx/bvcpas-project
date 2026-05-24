@@ -280,6 +280,69 @@ describe('Customer Support E2E (Tipo B)', () => {
     })
   })
 
+  describe('SMK-cs-010b — DELETE público borra response y vuelve a sin contestar', () => {
+    it('PATCH guarda → DELETE soft-delete → GET ya no muestra response', async () => {
+      const link = await request(app.getHttpServer())
+        .post(`/v1/clients/${clientId}/public-links`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ purpose: 'uncats', force: true })
+        .expect(200)
+      const token = (link.body as PublicLinkShape).token
+
+      // Guarda una nota para tx-001
+      await request(app.getHttpServer())
+        .patch(`/v1/public/uncats/${token}/${txn001Id}`)
+        .send({ note: 'borrame por error' })
+        .expect(200)
+
+      // Verifica que la nota está
+      const before = await request(app.getHttpServer())
+        .get(`/v1/public/uncats/${token}`)
+        .expect(200)
+      const t1Before = (before.body as PublicResponseShape).items.find((t) => t.id === txn001Id)
+      expect(t1Before?.response?.client_note).toBe('borrame por error')
+
+      // DELETE público
+      await request(app.getHttpServer())
+        .delete(`/v1/public/uncats/${token}/${txn001Id}`)
+        .expect(204)
+
+      // GET ya no muestra response para esa txn
+      const after = await request(app.getHttpServer()).get(`/v1/public/uncats/${token}`).expect(200)
+      const t1After = (after.body as PublicResponseShape).items.find((t) => t.id === txn001Id)
+      expect(t1After?.response).toBeNull()
+    })
+
+    it('DELETE idempotente: segunda llamada sigue 204', async () => {
+      const link = await request(app.getHttpServer())
+        .post(`/v1/clients/${clientId}/public-links`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ purpose: 'uncats' })
+        .expect(200)
+      const token = (link.body as PublicLinkShape).token
+
+      // Ya no hay response (lo borramos arriba). DELETE sin nada también responde 204.
+      await request(app.getHttpServer())
+        .delete(`/v1/public/uncats/${token}/${txn001Id}`)
+        .expect(204)
+    })
+
+    it('DELETE con txnId inexistente → 404', async () => {
+      const link = await request(app.getHttpServer())
+        .post(`/v1/clients/${clientId}/public-links`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ purpose: 'uncats' })
+        .expect(200)
+      const token = (link.body as PublicLinkShape).token
+
+      const fakeUuid = '00000000-0000-0000-0000-000000000000'
+      const res = await request(app.getHttpServer())
+        .delete(`/v1/public/uncats/${token}/${fakeUuid}`)
+        .expect(404)
+      expect((res.body as { code: string }).code).toBe('TRANSACTION_NOT_FOUND_IN_SNAPSHOT')
+    })
+  })
+
   describe('SMK-cs-011 — GET followups default', () => {
     it('si no existe, retorna pending', async () => {
       const res = await request(app.getHttpServer())
