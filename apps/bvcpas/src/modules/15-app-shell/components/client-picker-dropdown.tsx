@@ -45,7 +45,7 @@ export function ClientPickerDropdown() {
   }, [items, search])
 
   const handleSelect = (clientId: string) => {
-    router.push(`/dashboard/clients/${clientId}/uncategorized-transactions`)
+    router.push(`/dashboard/clients/${clientId}`)
     setOpen(false)
     setSearch('')
   }

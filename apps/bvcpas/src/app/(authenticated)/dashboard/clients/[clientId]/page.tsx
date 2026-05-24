@@ -1,24 +1,23 @@
 'use client'
 
-// /dashboard/clients/<clientId> sin tab. Redirige a la última tab
-// visitada para ese cliente (localStorage); si no hay, a customer-support
-// por default.
+// Home del cliente — visual only (v0.9.0). Mock data hardcoded.
+// Cuando existan endpoints, cada bloque del <ClientHomeScreen>
+// consumirá su hook sin tocar este page.
 
-import { use, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { use } from 'react'
 
-import { DEFAULT_TAB_SLUG, findTabBySlug } from '@/modules/15-app-shell/lib/tabs'
-import { getLastTab } from '@/modules/15-app-shell/hooks/use-last-tab'
+import { useClients } from '@/modules/11-clients/hooks/use-clients'
+import { ClientHomeScreen } from '@/modules/17-client-home/components/client-home-screen'
 
-export default function ClientRootPage({ params }: { params: Promise<{ clientId: string }> }) {
+export default function ClientHomePage({
+  params,
+}: {
+  params: Promise<{ clientId: string }>
+}) {
   const { clientId } = use(params)
-  const router = useRouter()
+  const { items } = useClients()
+  const client = items.find((c) => c.id === clientId)
+  const legalName = client?.legal_name ?? 'Client'
 
-  useEffect(() => {
-    const stored = getLastTab(clientId)
-    const slug = stored && findTabBySlug(stored) ? stored : DEFAULT_TAB_SLUG
-    router.replace(`/dashboard/clients/${clientId}/${slug}`)
-  }, [clientId, router])
-
-  return null
+  return <ClientHomeScreen clientId={clientId} legalName={legalName} />
 }

@@ -821,6 +821,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/connections/{id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /v1/connections/:id/pause
+         * @description Pausa la conexión. El dashboard la mostrará con status `paused`. Body opcional `{ reason }` para anotar contexto.
+         */
+        post: operations["ConnectionPauseController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/connections/{id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /v1/connections/:id/resume
+         * @description Reanuda una conexión previamente pausada.
+         */
+        post: operations["ConnectionPauseController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/clients/{id}/transactions/sync": {
         parameters: {
             query?: never;
@@ -1091,6 +1131,26 @@ export interface paths {
          * @description Detalle del cliente para el panel central del dashboard de Customer Support. Stats + datos del cliente + followup + silent_streak_days. Requiere `from` y `to` (YYYY-MM-DD).
          */
         get: operations["ClientUncatsController_detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/clients/{id}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/clients/:id/integrations
+         * @description Dashboard de integraciones del cliente. Lista conexiones Clover/Square con su status (healthy | needs_reauth | paused) y KPIs agregados (connected, healthy, needsAttention, errors, providersInUse). Status derivado en runtime desde columnas DB (no llama APIs externas). Para validar credenciales en vivo, el frontend usa POST /v1/connections/:id/test.
+         */
+        get: operations["ClientIntegrationsController_getIntegrations"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1854,6 +1914,9 @@ export interface components {
             merchantId: string;
             date: string;
         };
+        PauseBodyDto: {
+            reason?: string;
+        };
         /** @description Body para sync con Intuit (rango de fechas; clientId va en path) */
         SyncTransactionsBodyDto: {
             startDate: string;
@@ -2203,6 +2266,41 @@ export interface components {
                 /** Format: date-time */
                 created_at: string;
             } | null;
+        };
+        ClientIntegrationsResponseDto: {
+            client: {
+                /** Format: uuid */
+                id: string;
+                legalName: string;
+            };
+            stats: {
+                connected: number;
+                healthy: number;
+                needsAttention: number;
+                errors: number;
+                providersInUse: number;
+            };
+            connections: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                provider: "clover" | "square";
+                providerLabel: string;
+                label: string | null;
+                externalAccountId: string;
+                /** @enum {string} */
+                authType: "oauth" | "api_key";
+                /** @enum {string} */
+                status: "healthy" | "needs_reauth" | "paused";
+                statusReason: string | null;
+                /** Format: date-time */
+                pausedAt: string | null;
+                pausedReason: string | null;
+                /** Format: date-time */
+                lastSyncAt: string | null;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
         };
         /** @description Body para registrar una llamada (clientId va en path, user_id se toma del JWT) */
         CreateCallLogBodyDto: {
@@ -3460,6 +3558,78 @@ export interface operations {
             };
         };
     };
+    ConnectionPauseController_pause: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PauseBodyDto"];
+            };
+        };
+        responses: {
+            /** @description Conexión pausada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conexión no encontrada o sin acceso write */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conexión ya estaba pausada */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ConnectionPauseController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conexión reanudada */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conexión no encontrada o sin acceso write */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Conexión no estaba pausada */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ClientTransactionsController_sync: {
         parameters: {
             query?: never;
@@ -3964,6 +4134,34 @@ export interface operations {
                 };
             };
             /** @description Cliente no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientIntegrationsController_getIntegrations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientIntegrationsResponseDto"];
+                };
+            };
+            /** @description Cliente no encontrado o sin acceso */
             404: {
                 headers: {
                     [name: string]: unknown;
