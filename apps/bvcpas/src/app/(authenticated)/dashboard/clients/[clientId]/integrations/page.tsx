@@ -15,5 +15,5 @@ export default function IntegrationsPage({
   const client = items.find((c) => c.id === clientId)
   const legalName = client?.legal_name ?? 'Client'
 
-  return <IntegrationsScreen legalName={legalName} />
+  return <IntegrationsScreen clientId={clientId} legalName={legalName} />
 }

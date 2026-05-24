@@ -12,23 +12,18 @@ import {
 } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-import type { Connection } from '../lib/mock-data'
+import type { IntegrationConnection } from '../api/integrations.api'
+import { STATUS_LABEL, deriveInitials } from '../lib/status-mapping'
 
-import { DisconnectDialog } from './disconnect-dialog'
 import { IssActivity } from './iss-activity'
 import { IssFieldMapping } from './iss-field-mapping'
 import { IssSyncSettings } from './iss-sync-settings'
-
-const STATUS_LABEL: Record<Connection['status'], string> = {
-  connected: 'Connected',
-  reauth: 'Re-auth needed',
-  failed: 'Sync failed',
-}
+import { PauseDialog } from './pause-dialog'
 
 export interface IntegrationSettingsSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  connection: Connection | null
+  connection: IntegrationConnection | null
 }
 
 export function IntegrationSettingsSheet({
@@ -36,9 +31,12 @@ export function IntegrationSettingsSheet({
   onOpenChange,
   connection,
 }: IntegrationSettingsSheetProps) {
-  const [disconnectOpen, setDisconnectOpen] = useState(false)
+  const [pauseOpen, setPauseOpen] = useState(false)
 
   if (!connection) return null
+
+  const initials = deriveInitials(connection.providerLabel)
+  const accountLabel = connection.label ?? '—'
 
   return (
     <>
@@ -51,35 +49,40 @@ export function IntegrationSettingsSheet({
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="flex size-12 shrink-0 items-center justify-center rounded border bg-muted text-sm font-semibold">
-                  {connection.initials}
+                  {initials}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <SheetTitle className="text-lg">{connection.title}</SheetTitle>
+                  <SheetTitle className="text-lg">
+                    {connection.providerLabel}
+                  </SheetTitle>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="inline-flex items-center rounded border bg-muted/40 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                      {connection.accountLabel}
+                      {accountLabel}
                     </span>
                     <span className="font-mono text-xs text-muted-foreground">
-                      {connection.accountDomain}
+                      {connection.externalAccountId}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    ● {connection.statusDetail ?? STATUS_LABEL[connection.status]}{' '}
-                    · Last sync · {connection.lastSyncRelative}
+                    {STATUS_LABEL[connection.status]} ·{' '}
+                    {connection.authType === 'api_key' ? 'API key' : 'OAuth'}
                   </p>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDisconnectOpen(true)}
-                >
-                  <X className="size-3.5" />
-                  Disconnect
-                </Button>
-              </div>
+              {connection.status !== 'paused' && (
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                    onClick={() => setPauseOpen(true)}
+                  >
+                    <X className="size-3.5" />
+                    Pause
+                  </Button>
+                </div>
+              )}
             </div>
           </SheetHeader>
 
@@ -91,7 +94,7 @@ export function IntegrationSettingsSheet({
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
               <p className="text-xs text-muted-foreground">
-                Connector v3.4 · OAuth
+                {connection.authType === 'api_key' ? 'API key' : 'OAuth'}
               </p>
             </div>
 
@@ -101,7 +104,7 @@ export function IntegrationSettingsSheet({
               </TabsContent>
               <TabsContent value="sync" className="m-0">
                 <IssSyncSettings
-                  onDisconnectClick={() => setDisconnectOpen(true)}
+                  onDisconnectClick={() => setPauseOpen(true)}
                 />
               </TabsContent>
               <TabsContent value="activity" className="m-0">
@@ -112,10 +115,11 @@ export function IntegrationSettingsSheet({
         </SheetContent>
       </Sheet>
 
-      <DisconnectDialog
-        open={disconnectOpen}
-        onOpenChange={setDisconnectOpen}
-        connectionTitle={connection.title}
+      <PauseDialog
+        open={pauseOpen}
+        onOpenChange={setPauseOpen}
+        connectionId={connection.id}
+        connectionTitle={connection.providerLabel}
       />
     </>
   )

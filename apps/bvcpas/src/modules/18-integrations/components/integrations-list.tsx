@@ -4,38 +4,30 @@ import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 
-import type { Connection } from '../lib/mock-data'
-import { INTEGRATIONS_MOCK } from '../lib/mock-data'
+import type { IntegrationConnection } from '../api/integrations.api'
 
 import { IntegrationsRow } from './integrations-row'
 
 export interface IntegrationsListProps {
-  onSelect: (connection: Connection) => void
-  onDisconnect: (connection: Connection) => void
+  connections: IntegrationConnection[]
+  onSelect: (connection: IntegrationConnection) => void
+  onPause: (connection: IntegrationConnection) => void
 }
 
 export function IntegrationsList({
+  connections,
   onSelect,
-  onDisconnect,
+  onPause,
 }: IntegrationsListProps) {
   return (
     <section className="flex flex-col gap-3">
-      {/* <div className="flex items-end justify-between gap-3">
-        <div>
-          <h2 className="text-base font-semibold">Connected accounts</h2>
-          <p className="text-xs text-muted-foreground">
-            Click a row to map fields, change settings, or disconnect.
-          </p>
-        </div>
-      </div> */}
-
       <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-        {INTEGRATIONS_MOCK.connections.map((c) => (
+        {connections.map((c) => (
           <IntegrationsRow
             key={c.id}
             connection={c}
             onSelect={() => onSelect(c)}
-            onDisconnect={() => onDisconnect(c)}
+            onPause={() => onPause(c)}
           />
         ))}
       </div>
