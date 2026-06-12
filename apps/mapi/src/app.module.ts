@@ -21,6 +21,7 @@ import { CustomerSupportModule } from './modules/12-customer-support/customer-su
 import { DashboardsModule } from './modules/13-views/dashboards.module'
 import { CallLogsModule } from './modules/14-call-logs/call-logs.module'
 import { ConnectionsModule } from './modules/21-connections/connections.module'
+import { BankWorkerModule } from './modules/22-bank-worker/bank-worker.module'
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { ConnectionsModule } from './modules/21-connections/connections.module'
     DashboardsModule,
     CallLogsModule,
     ConnectionsModule,
+    BankWorkerModule,
     HealthModule,
   ],
   providers: [
