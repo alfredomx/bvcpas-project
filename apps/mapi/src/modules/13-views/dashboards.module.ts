@@ -5,6 +5,10 @@ import { ClientUncatsController } from './customer-support/client-uncats.control
 import { CustomerSupportDashboardRepository } from './customer-support/customer-support-dashboard.repository'
 import { CustomerSupportDashboardService } from './customer-support/customer-support-dashboard.service'
 import { UncatsViewController } from './customer-support/uncats-view.controller'
+import { ClientIntegrationsController } from './integrations/client-integrations.controller'
+import { ConnectionStatusResolver } from './integrations/connection-status.resolver'
+import { IntegrationsRepository } from './integrations/integrations.repository'
+import { IntegrationsService } from './integrations/integrations.service'
 
 /**
  * Módulo 13-views: vistas globales agregadas para el operador.
@@ -24,7 +28,14 @@ import { UncatsViewController } from './customer-support/uncats-view.controller'
  */
 @Module({
   imports: [ClientsModule, CustomerSupportModule],
-  controllers: [UncatsViewController, ClientUncatsController],
-  providers: [CustomerSupportDashboardRepository, CustomerSupportDashboardService],
+  controllers: [UncatsViewController, ClientUncatsController, ClientIntegrationsController],
+  providers: [
+    CustomerSupportDashboardRepository,
+    CustomerSupportDashboardService,
+    // v0.14.0 — Integrations dashboard
+    IntegrationsRepository,
+    IntegrationsService,
+    ConnectionStatusResolver,
+  ],
 })
 export class DashboardsModule {}

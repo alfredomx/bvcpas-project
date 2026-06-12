@@ -36,3 +36,4 @@ Cada vista global tiene su contraparte por cliente bajo
 | [v0.6.1](v0.6.1.md)                   | ✅     | Dashboard customer-support (creado bajo el nombre antiguo `13-dashboards/`).                                          |
 | [v0.8.0](../21-connections/v0.8.0.md) | 🚧     | Refactor URLs + módulo renombrado a `13-views/`. Path `/v1/views/uncats` reemplaza `/v1/dashboards/customer-support`. |
 | [v0.12.1](v0.12.1.md)                 | ✅     | `public_link` extendido con `id`/`max_uses`/`use_count`/`revoked_at` + fix `responded_count` excluye soft-deleted.    |
+| [v0.14.0](v0.14.0.md)                 | 🚧     | Dashboard de integraciones por cliente (Clover/Square) + pause/resume genérico de conexiones.                         |

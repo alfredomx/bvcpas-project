@@ -105,6 +105,31 @@ export class ConnectionsRepository {
   }
 
   /**
+   * v0.14.0 — pause/resume manual.
+   * Marca la conexión como pausada. Si ya estaba pausada, sobreescribe
+   * `paused_at` y `paused_reason` (el caller debe haber verificado el
+   * estado previo si quiere lanzar error de "ya pausada").
+   */
+  async setPause(connectionId: string, pausedAt: Date, pausedReason: string | null): Promise<void> {
+    await this.db
+      .update(userConnections)
+      .set({ pausedAt, pausedReason, updatedAt: new Date() })
+      .where(eq(userConnections.id, connectionId))
+  }
+
+  /**
+   * v0.14.0 — reanuda una conexión pausada limpiando ambos campos.
+   * Idempotente: si no estaba pausada no rompe — el caller debe haber
+   * verificado el estado previo si quiere lanzar error.
+   */
+  async clearPause(connectionId: string): Promise<void> {
+    await this.db
+      .update(userConnections)
+      .set({ pausedAt: null, pausedReason: null, updatedAt: new Date() })
+      .where(eq(userConnections.id, connectionId))
+  }
+
+  /**
    * Conexión activa para LECTURA sobre un cliente. Política:
    * 1. Personal del user actual con scope_type='full' (si existe).
    * 2. Fallback a cualquier conexión 'readonly' del cliente (cuenta global).

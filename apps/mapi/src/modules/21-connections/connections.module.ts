@@ -33,6 +33,8 @@ import { GoogleConnectionController } from './providers/google/google.controller
 import { GoogleProvider } from './providers/google/google.provider'
 import { GoogleConnectionService } from './providers/google/google.service'
 import { IntuitProvider } from './providers/intuit/intuit.provider'
+import { ConnectionPauseController } from './pause/connection-pause.controller'
+import { ConnectionPauseService } from './pause/connection-pause.service'
 import { GraphMailService } from './providers/microsoft/graph-mail.service'
 import { MicrosoftConnectionController } from './providers/microsoft/microsoft.controller'
 import { MicrosoftProvider } from './providers/microsoft/microsoft.provider'
@@ -69,6 +71,7 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     CloverReportController,
     SquareConnectionController,
     SquareReportController,
+    ConnectionPauseController,
   ],
   providers: [
     ConnectionsRepository,
@@ -96,6 +99,8 @@ import { MicrosoftConnectionService } from './providers/microsoft/microsoft.serv
     // Square OAuth (v0.12.0)
     SquareProvider,
     SquareConnectionService,
+    // Pause/Resume (v0.14.0)
+    ConnectionPauseService,
   ],
   exports: [
     ConnectionsService,
