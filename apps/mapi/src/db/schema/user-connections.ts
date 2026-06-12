@@ -83,6 +83,11 @@ export const userConnections = pgTable(
     // (ej. Clover: `{api_token, merchant_id}`).
     credentialsEncrypted: text('credentials_encrypted'),
     lastRefreshedAt: timestamp('last_refreshed_at', { withTimezone: true }),
+    // v0.14.0: pause manual. Cuando paused_at != null la conexión aparece
+    // como `paused` en el dashboard de integraciones. Workers/crons NO la
+    // respetan todavía (decisión D-mapi-054 — flag informativo).
+    pausedAt: timestamp('paused_at', { withTimezone: true }),
+    pausedReason: text('paused_reason'),
     metadata: jsonb('metadata'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()

@@ -132,3 +132,24 @@ export class CredentialsShapeError extends DomainError {
     super(`credentials inválido para provider ${provider}: falta o vacío ${missingField}`)
   }
 }
+
+/**
+ * v0.14.0 — Pause/Resume.
+ * Lanzado en POST /pause cuando la conexión ya está pausada.
+ */
+export class ConnectionAlreadyPausedError extends DomainError {
+  readonly code = 'CONNECTION_ALREADY_PAUSED'
+  constructor(connectionId: string) {
+    super(`La conexión ${connectionId} ya está pausada`)
+  }
+}
+
+/**
+ * Lanzado en POST /resume cuando la conexión no está pausada.
+ */
+export class ConnectionNotPausedError extends DomainError {
+  readonly code = 'CONNECTION_NOT_PAUSED'
+  constructor(connectionId: string) {
+    super(`La conexión ${connectionId} no está pausada`)
+  }
+}

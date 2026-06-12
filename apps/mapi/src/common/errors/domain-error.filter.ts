@@ -67,6 +67,10 @@ const STATUS_BY_CODE: Record<string, number> = {
 
   // 14-call-logs (v0.13.0)
   CALL_LOG_NOT_FOUND: 404,
+
+  // 21-connections pause/resume (v0.14.0)
+  CONNECTION_ALREADY_PAUSED: 409,
+  CONNECTION_NOT_PAUSED: 409,
 }
 
 interface ErrorBody {

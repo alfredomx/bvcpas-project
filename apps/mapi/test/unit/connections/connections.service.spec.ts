@@ -37,6 +37,8 @@ function buildConnection(overrides: Partial<UserConnection> = {}): UserConnectio
     refreshTokenExpiresAt: null,
     credentialsEncrypted: null,
     lastRefreshedAt: null,
+    pausedAt: null,
+    pausedReason: null,
     metadata: null,
     createdAt: NOW,
     updatedAt: NOW,
