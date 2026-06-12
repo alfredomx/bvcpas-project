@@ -184,6 +184,18 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 > - Considerar `pg_advisory_lock` para evitar que 2 réplicas corran
 >   migraciones en paralelo (no aplica hoy con 1 réplica, pero útil a futuro).
 
+### Trigger: cuando entre el primer adapter bancario (v0.16.0+)
+
+> Decisiones de carpeta destino para los PDFs descargados por los
+> adapters. Se aterriza con un caso real cuando llegue Chase.
+
+- **Script de descubrimiento de carpeta Dropbox por regex + mask**.
+  El operador propuso: dado un `account_mask`, buscar recursivamente
+  en su Dropbox compartido la carpeta destino aunque el nombre exacto
+  no se conozca. Más costoso que tener path fijo pero garantiza que
+  siempre da con la carpeta correcta aunque cambien los nombres. Se
+  implementa con la primera versión que escriba PDFs (v0.16.0).
+
 ---
 
 ## Histórico

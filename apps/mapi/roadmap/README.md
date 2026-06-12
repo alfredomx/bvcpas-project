@@ -294,7 +294,6 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
 | 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total` | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
 | 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                     | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
-| 0.15.0  | 15-permissions      | ✅     | RBAC dinámico + overrides por usuario; migra 18 endpoints; drop `users.role`   | mapi-v0.15.0 | [15-permissions/v0.15.0.md](15-permissions/v0.15.0.md)           |
 
 ---
 
