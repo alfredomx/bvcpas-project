@@ -16,7 +16,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { Client } from '../../../db/schema/clients'
 import type { ClientTransaction } from '../../../db/schema/client-transactions'
@@ -87,7 +87,6 @@ function applyClientFilter(
 @ApiTags('Clients - Transactions')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/transactions')
-@Roles('admin')
 @UseGuards(ClientAccessGuard)
 export class ClientTransactionsController {
   constructor(
@@ -99,6 +98,7 @@ export class ClientTransactionsController {
 
   @Post('sync')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('customer_support.create')
   @ApiOperation({
     summary: 'POST /v1/clients/:id/transactions/sync',
     description:
@@ -128,6 +128,7 @@ export class ClientTransactionsController {
   }
 
   @Get()
+  @RequirePermission('customer_support.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/transactions',
     description:
@@ -180,6 +181,7 @@ export class ClientTransactionsController {
 
   @Delete(':txId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission('customer_support.delete')
   @ApiOperation({
     summary: 'DELETE /v1/clients/:id/transactions/:txId',
     description:

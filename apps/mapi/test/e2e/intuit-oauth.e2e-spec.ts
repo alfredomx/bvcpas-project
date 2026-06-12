@@ -54,11 +54,16 @@ describe('Intuit OAuth E2E (Tipo B)', () => {
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
       const [admin] = (await c`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Intuit', 'admin', 'active')
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Intuit', 'active')
         RETURNING id
       `) as unknown as { id: string }[]
       adminUserId = admin.id
+      // v0.15.0: rol Administrator del sistema (RBAC dinámico)
+      await c`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${adminUserId}, '00000000-0000-0000-0000-000000000001')
+      `
     } finally {
       await c.end()
     }

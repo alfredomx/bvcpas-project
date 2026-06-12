@@ -50,6 +50,12 @@ export default async function globalSetup(): Promise<void> {
     await db.execute(sql`DROP TABLE IF EXISTS clients CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_sessions CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS event_log CASCADE`)
+    // 15-permissions (v0.15.0). Orden: tablas dependientes primero.
+    await db.execute(sql`DROP TABLE IF EXISTS user_permissions CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS user_roles CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS role_permissions CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS permissions CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS roles CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS users CASCADE`)
     await db.execute(sql`DROP FUNCTION IF EXISTS users_set_updated_at CASCADE`)
     await db.execute(sql`DROP FUNCTION IF EXISTS clients_set_updated_at CASCADE`)

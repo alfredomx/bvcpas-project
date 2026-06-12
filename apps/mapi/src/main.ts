@@ -36,6 +36,10 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
   // Access Management
   { name: 'Auth', description: 'Login, sesión, password change' },
   { name: 'Users', description: 'CRUD admin de usuarios del sistema' },
+  {
+    name: 'Permissions',
+    description: 'RBAC dinámico — gestión de roles, asignaciones, overrides individuales (v0.15.0)',
+  },
 
   // Client Management — sub-tags con displayName corto (el grupo padre
   // 'Client Management' ya da el contexto en sidebar de Scalar).
@@ -146,7 +150,7 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
  * del cliente, se agregan a los grupos correspondientes.
  */
 const TAG_GROUPS: { name: string; tags: string[] }[] = [
-  { name: 'Access Management', tags: ['Auth', 'Users'] },
+  { name: 'Access Management', tags: ['Auth', 'Users', 'Permissions'] },
   {
     name: 'Client Management',
     tags: [

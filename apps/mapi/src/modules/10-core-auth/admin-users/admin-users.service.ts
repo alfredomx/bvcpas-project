@@ -21,8 +21,8 @@ interface CreateResult {
 }
 
 /**
- * Service de gestión admin de usuarios. Solo accesible por role=admin
- * (controlled por @Roles('admin') en el controller).
+ * Service de gestión admin de usuarios. Solo accesible vía
+ * @RequirePermission('system.users.manage') en el controller.
  */
 @Injectable()
 export class AdminUsersService {
@@ -80,7 +80,6 @@ export class AdminUsersService {
           email,
           passwordHash,
           fullName: dto.fullName,
-          role: dto.role,
           status: 'active',
         })
         .returning()
@@ -99,7 +98,6 @@ export class AdminUsersService {
       {
         userId: inserted.id,
         email: inserted.email,
-        role: inserted.role,
       },
       actorUserId,
       { type: 'user', id: inserted.id },
@@ -111,9 +109,8 @@ export class AdminUsersService {
   async update(id: string, dto: UpdateUserDto, actorUserId: string): Promise<User> {
     const existing = await this.getById(id)
 
-    const changes: Partial<Pick<User, 'fullName' | 'role' | 'status'>> = {}
+    const changes: Partial<Pick<User, 'fullName' | 'status'>> = {}
     if (dto.fullName !== undefined) changes.fullName = dto.fullName
-    if (dto.role !== undefined) changes.role = dto.role
     if (dto.status !== undefined) changes.status = dto.status
 
     if (Object.keys(changes).length === 0) {
@@ -189,12 +186,14 @@ export class AdminUsersService {
 
   /**
    * Aux: serializa User a UserDto (sin password_hash, fechas como ISO).
+   *
+   * v0.15.0: ya no incluye `role` (eliminado del schema). Los roles del
+   * user se consultan con `GET /v1/permissions/users/:userId/effective`.
    */
   static serialize(user: User): {
     id: string
     email: string
     fullName: string
-    role: User['role']
     status: User['status']
     lastLoginAt: string | null
     createdAt: string
@@ -204,7 +203,6 @@ export class AdminUsersService {
       id: user.id,
       email: user.email,
       fullName: user.fullName,
-      role: user.role,
       status: user.status,
       lastLoginAt: user.lastLoginAt ? user.lastLoginAt.toISOString() : null,
       createdAt: user.createdAt.toISOString(),

@@ -1,13 +1,17 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { USER_ROLES, USER_STATUSES } from '../../../../db/schema/users'
+import { USER_STATUSES } from '../../../../db/schema/users'
 
+/**
+ * v0.15.0: `role` fue removido. Para ver los roles del user, llamar
+ * `GET /v1/permissions/users/:userId/effective` (devuelve roles y
+ * permisos efectivos).
+ */
 const UserSchema = z
   .object({
     id: z.string().uuid().describe('ID del usuario'),
     email: z.string().email().describe('Email del usuario'),
     fullName: z.string().describe('Nombre completo'),
-    role: z.enum(USER_ROLES).describe('Rol del sistema'),
     status: z.enum(USER_STATUSES).describe('Estado de la cuenta'),
     lastLoginAt: z.string().datetime().nullable().describe('Último login (ISO)'),
     createdAt: z.string().datetime().describe('Fecha de creación (ISO)'),

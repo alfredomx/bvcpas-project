@@ -28,7 +28,6 @@ describe('JwtService', () => {
       const token = service.sign({
         sub: 'user-123',
         email: 'test@example.com',
-        role: 'admin',
         jti: 'jti-abc',
       })
 
@@ -41,14 +40,12 @@ describe('JwtService', () => {
       const token = service.sign({
         sub: 'user-123',
         email: 'test@example.com',
-        role: 'viewer',
         jti: 'jti-xyz',
       })
 
       const decoded = service.verify(token)
       expect(decoded.sub).toBe('user-123')
       expect(decoded.email).toBe('test@example.com')
-      expect(decoded.role).toBe('viewer')
       expect(decoded.jti).toBe('jti-xyz')
       expect(typeof decoded.iat).toBe('number')
       expect(typeof decoded.exp).toBe('number')
@@ -62,7 +59,6 @@ describe('JwtService', () => {
       const token = service.sign({
         sub: 'user-123',
         email: 'a@b.com',
-        role: 'admin',
         jti: 'j1',
       })
 
@@ -77,7 +73,6 @@ describe('JwtService', () => {
       const token = serviceA.sign({
         sub: 'u',
         email: 'a@b.com',
-        role: 'admin',
         jti: 'j1',
       })
 
@@ -90,7 +85,6 @@ describe('JwtService', () => {
       const token = service.sign({
         sub: 'u',
         email: 'a@b.com',
-        role: 'admin',
         jti: 'j1',
       })
 

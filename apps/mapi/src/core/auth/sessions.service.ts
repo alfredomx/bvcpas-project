@@ -6,7 +6,7 @@ import type Redis from 'ioredis'
 import { randomUUID } from 'node:crypto'
 import { DB, type DrizzleDb } from '../db/db.module'
 import { userSessions, type UserSession } from '../../db/schema/user-sessions'
-import { users, type UserRole, type UserStatus } from '../../db/schema/users'
+import { users, type UserStatus } from '../../db/schema/users'
 import { JwtService } from './jwt.service'
 import { AppConfigService } from '../config/config.service'
 import { REDIS_CLIENT } from './redis.module'
@@ -26,18 +26,21 @@ import {
 interface CachedSession {
   userId: string
   email: string
-  role: UserRole
   status: UserStatus
   expiresAt: number // unix timestamp ms
 }
 
 /**
  * Resultado de verificar una sesión: contexto del user dueño.
+ *
+ * v0.15.0: la columna `users.role` fue eliminada y reemplazada por RBAC
+ * dinámico (módulo 15-permissions). Los permisos efectivos del usuario
+ * se obtienen vía `PermissionsService.getEffectivePermissionCodes(userId)`,
+ * con cache Redis propio.
  */
 export interface SessionContext {
   userId: string
   email: string
-  role: UserRole
   jti: string
 }
 
@@ -72,7 +75,7 @@ export class SessionsService {
    * firma JWT con jti, retorna ambos.
    */
   async create(
-    user: { id: string; email: string; role: UserRole },
+    user: { id: string; email: string },
     userAgent?: string,
     ip?: string,
   ): Promise<{ token: string; sessionId: string; jti: string }> {
@@ -97,7 +100,6 @@ export class SessionsService {
     const token = this.jwt.sign({
       sub: user.id,
       email: user.email,
-      role: user.role,
       jti,
     })
 
@@ -128,7 +130,6 @@ export class SessionsService {
       return {
         userId: cached.userId,
         email: cached.email,
-        role: cached.role,
         jti,
       }
     }
@@ -140,7 +141,6 @@ export class SessionsService {
         revokedAt: userSessions.revokedAt,
         expiresAt: userSessions.expiresAt,
         userEmail: users.email,
-        userRole: users.role,
         userStatus: users.status,
       })
       .from(userSessions)
@@ -171,7 +171,6 @@ export class SessionsService {
     await this.writeCache(cacheKey, {
       userId: row.userId,
       email: row.userEmail,
-      role: row.userRole,
       status: row.userStatus,
       expiresAt: expiresAtMs,
     })
@@ -179,7 +178,6 @@ export class SessionsService {
     return {
       userId: row.userId,
       email: row.userEmail,
-      role: row.userRole,
       jti,
     }
   }

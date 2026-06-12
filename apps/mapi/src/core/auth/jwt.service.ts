@@ -2,20 +2,22 @@ import { Injectable } from '@nestjs/common'
 import jwt from 'jsonwebtoken'
 import type { SignOptions } from 'jsonwebtoken'
 import { AppConfigService } from '../config/config.service'
-import type { UserRole } from '../../db/schema/users'
 
 /**
  * Claims que viajan dentro del JWT.
  * - sub: user id (UUID).
- * - email, role: para guards sin pegarle a DB en happy path.
+ * - email: para identificar al user sin pegarle a DB en happy path.
  * - jti: id de la sesión (UUID), buscado en `user_sessions` para verificar
  *   que la sesión sigue activa y no revocada.
  * - iat / exp: standard JWT (numéricos en segundos UNIX).
+ *
+ * v0.15.0: `role` fue removido del payload. Los permisos del usuario se
+ * obtienen vía `PermissionsService.getEffectivePermissionCodes(userId)`
+ * dentro del `PermissionsGuard`.
  */
 export interface JwtPayload {
   sub: string
   email: string
-  role: UserRole
   jti: string
   iat?: number
   exp?: number

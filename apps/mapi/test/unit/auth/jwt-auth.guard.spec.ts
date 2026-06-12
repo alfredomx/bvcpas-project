@@ -55,7 +55,7 @@ function buildSessions(
         opts.verifyResult ?? {
           userId: 'u-1',
           email: 'a@b.com',
-          role: 'admin',
+
           jti: 'j-1',
         },
       )
@@ -91,7 +91,7 @@ describe('JwtAuthGuard', () => {
 
     it('JWT con firma inválida → UnauthorizedException', async () => {
       const jwt = buildJwt()
-      const valid = jwt.sign({ sub: 'u', email: 'a@b.com', role: 'admin', jti: 'j' })
+      const valid = jwt.sign({ sub: 'u', email: 'a@b.com', jti: 'j' })
       const tampered = `${valid.split('.').slice(0, 2).join('.')}.invalid`
 
       const guard = new JwtAuthGuard(buildReflector(false), jwt, buildSessions())
@@ -104,10 +104,10 @@ describe('JwtAuthGuard', () => {
   describe('happy path', () => {
     it('JWT válido + sesión activa → inyecta req.user', async () => {
       const jwt = buildJwt()
-      const token = jwt.sign({ sub: 'u-1', email: 'a@b.com', role: 'admin', jti: 'j-1' })
+      const token = jwt.sign({ sub: 'u-1', email: 'a@b.com', jti: 'j-1' })
 
       const sessions = buildSessions({
-        verifyResult: { userId: 'u-1', email: 'a@b.com', role: 'admin', jti: 'j-1' },
+        verifyResult: { userId: 'u-1', email: 'a@b.com', jti: 'j-1' },
       })
 
       const req: MockRequest = { headers: { authorization: `Bearer ${token}` } }
@@ -118,14 +118,14 @@ describe('JwtAuthGuard', () => {
       expect(req.user).toEqual({
         userId: 'u-1',
         email: 'a@b.com',
-        role: 'admin',
+
         jti: 'j-1',
       })
     })
 
     it('SessionsService.verify() lanza error de dominio → propaga', async () => {
       const jwt = buildJwt()
-      const token = jwt.sign({ sub: 'u', email: 'a@b.com', role: 'admin', jti: 'j-revoked' })
+      const token = jwt.sign({ sub: 'u', email: 'a@b.com', jti: 'j-revoked' })
 
       const sessionRevokedError = new Error('Session revoked')
       const sessions = buildSessions({ verifyThrows: sessionRevokedError })

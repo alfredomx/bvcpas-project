@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
-import { Roles } from '../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import type { Client } from '../../db/schema/clients'
 import { ClientAccessRepository } from './client-access.repository'
@@ -58,7 +58,6 @@ function serialize(c: Client): ClientDto {
 @ApiTags('Clients - Clients')
 @ApiBearerAuth('bearer')
 @Controller('clients')
-@Roles('admin')
 @UseGuards(ClientAccessGuard)
 export class ClientsController {
   constructor(
@@ -67,6 +66,7 @@ export class ClientsController {
   ) {}
 
   @Get()
+  @RequirePermission('clients.read')
   @ApiOperation({
     summary: 'GET /v1/clients',
     description:
@@ -95,6 +95,7 @@ export class ClientsController {
   }
 
   @Get(':id')
+  @RequirePermission('clients.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id',
     description: 'Detalle completo de un cliente. Incluye metadata expandida (intuit_*).',
@@ -107,6 +108,7 @@ export class ClientsController {
   }
 
   @Patch(':id')
+  @RequirePermission('clients.update')
   @ApiOperation({
     summary: 'PATCH /v1/clients/:id',
     description:
@@ -125,6 +127,7 @@ export class ClientsController {
 
   @Post(':id/status')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('clients.update')
   @ApiOperation({
     summary: 'POST /v1/clients/:id/status',
     description:

@@ -2,7 +2,7 @@ import { Controller, Get, Param, ParseUUIDPipe, Query, UseGuards } from '@nestjs
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../../common/pipes/zod-validation.pipe'
 import { ClientAccessGuard } from '../../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../../core/permissions/decorators/require-permission.decorator'
 import { z } from 'zod'
 import { ConnectionsRepository } from '../../connections.repository'
 import { ConnectionNotFoundError } from '../../connection.errors'
@@ -28,7 +28,7 @@ const ReportQuerySchema = z.object({
 @ApiTags('Merchants - Clover')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/merchants/clover/:merchantId/reports')
-@Roles('admin')
+@RequirePermission('connections.read')
 @UseGuards(ClientAccessGuard)
 export class CloverReportController {
   constructor(private readonly connectionsRepo: ConnectionsRepository) {}

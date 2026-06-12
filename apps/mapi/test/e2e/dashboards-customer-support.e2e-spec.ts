@@ -64,11 +64,16 @@ describe('Customer Support Dashboard E2E (Tipo B)', () => {
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
       const [admin] = (await c`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Dash', 'admin', 'active')
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Dash', 'active')
         RETURNING id
       `) as unknown as { id: string }[]
       const adminId = admin.id
+      // v0.15.0: rol Administrator del sistema (RBAC dinámico)
+      await c`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${adminId}, '00000000-0000-0000-0000-000000000001')
+      `
       const [client] = (await c`
         INSERT INTO clients (legal_name, qbo_realm_id, status, tier, transactions_filter)
         VALUES ('Dash Co', 'realm-dash', 'active', 'gold', 'all')

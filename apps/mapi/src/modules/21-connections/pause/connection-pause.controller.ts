@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import { PauseBodyDto, PauseBodySchema } from './dto/connection-pause.dto'
 import { ConnectionPauseService } from './connection-pause.service'
 
@@ -19,7 +19,7 @@ import { ConnectionPauseService } from './connection-pause.service'
 @ApiTags('Connections')
 @ApiBearerAuth('bearer')
 @Controller('connections/:id')
-@Roles('admin')
+@RequirePermission('connections.update')
 export class ConnectionPauseController {
   constructor(private readonly service: ConnectionPauseService) {}
 

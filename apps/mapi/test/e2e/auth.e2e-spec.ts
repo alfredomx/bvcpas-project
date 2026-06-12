@@ -26,13 +26,13 @@ const ADMIN_EMAIL = 'admin-e2e@example.com'
 const ADMIN_PASSWORD = 'admin-e2e-password-12345'
 
 interface CreateUserResponseShape {
-  user: { id: string; email: string; role: string; status: string }
+  user: { id: string; email: string; status: string }
   initialPassword: string
 }
 
 interface LoginResponseShape {
   accessToken: string
-  user: { id: string; email: string; role: string; status: string }
+  user: { id: string; email: string; status: string }
 }
 
 interface SessionsListShape {
@@ -61,9 +61,17 @@ describe('Auth E2E (Tipo B)', () => {
     const client = postgres(databaseUrl, { max: 1 })
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
+      // v0.15.0: users ya no tiene columna role. El admin se asigna al
+      // rol Administrator (UUID hardcoded del sistema seedeado por la
+      // migration 0018).
+      const [inserted] = await client<{ id: string }[]>`
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin E2E', 'active')
+        RETURNING id
+      `
       await client`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin E2E', 'admin', 'active')
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${inserted.id}, '00000000-0000-0000-0000-000000000001')
       `
     } finally {
       await client.end()
@@ -93,7 +101,6 @@ describe('Auth E2E (Tipo B)', () => {
       const body = res.body as LoginResponseShape
       expect(body.accessToken).toBeDefined()
       expect(body.user.email).toBe(ADMIN_EMAIL)
-      expect(body.user.role).toBe('admin')
       expect(body.user.status).toBe('active')
     })
 
@@ -110,9 +117,8 @@ describe('Auth E2E (Tipo B)', () => {
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200)
 
-      const body = res.body as { email: string; role: string }
+      const body = res.body as { email: string }
       expect(body.email).toBe(ADMIN_EMAIL)
-      expect(body.role).toBe('admin')
     })
 
     it('GET /v1/auth/me sin JWT → 401', async () => {
@@ -135,7 +141,8 @@ describe('Auth E2E (Tipo B)', () => {
         .send({
           email: viewerEmail,
           fullName: 'Viewer E2E',
-          role: 'viewer',
+          // v0.15.0: rol Viewer del sistema (UUID hardcoded en migration 0018)
+          roleIds: ['00000000-0000-0000-0000-000000000002'],
         })
         .expect(201)
 
@@ -232,13 +239,13 @@ describe('Auth E2E (Tipo B)', () => {
       await request(app.getHttpServer())
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ email, fullName: 'First', role: 'viewer' })
+        .send({ email, fullName: 'First' })
         .expect(201)
 
       const res = await request(app.getHttpServer())
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ email, fullName: 'Second', role: 'viewer' })
+        .send({ email, fullName: 'Second' })
         .expect(409)
 
       const body = res.body as { code: string }
@@ -254,7 +261,7 @@ describe('Auth E2E (Tipo B)', () => {
       const createRes = await request(app.getHttpServer())
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ email, fullName: 'Dual', role: 'viewer' })
+        .send({ email, fullName: 'Dual' })
         .expect(201)
 
       const password = (createRes.body as CreateUserResponseShape).initialPassword
@@ -292,7 +299,7 @@ describe('Auth E2E (Tipo B)', () => {
       const createRes = await request(app.getHttpServer())
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ email, fullName: 'Logout', role: 'viewer' })
+        .send({ email, fullName: 'Logout' })
         .expect(201)
 
       const password = (createRes.body as CreateUserResponseShape).initialPassword
@@ -340,7 +347,7 @@ describe('Auth E2E (Tipo B)', () => {
       const createRes = await request(app.getHttpServer())
         .post('/v1/users')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ email, fullName: 'LogoutAll', role: 'viewer' })
+        .send({ email, fullName: 'LogoutAll' })
         .expect(201)
 
       const password = (createRes.body as CreateUserResponseShape).initialPassword

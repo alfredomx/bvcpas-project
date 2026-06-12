@@ -266,6 +266,8 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                               |
 | 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                               |
 | 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                               |
+| 15-permissions                  | ✅     | base    | [README.md](15-permissions/README.md)                  | v0.15.0 — RBAC dinámico + overrides por usuario                 |
+| 22-bank-worker                  | ⏸️     | —       | [README.md](22-bank-worker/README.md)                  | v0.15.0 (avance pausado en branch `mapi/22-bank-worker`)        |
 
 ---
 
@@ -292,6 +294,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
 | 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total` | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
 | 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                     | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
+| 0.15.0  | 15-permissions      | ✅     | RBAC dinámico + overrides por usuario; migra 18 endpoints; drop `users.role`   | mapi-v0.15.0 | [15-permissions/v0.15.0.md](15-permissions/v0.15.0.md)           |
 
 ---
 
@@ -350,6 +353,16 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | D-mapi-049 | Square refresh_token siempre se persiste (defensivo single-use por ambigüedad doc)                           | 0.12.0  | No           |
 | D-mapi-050 | `external_account_id` Square = `merchant_id` (no `location_id`); 1 conexión cubre N locations                | 0.12.0  | No           |
 | D-mapi-051 | Square requiere `redirect_uri` en body del exchange aunque ya esté en authorize URL                          | 0.12.0  | No           |
+| D-mapi-PRM-001 | RBAC Nivel 3: roles + overrides por usuario (5 tablas)                                                   | 0.15.0  | Sí (módulo nuevo) |
+| D-mapi-PRM-002 | Módulo separado `15-permissions` (no extiende `10-core-auth`)                                            | 0.15.0  | No           |
+| D-mapi-PRM-003 | Migración total: eliminar `users.role`, migrar 18 endpoints a `@RequirePermission`                       | 0.15.0  | Sí (schema)  |
+| D-mapi-PRM-004 | Sintaxis permisos `<modulo>.<accion>` con puntos                                                         | 0.15.0  | No           |
+| D-mapi-PRM-005 | UI en bvcpas v0.15.1 (backend first); admin gestiona via Scalar mientras tanto                           | 0.15.0  | No           |
+| D-mapi-PRM-006 | Cache Redis `user:permissions:{userId}` TTL 15min; invalidación al cambiar roles/permisos               | 0.15.0  | No           |
+| D-mapi-PRM-007 | Permisos consolidados por módulo (sin granularidad por sub-recurso); excepción banking por casos reales | 0.15.0  | No           |
+| D-mapi-PRM-008 | Migration atómica (drizzle envuelve cada archivo en transaction; sin BEGIN/COMMIT manuales)             | 0.15.0  | No           |
+| D-mapi-PRM-009 | `GET /v1/auth/me/permissions` con wildcards EXPANDIDOS literalmente                                      | 0.15.0  | No           |
+| D-mapi-PRM-010 | Frontend decide visibilidad de secciones; backend solo controla acceso a endpoints                       | 0.15.0  | No           |
 
 ---
 

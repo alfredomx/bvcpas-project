@@ -1,6 +1,6 @@
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
-import { USER_ROLES, USER_STATUSES } from '../../../db/schema/users'
+import { USER_STATUSES } from '../../../db/schema/users'
 
 const LoginSchema = z
   .object({
@@ -11,11 +11,14 @@ const LoginSchema = z
 
 export class LoginDto extends createZodDto(LoginSchema) {}
 
+/**
+ * v0.15.0: `role` fue removido. Para obtener los permisos del user
+ * recién autenticado, llamar `GET /v1/auth/me/permissions`.
+ */
 const LoginUserSchema = z.object({
   id: z.string().uuid().describe('ID del usuario'),
   email: z.string().email().describe('Email del usuario'),
   fullName: z.string().describe('Nombre completo'),
-  role: z.enum(USER_ROLES).describe('Rol del sistema'),
   status: z.enum(USER_STATUSES).describe('Estado de la cuenta'),
 })
 

@@ -52,11 +52,16 @@ describe('Clients E2E (Tipo B)', () => {
     try {
       const hashed = await hash(ADMIN_PASSWORD, 4)
       const [admin] = (await client`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Clients', 'admin', 'active')
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${ADMIN_EMAIL}, ${hashed}, 'Admin Clients', 'active')
         RETURNING id
       `) as unknown as { id: string }[]
       const adminId = admin.id
+      // v0.15.0: asignar rol Administrator del sistema (RBAC dinámico)
+      await client`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES (${adminId}, '00000000-0000-0000-0000-000000000001')
+      `
       // Seed 3 clientes con distintos tiers
       const inserted = (await client`
         INSERT INTO clients (legal_name, qbo_realm_id, status, tier)

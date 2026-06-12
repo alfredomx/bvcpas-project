@@ -66,17 +66,24 @@ describe('Connections E2E (Tipo B)', () => {
       const adminHashed = await hash(ADMIN_PASSWORD, 4)
       const otherHashed = await hash(OTHER_PASSWORD, 4)
       const [admin] = (await c`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${ADMIN_EMAIL}, ${adminHashed}, 'Admin Conn', 'admin', 'active')
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${ADMIN_EMAIL}, ${adminHashed}, 'Admin Conn', 'active')
         RETURNING id
       `) as unknown as { id: string }[]
       userId = admin.id
       const [other] = (await c`
-        INSERT INTO users (email, password_hash, full_name, role, status)
-        VALUES (${OTHER_EMAIL}, ${otherHashed}, 'Other Conn', 'admin', 'active')
+        INSERT INTO users (email, password_hash, full_name, status)
+        VALUES (${OTHER_EMAIL}, ${otherHashed}, 'Other Conn', 'active')
         RETURNING id
       `) as unknown as { id: string }[]
       otherUserId = other.id
+      // v0.15.0: ambos users con rol Administrator (RBAC dinámico)
+      await c`
+        INSERT INTO user_roles (user_id, role_id)
+        VALUES
+          (${userId}, '00000000-0000-0000-0000-000000000001'),
+          (${otherUserId}, '00000000-0000-0000-0000-000000000001')
+      `
     } finally {
       await c.end()
     }

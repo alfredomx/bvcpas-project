@@ -1,7 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { ConnectionsRepository } from '../../21-connections/connections.repository'
 import { IntuitApiService } from '../api-client/intuit-api.service'
@@ -22,7 +22,6 @@ const MS_PER_DAY = 24 * 3600 * 1000
 @ApiTags('Intuit API')
 @ApiBearerAuth('bearer')
 @Controller('intuit')
-@Roles('admin')
 export class IntuitAdminController {
   constructor(
     private readonly api: IntuitApiService,
@@ -31,6 +30,7 @@ export class IntuitAdminController {
 
   @Post('realms/:realmId/call')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('intuit.update')
   @ApiOperation({
     summary: 'POST /v1/intuit/realms/:realmId/call',
     description:
@@ -56,6 +56,7 @@ export class IntuitAdminController {
   }
 
   @Get('oauth/tokens')
+  @RequirePermission('intuit.read')
   @ApiOperation({
     summary: 'GET /v1/intuit/oauth/tokens',
     description:

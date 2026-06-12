@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { FollowupDto, UpdateFollowupDto, UpdateFollowupSchema } from '../dto/customer-support.dto'
 import { ClientPeriodFollowupsService, type FollowupView } from './client-period-followups.service'
@@ -26,12 +26,12 @@ function serialize(v: FollowupView): FollowupDto {
 @ApiTags('Clients - Followups')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/followups')
-@Roles('admin')
 @UseGuards(ClientAccessGuard)
 export class ClientPeriodFollowupsController {
   constructor(private readonly service: ClientPeriodFollowupsService) {}
 
   @Get(':period')
+  @RequirePermission('customer_support.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/followups/:period',
     description:
@@ -47,6 +47,7 @@ export class ClientPeriodFollowupsController {
   }
 
   @Patch(':period')
+  @RequirePermission('customer_support.update')
   @ApiOperation({
     summary: 'PATCH /v1/clients/:id/followups/:period',
     description:
