@@ -15,7 +15,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
-import { Roles } from '../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import {
   CreateCallLogBodyDto,
@@ -32,13 +32,13 @@ import { CallLogsService } from './call-logs.service'
 @ApiTags('Clients - Call Logs')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/call-logs')
-@Roles('admin')
 @UseGuards(ClientAccessGuard)
 export class CallLogsController {
   constructor(private readonly service: CallLogsService) {}
 
   @Post()
   @HttpCode(201)
+  @RequirePermission('call_logs.create')
   @ApiOperation({
     summary: 'POST /v1/clients/:id/call-logs',
     description:
@@ -56,6 +56,7 @@ export class CallLogsController {
   }
 
   @Get()
+  @RequirePermission('call_logs.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/call-logs',
     description:
@@ -70,6 +71,7 @@ export class CallLogsController {
   }
 
   @Patch(':logId')
+  @RequirePermission('call_logs.update')
   @ApiOperation({
     summary: 'PATCH /v1/clients/:id/call-logs/:logId',
     description:
@@ -89,6 +91,7 @@ export class CallLogsController {
 
   @Delete(':logId')
   @HttpCode(204)
+  @RequirePermission('call_logs.delete')
   @ApiOperation({
     summary: 'DELETE /v1/clients/:id/call-logs/:logId',
     description:

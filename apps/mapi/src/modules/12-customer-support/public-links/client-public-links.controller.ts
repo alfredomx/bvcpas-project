@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import type { ClientPublicLink } from '../../../db/schema/client-public-links'
 import {
@@ -46,7 +46,6 @@ function serialize(l: ClientPublicLink): PublicLinkDto {
 
 @ApiTags('Clients - Public Links')
 @ApiBearerAuth('bearer')
-@Roles('admin')
 @Controller('clients/:id/public-links')
 @UseGuards(ClientAccessGuard)
 export class ClientPublicLinksController {
@@ -54,6 +53,7 @@ export class ClientPublicLinksController {
 
   @Post()
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('customer_support.create')
   @ApiOperation({
     summary: 'POST /v1/clients/:id/public-links',
     description:
@@ -77,6 +77,7 @@ export class ClientPublicLinksController {
   }
 
   @Get()
+  @RequirePermission('customer_support.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/public-links',
     description: 'Lista todos los links del cliente (activos y revocados).',
@@ -89,6 +90,7 @@ export class ClientPublicLinksController {
 
   @Post(':linkId/revoke')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission('customer_support.update')
   @ApiOperation({
     summary: 'POST /v1/clients/:id/public-links/:linkId/revoke',
     description: 'Revoca el link inmediatamente. El cliente que lo use recibe 410.',
@@ -104,6 +106,7 @@ export class ClientPublicLinksController {
 
   @Patch(':linkId')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('customer_support.update')
   @ApiOperation({
     summary: 'PATCH /v1/clients/:id/public-links/:linkId',
     description:

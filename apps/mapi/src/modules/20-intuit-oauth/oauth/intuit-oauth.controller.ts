@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import type { Request, Response } from 'express'
 import { Public } from '../../../common/decorators/public.decorator'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { AuthorizeResponseDto, CallbackQueryDto } from './dto/intuit-oauth.dto'
 import { IntuitOauthService } from './intuit-oauth.service'
@@ -15,7 +15,7 @@ export class IntuitOauthController {
 
   @Post('connect')
   @ApiBearerAuth('bearer')
-  @Roles('admin')
+  @RequirePermission('intuit.create')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'POST /v1/intuit/oauth/connect',

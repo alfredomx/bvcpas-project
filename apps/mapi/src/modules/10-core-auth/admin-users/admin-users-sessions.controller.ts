@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { AdminSessionsService } from '../admin-sessions/admin-sessions.service'
 import { AdminUsersService } from './admin-users.service'
@@ -19,7 +19,7 @@ import { RevokeAllResponseDto, SessionsListResponseDto } from './dto/session.dto
 @ApiTags('Users')
 @ApiBearerAuth('bearer')
 @Controller('users/:userId/sessions')
-@Roles('admin')
+@RequirePermission('system.users.manage')
 export class AdminUsersSessionsController {
   constructor(
     private readonly adminUsers: AdminUsersService,

@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import { CurrentUser } from '../../../core/auth/decorators/current-user.decorator'
 import type { SessionContext } from '../../../core/auth/sessions.service'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
@@ -56,7 +56,6 @@ function serializeResp(r: ClientTransactionResponse): TransactionResponseDto {
 @ApiTags('Clients - Responses')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/transactions/responses')
-@Roles('admin')
 @UseGuards(ClientAccessGuard)
 export class ClientTransactionResponsesController {
   constructor(
@@ -65,6 +64,7 @@ export class ClientTransactionResponsesController {
   ) {}
 
   @Get()
+  @RequirePermission('customer_support.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/transactions/responses',
     description:
@@ -78,6 +78,7 @@ export class ClientTransactionResponsesController {
 
   @Patch(':txnId')
   @HttpCode(HttpStatus.OK)
+  @RequirePermission('customer_support.update')
   @ApiOperation({
     summary: 'PATCH /v1/clients/:id/transactions/responses/:txnId',
     description:
@@ -120,6 +121,7 @@ export class ClientTransactionResponsesController {
 
   @Delete(':txnId')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @RequirePermission('customer_support.delete')
   @ApiOperation({
     summary: 'DELETE /v1/clients/:id/transactions/responses/:txnId',
     description:

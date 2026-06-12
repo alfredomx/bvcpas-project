@@ -6,17 +6,34 @@ import type { Request } from 'express'
 import { Public } from '../../common/decorators/public.decorator'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
+import { PermissionsService } from '../../core/permissions/permissions.service'
 import { AuthService } from './auth.service'
 import { LoginDto, LoginResponseDto } from './dto/login.dto'
 import { MeResponseDto } from './dto/me-response.dto'
 import { ChangePasswordDto } from './dto/change-password.dto'
 import { LogoutAllResponseDto } from './dto/logout-all-response.dto'
+import { EffectivePermissionsResponseDto, RoleDto } from '../15-permissions/dto/permissions.dto'
+import type { Role } from '../../db/schema/roles'
+
+function serializeRole(r: Role): RoleDto {
+  return {
+    id: r.id,
+    name: r.name,
+    description: r.description,
+    is_system: r.isSystem,
+    created_at: r.createdAt.toISOString(),
+    updated_at: r.updatedAt.toISOString(),
+  }
+}
 
 @ApiTags('Auth')
 @Controller('auth')
 @SkipThrottle()
 export class AuthController {
-  constructor(private readonly auth: AuthService) {}
+  constructor(
+    private readonly auth: AuthService,
+    private readonly permissions: PermissionsService,
+  ) {}
 
   @Public()
   @Post('login')
@@ -89,9 +106,28 @@ export class AuthController {
       id: u.id,
       email: u.email,
       fullName: u.fullName,
-      role: u.role,
       status: u.status,
       lastLoginAt: u.lastLoginAt ? u.lastLoginAt.toISOString() : null,
+    }
+  }
+
+  @Get('me/permissions')
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: '/v1/auth/me/permissions',
+    description:
+      'Devuelve roles + permisos efectivos del usuario actual. ' +
+      'Endpoint clave para el frontend — bvcpas lo llama después del login para decidir qué secciones del sidebar mostrar (D-mapi-PRM-010). ' +
+      'Wildcards EXPANDIDOS literalmente (D-mapi-PRM-009): si el user tiene el rol Administrator (`*`), recibe los 27 codes del catálogo en la lista.',
+  })
+  @ApiResponse({ status: 200, type: EffectivePermissionsResponseDto })
+  async myPermissions(
+    @CurrentUser() user: SessionContext,
+  ): Promise<EffectivePermissionsResponseDto> {
+    const { roles, permissions } = await this.permissions.getEffectivePermissions(user.userId)
+    return {
+      roles: roles.map(serializeRole),
+      permissions,
     }
   }
 

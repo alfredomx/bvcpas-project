@@ -1,7 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../../common/pipes/zod-validation.pipe'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import {
   CustomerSupportListResponseDto,
   DashboardQueryDto,
@@ -20,7 +20,7 @@ import { CustomerSupportDashboardService } from './customer-support-dashboard.se
 @ApiTags('Views - Uncats')
 @ApiBearerAuth('bearer')
 @Controller('views/uncats')
-@Roles('admin')
+@RequirePermission('customer_support.read')
 export class UncatsViewController {
   constructor(private readonly service: CustomerSupportDashboardService) {}
 

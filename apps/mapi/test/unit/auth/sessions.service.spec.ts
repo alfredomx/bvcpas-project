@@ -109,7 +109,6 @@ describe('SessionsService', () => {
       const result = await service.create({
         id: 'user-123',
         email: 'a@b.com',
-        role: 'admin',
       })
 
       expect(result.jti).toBeDefined()
@@ -121,7 +120,6 @@ describe('SessionsService', () => {
       const decoded = jwt.verify(result.token)
       expect(decoded.jti).toBe(result.jti)
       expect(decoded.sub).toBe('user-123')
-      expect(decoded.role).toBe('admin')
     })
   })
 
@@ -207,7 +205,6 @@ describe('SessionsService', () => {
       const ctx = await service.verify('jti-happy')
       expect(ctx.userId).toBe('u-1')
       expect(ctx.email).toBe('admin@x.com')
-      expect(ctx.role).toBe('admin')
       expect(ctx.jti).toBe('jti-happy')
       expect(redis.set).toHaveBeenCalled()
     })
@@ -216,7 +213,6 @@ describe('SessionsService', () => {
       const cached = JSON.stringify({
         userId: 'u-cached',
         email: 'c@x.com',
-        role: 'viewer',
         status: 'active',
         expiresAt: Date.now() + 86400000,
       })
@@ -234,7 +230,6 @@ describe('SessionsService', () => {
       const cached = JSON.stringify({
         userId: 'u',
         email: 'a@b.com',
-        role: 'viewer',
         status: 'active',
         expiresAt: Date.now() - 1000,
       })

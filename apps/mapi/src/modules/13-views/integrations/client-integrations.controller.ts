@@ -1,7 +1,7 @@
 import { Controller, Get, Param, ParseUUIDPipe, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ClientAccessGuard } from '../../../core/auth/guards/client-access.guard'
-import { Roles } from '../../../core/auth/decorators/roles.decorator'
+import { RequirePermission } from '../../../core/permissions/decorators/require-permission.decorator'
 import { ClientIntegrationsResponseDto } from './dto/client-integrations.dto'
 import { IntegrationsService } from './integrations.service'
 
@@ -17,7 +17,7 @@ import { IntegrationsService } from './integrations.service'
 @ApiTags('Clients - Integrations')
 @ApiBearerAuth('bearer')
 @Controller('clients/:id/integrations')
-@Roles('admin')
+@RequirePermission('connections.read')
 @UseGuards(ClientAccessGuard)
 export class ClientIntegrationsController {
   constructor(private readonly service: IntegrationsService) {}

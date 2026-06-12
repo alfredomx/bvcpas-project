@@ -53,9 +53,25 @@ export async function truncateTables(): Promise<void> {
   const client = postgres(databaseUrl, { max: 1 })
   const db = drizzle(client)
   try {
+    // NOTA v0.15.0: NO truncar `roles`, `permissions`, `role_permissions` —
+    // los roles del sistema (Administrator, Viewer) y los 27 permisos del
+    // catálogo son seedeados por la migration 0018 y deben sobrevivir entre
+    // tests. Solo se limpian las ASIGNACIONES (user_roles, user_permissions).
+    //
+    // IMPORTANTE: `users` NO va en TRUNCATE CASCADE porque las tablas
+    // RBAC (`role_permissions`, `user_roles`, `user_permissions`) tienen FK
+    // `granted_by` → `users.id` (ON DELETE SET NULL), y TRUNCATE CASCADE
+    // ignora la regla — directamente cascadea la limpieza a esas tablas,
+    // borrando los 33 role_permissions seedeados.
+    //
+    // Solución: borrar `users` con DELETE explícito (respeta ON DELETE
+    // SET NULL para `granted_by`). Las filas en `user_roles` y
+    // `user_permissions` desaparecen por ON DELETE CASCADE de su FK
+    // `user_id`. `role_permissions.granted_by` queda en NULL.
     await db.execute(
-      sql`TRUNCATE TABLE client_call_logs, client_public_links, client_period_followups, client_transaction_responses, client_transactions, intuit_tokens_deprecated, user_client_access, user_connections, clients, user_sessions, event_log, users RESTART IDENTITY CASCADE`,
+      sql`TRUNCATE TABLE client_call_logs, client_public_links, client_period_followups, client_transaction_responses, client_transactions, intuit_tokens_deprecated, user_client_access, user_connections, clients, user_sessions, event_log RESTART IDENTITY CASCADE`,
     )
+    await db.execute(sql`DELETE FROM users`)
   } finally {
     await client.end()
   }

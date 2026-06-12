@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { eq, sql } from 'drizzle-orm'
 import { DB, type DrizzleDb } from '../../core/db/db.module'
-import { users, type User, type UserRole, type UserStatus } from '../../db/schema/users'
+import { users, type User, type UserStatus } from '../../db/schema/users'
 import { PasswordService } from '../../core/auth/password.service'
 import { SessionsService } from '../../core/auth/sessions.service'
 import { EventLogService } from '../95-event-log/event-log.service'
@@ -18,7 +18,6 @@ export interface LoginResult {
     id: string
     email: string
     fullName: string
-    role: UserRole
     status: UserStatus
   }
 }
@@ -87,11 +86,7 @@ export class AuthService {
       throw new UserDisabledError({ userId: user.id })
     }
 
-    const session = await this.sessions.create(
-      { id: user.id, email: user.email, role: user.role },
-      userAgent,
-      ip,
-    )
+    const session = await this.sessions.create({ id: user.id, email: user.email }, userAgent, ip)
 
     await this.db
       .update(users)
@@ -114,7 +109,6 @@ export class AuthService {
         id: user.id,
         email: user.email,
         fullName: user.fullName,
-        role: user.role,
         status: user.status,
       },
     }

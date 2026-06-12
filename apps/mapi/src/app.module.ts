@@ -10,8 +10,10 @@ import { HealthModule } from './modules/health/health.module'
 import { EventLogModule } from './modules/95-event-log/event-log.module'
 import { AuthCoreModule } from './core/auth/auth-core.module'
 import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard'
-import { RolesGuard } from './core/auth/guards/roles.guard'
+import { PermissionsModule } from './core/permissions/permissions.module'
+import { PermissionsGuard } from './core/permissions/guards/permissions.guard'
 import { AuthModule } from './modules/10-core-auth/auth.module'
+import { PermissionsHttpModule } from './modules/15-permissions/permissions.module'
 import { EncryptionModule } from './core/encryption/encryption.module'
 import { IntuitOauthModule } from './modules/20-intuit-oauth/intuit-oauth.module'
 import { ClientsModule } from './modules/11-clients/clients.module'
@@ -27,9 +29,11 @@ import { ConnectionsModule } from './modules/21-connections/connections.module'
     DbModule,
     MetricsModule,
     AuthCoreModule,
+    PermissionsModule,
     EncryptionModule,
     EventLogModule,
     AuthModule,
+    PermissionsHttpModule,
     ClientsModule,
     IntuitOauthModule,
     CustomerSupportModule,
@@ -48,8 +52,11 @@ import { ConnectionsModule } from './modules/21-connections/connections.module'
       useClass: JwtAuthGuard,
     },
     {
+      // PermissionsGuard reemplaza al RolesGuard de v0.2.0. Lee
+      // @RequirePermission() metadata y valida contra los permisos
+      // efectivos del user (RBAC dinámico con cache Redis).
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: PermissionsGuard,
     },
   ],
 })

@@ -151,7 +151,6 @@ describe('AdminUsersService', () => {
           {
             email: userActive.email,
             fullName: 'Otro',
-            role: 'viewer',
           },
           'actor-id',
         ),
@@ -175,7 +174,6 @@ describe('AdminUsersService', () => {
         {
           email: 'nuevo@example.com',
           fullName: 'Nuevo',
-          role: 'viewer',
         },
         'actor-id',
       )

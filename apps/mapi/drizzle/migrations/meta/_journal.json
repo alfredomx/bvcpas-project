@@ -127,6 +127,13 @@
       "when": 1779594053172,
       "tag": "0017_overconfident_eddie_brock",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781284539000,
+      "tag": "0018_uneven_puppet_master",
+      "breakpoints": true
     }
   ]
 }
