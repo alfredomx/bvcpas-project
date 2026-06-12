@@ -41,8 +41,8 @@ export const clientBankAccounts = pgTable(
     bankPortalId: uuid('bank_portal_id')
       .notNull()
       .references(() => bankPortals.id, { onDelete: 'restrict' }),
-    usernameEncrypted: text('username_encrypted').notNull(),
-    passwordEncrypted: text('password_encrypted').notNull(),
+    usernameEncrypted: text('username_encrypted'),
+    passwordEncrypted: text('password_encrypted'),
     securityQaEncrypted: text('security_qa_encrypted'),
     status: varchar('status', { length: 20, enum: CLIENT_BANK_ACCOUNT_STATUSES })
       .notNull()
