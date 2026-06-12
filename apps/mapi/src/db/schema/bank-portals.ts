@@ -21,7 +21,7 @@ import { sql } from 'drizzle-orm'
 export const bankPortals = pgTable('bank_portals', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().unique(),
-  portalUrl: text('portal_url').notNull(),
+  portalUrl: text('portal_url'),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .default(sql`now()`),

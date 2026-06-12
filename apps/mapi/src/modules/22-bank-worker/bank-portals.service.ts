@@ -35,7 +35,7 @@ export class BankPortalsService {
     const existing = await this.repo.findByName(dto.name)
     if (existing) throw new BankPortalAlreadyExistsError(dto.name)
 
-    const row = await this.repo.create({ name: dto.name, portalUrl: dto.portalUrl })
+    const row = await this.repo.create({ name: dto.name, portalUrl: dto.portalUrl ?? null })
     await this.events.log(
       'bank_portal.created',
       { bank_portal_id: row.id, name: row.name, portal_url: row.portalUrl },

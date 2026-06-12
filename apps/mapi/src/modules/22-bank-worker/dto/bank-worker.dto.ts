@@ -8,7 +8,12 @@ import { BANK_ACCOUNT_TYPES, BANK_ACCOUNT_STATUSES } from '../../../db/schema/ba
 export const CreateBankPortalSchema = z
   .object({
     name: z.string().min(1).max(200).describe('Nombre único del portal bancario.'),
-    portalUrl: z.string().url().describe('URL del portal de login del banco.'),
+    portalUrl: z
+      .string()
+      .url()
+      .nullable()
+      .optional()
+      .describe('URL del portal de login del banco. Puede ser null si se desconoce.'),
   })
   .strict()
 
@@ -17,7 +22,7 @@ export class CreateBankPortalDto extends createZodDto(CreateBankPortalSchema) {}
 export const UpdateBankPortalSchema = z
   .object({
     name: z.string().min(1).max(200).optional(),
-    portalUrl: z.string().url().optional(),
+    portalUrl: z.string().url().nullable().optional(),
   })
   .strict()
   .refine((data) => Object.values(data).some((v) => v !== undefined), {
@@ -29,7 +34,7 @@ export class UpdateBankPortalDto extends createZodDto(UpdateBankPortalSchema) {}
 export interface BankPortalResponse {
   id: string
   name: string
-  portal_url: string
+  portal_url: string | null
   created_at: string
   updated_at: string
 }
@@ -72,6 +77,52 @@ export interface ClientBankAccountResponse {
   notes: string | null
   created_at: string
   updated_at: string
+}
+
+// ───── Global Credentials (v0.16.1) ───────────────────────────────────────
+
+export const ListGlobalCredentialsQuerySchema = z
+  .object({
+    clientId: z.string().uuid().optional(),
+    portalId: z.string().uuid().optional(),
+    status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES).optional(),
+    search: z.string().min(1).max(200).optional(),
+    limit: z.coerce.number().int().min(1).max(500).default(200),
+    offset: z.coerce.number().int().min(0).default(0),
+  })
+  .strict()
+
+export class ListGlobalCredentialsQueryDto extends createZodDto(ListGlobalCredentialsQuerySchema) {}
+
+export const CreateGlobalCredentialSchema = z
+  .object({
+    clientId: z.string().uuid(),
+    bankPortalId: z.string().uuid(),
+    username: z.string().min(1),
+    password: z.string().min(1),
+    securityQa: z.string().optional(),
+    status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES).optional(),
+    notes: z.string().max(2000).optional(),
+  })
+  .strict()
+
+export class CreateGlobalCredentialDto extends createZodDto(CreateGlobalCredentialSchema) {}
+
+export interface GlobalCredentialResponse {
+  id: string
+  client: { id: string; legal_name: string }
+  portal: { id: string; name: string; portal_url: string | null }
+  status: (typeof CLIENT_BANK_ACCOUNT_STATUSES)[number]
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface ListGlobalCredentialsResponse {
+  items: GlobalCredentialResponse[]
+  total: number
+  limit: number
+  offset: number
 }
 
 // ───── Bank Accounts (cuentas individuales) ──────────────────────────────

@@ -11,10 +11,16 @@ import { ClientBankAccountsService } from './client-bank-accounts.service'
 import { BankAccountsController } from './bank-accounts.controller'
 import { BankAccountsRepository } from './bank-accounts.repository'
 import { BankAccountsService } from './bank-accounts.service'
+import { BankCredentialsGlobalController } from './bank-credentials-global.controller'
 
 @Module({
   imports: [ClientsModule, EventLogModule, EncryptionModule],
-  controllers: [BankPortalsController, ClientBankAccountsController, BankAccountsController],
+  controllers: [
+    BankPortalsController,
+    ClientBankAccountsController,
+    BankAccountsController,
+    BankCredentialsGlobalController,
+  ],
   providers: [
     BankPortalsRepository,
     BankPortalsService,

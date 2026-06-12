@@ -141,6 +141,13 @@
       "when": 1781298160582,
       "tag": "0019_bank_worker_v016",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1781301771777,
+      "tag": "0020_allow_nulls_bank",
+      "breakpoints": true
     }
   ]
 }
