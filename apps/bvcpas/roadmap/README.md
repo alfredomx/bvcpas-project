@@ -327,6 +327,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.11.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista global cross-cliente de credenciales bancarias                                               | bvcpas-v0.11.0 | [19-bank-accounts/v0.1.0.md](19-bank-accounts/v0.1.0.md)       |
 | 0.12.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista por cliente + credenciales descifradas (bank-worker v0.16.3)                                 | bvcpas-v0.12.0 | [19-bank-accounts/v0.12.0.md](19-bank-accounts/v0.12.0.md)     |
 | 0.13.0  | 19-bank-accounts    | ✅     | Manage portals — CRUD del catálogo de portales (banco/utility/payroll)                                             | bvcpas-v0.13.0 | [19-bank-accounts/v0.13.0.md](19-bank-accounts/v0.13.0.md)     |
+| 0.13.1  | 19-bank-accounts    | ✅     | fix: "Add account" se abría con datos previos (reset explícito del form)                                           | bvcpas-v0.13.1 | [19-bank-accounts/v0.13.1.md](19-bank-accounts/v0.13.1.md)     |
 
 ---
 

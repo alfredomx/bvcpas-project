@@ -83,7 +83,13 @@ export function BankAccountFormDialog({
         notes: account.notes ?? '',
       })
     } else {
-      form.reset()
+      form.reset({
+        accountMask: '',
+        accountType: 'checking',
+        label: '',
+        status: 'active',
+        notes: '',
+      })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, account?.id])
