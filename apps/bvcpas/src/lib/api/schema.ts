@@ -84,6 +84,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/me/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * /v1/auth/me/permissions
+         * @description Devuelve roles + permisos efectivos del usuario actual. Endpoint clave para el frontend — bvcpas lo llama después del login para decidir qué secciones del sidebar mostrar (D-mapi-PRM-010). Wildcards EXPANDIDOS literalmente (D-mapi-PRM-009): si el user tiene el rol Administrator (`*`), recibe los 27 codes del catálogo en la lista.
+         */
+        get: operations["AuthController_myPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/me/password": {
         parameters: {
             query?: never;
@@ -227,6 +247,239 @@ export interface paths {
          * @description Revoca una sesión individual por su id. La próxima request del usuario en ese dispositivo fallará con 401 SESSION_REVOKED.
          */
         patch: operations["AdminUsersSessionsController_revokeOne"];
+        trace?: never;
+    };
+    "/v1/permissions/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/permissions/permissions
+         * @description Lista plana de los permisos atómicos del catálogo. Ordenados por module + code. Útil para auditoría o consumo programático.
+         */
+        get: operations["PermissionsCatalogController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/permissions/grouped": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/permissions/permissions/grouped
+         * @description Catálogo agrupado por módulo (`system`, `clients`, `banking`, etc.). Diseñado para la UI de gestión de permisos por rol.
+         */
+        get: operations["PermissionsCatalogController_grouped"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/permissions/roles
+         * @description Lista todos los roles del sistema ordenados por nombre.
+         */
+        get: operations["RolesController_list"];
+        put?: never;
+        /**
+         * POST /v1/permissions/roles
+         * @description Crea un rol nuevo. El rol queda sin permisos hasta que se asignen.
+         */
+        post: operations["RolesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/permissions/roles/:roleId */
+        get: operations["RolesController_getOne"];
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /v1/permissions/roles/:roleId
+         * @description Elimina el rol. Cascade: borra todas las `role_permissions` y `user_roles` asociadas. Falla 403 si el rol es del sistema.
+         */
+        delete: operations["RolesController_delete"];
+        options?: never;
+        head?: never;
+        /**
+         * PATCH /v1/permissions/roles/:roleId
+         * @description Edita name y/o description. Falla 403 si el rol es del sistema.
+         */
+        patch: operations["RolesController_update"];
+        trace?: never;
+    };
+    "/v1/permissions/roles/{roleId}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/permissions/roles/:roleId/permissions
+         * @description Lista los permisos asignados al rol.
+         */
+        get: operations["RolePermissionsController_list"];
+        put?: never;
+        /**
+         * POST /v1/permissions/roles/:roleId/permissions
+         * @description Otorga uno o más permisos al rol. Idempotente — si el rol ya tiene un permiso del set, se ignora silenciosamente. Falla 403 si el rol es del sistema.
+         */
+        post: operations["RolePermissionsController_grant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/roles/{roleId}/permissions/{permissionCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /v1/permissions/roles/:roleId/permissions/:permissionCode
+         * @description Revoca un permiso del rol. Falla 403 si el rol es del sistema.
+         */
+        delete: operations["RolePermissionsController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/users/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /v1/permissions/users/:userId/roles
+         * @description Asigna un rol RBAC al usuario.
+         */
+        post: operations["UserRolesController_assign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/users/{userId}/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /v1/permissions/users/:userId/roles/:roleId
+         * @description Revoca un rol del usuario. Falla 422 si es el último rol del usuario (debe tener al menos uno).
+         */
+        delete: operations["UserRolesController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/users/{userId}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * POST /v1/permissions/users/:userId/permissions
+         * @description Crea un override individual para el usuario. Si ya existe un override para `(user, permission)`, falla 409 — para cambiarlo, eliminar el actual y crear uno nuevo.
+         */
+        post: operations["UserPermissionsController_set"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/users/{userId}/permissions/{permissionCode}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * DELETE /v1/permissions/users/:userId/permissions/:permissionCode
+         * @description Elimina el override. El permiso del usuario vuelve a depender únicamente de sus roles.
+         */
+        delete: operations["UserPermissionsController_unset"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/permissions/users/{userId}/effective": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/permissions/users/:userId/effective
+         * @description Devuelve roles asignados al usuario + sus permisos efectivos (expandidos, ya con overrides aplicados). Para que admin pueda inspeccionar qué puede hacer otro usuario.
+         */
+        get: operations["EffectivePermissionsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/v1/clients": {
@@ -1207,6 +1460,173 @@ export interface paths {
         patch: operations["CallLogsController_update"];
         trace?: never;
     };
+    "/v1/banking/portals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/banking/portals — lista todos los portales bancarios */
+        get: operations["BankPortalsController_list"];
+        put?: never;
+        /** POST /v1/banking/portals — crea un portal */
+        post: operations["BankPortalsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/banking/portals/{portalId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/banking/portals/:portalId — detalle de un portal */
+        get: operations["BankPortalsController_findOne"];
+        put?: never;
+        post?: never;
+        /** DELETE /v1/banking/portals/:portalId — borra un portal */
+        delete: operations["BankPortalsController_delete"];
+        options?: never;
+        head?: never;
+        /** PATCH /v1/banking/portals/:portalId — edita un portal */
+        patch: operations["BankPortalsController_update"];
+        trace?: never;
+    };
+    "/v1/clients/{id}/banking/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/clients/:id/banking/credentials — lista credenciales del cliente */
+        get: operations["ClientBankAccountsController_list"];
+        put?: never;
+        /** POST /v1/clients/:id/banking/credentials — crea credencial */
+        post: operations["ClientBankAccountsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/clients/{id}/banking/credentials/{credentialId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/clients/:id/banking/credentials/:credentialId — detalle */
+        get: operations["ClientBankAccountsController_findOne"];
+        put?: never;
+        post?: never;
+        /** DELETE /v1/clients/:id/banking/credentials/:credentialId — borra */
+        delete: operations["ClientBankAccountsController_delete"];
+        options?: never;
+        head?: never;
+        /** PATCH /v1/clients/:id/banking/credentials/:credentialId — edita */
+        patch: operations["ClientBankAccountsController_update"];
+        trace?: never;
+    };
+    "/v1/banking/credentials/{credentialId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/banking/credentials/:credentialId/accounts — cuentas dentro del login */
+        get: operations["BankAccountsController_list"];
+        put?: never;
+        /** POST /v1/banking/credentials/:credentialId/accounts — crea cuenta */
+        post: operations["BankAccountsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/banking/accounts/{accountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** DELETE /v1/banking/accounts/:accountId — borra cuenta */
+        delete: operations["BankAccountsController_delete"];
+        options?: never;
+        head?: never;
+        /** PATCH /v1/banking/accounts/:accountId — edita cuenta */
+        patch: operations["BankAccountsController_update"];
+        trace?: never;
+    };
+    "/v1/banking/accounts/{accountId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /v1/banking/accounts/:accountId/status — cambia status */
+        post: operations["BankAccountsController_changeStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/banking/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * GET /v1/banking/credentials — lista global de todas las credenciales
+         * @description Devuelve todas las credenciales con cliente y portal poblados. Filtros: clientId, portalId, status, search (busca en client.legal_name, portal.name y notes).
+         */
+        get: operations["BankCredentialsGlobalController_list"];
+        put?: never;
+        /** POST /v1/banking/credentials — crea credencial pasando clientId en el body */
+        post: operations["BankCredentialsGlobalController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/banking/credentials/{credentialId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /v1/banking/credentials/:credentialId — detalle global */
+        get: operations["BankCredentialsGlobalController_findOne"];
+        put?: never;
+        post?: never;
+        /** DELETE /v1/banking/credentials/:credentialId — borra credencial (global) */
+        delete: operations["BankCredentialsGlobalController_delete"];
+        options?: never;
+        head?: never;
+        /** PATCH /v1/banking/credentials/:credentialId — edita credencial (global) */
+        patch: operations["BankCredentialsGlobalController_update"];
+        trace?: never;
+    };
     "/v1/healthz": {
         parameters: {
             query?: never;
@@ -1259,11 +1679,6 @@ export interface components {
                 /** @description Nombre completo */
                 fullName: string;
                 /**
-                 * @description Rol del sistema
-                 * @enum {string}
-                 */
-                role: "admin" | "viewer";
-                /**
                  * @description Estado de la cuenta
                  * @enum {string}
                  */
@@ -1290,11 +1705,6 @@ export interface components {
             /** @description Nombre completo */
             fullName: string;
             /**
-             * @description Rol del sistema
-             * @enum {string}
-             */
-            role: "admin" | "viewer";
-            /**
              * @description Estado de la cuenta
              * @enum {string}
              */
@@ -1304,6 +1714,29 @@ export interface components {
              * @description Último login exitoso (ISO)
              */
             lastLoginAt: string | null;
+        };
+        /** @description Permisos efectivos del usuario después de aplicar roles + overrides */
+        EffectivePermissionsResponseDto: {
+            /** @description Roles asignados al usuario */
+            roles: {
+                /**
+                 * Format: uuid
+                 * @description UUID del rol
+                 */
+                id: string;
+                /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+                name: string;
+                /** @description Descripción libre del rol */
+                description: string | null;
+                /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+                is_system: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            /** @description Permission codes EFECTIVOS (expandidos literalmente, ya incluyendo overrides individuales) */
+            permissions: string[];
         };
         /** @description Cambio de contraseña self-service */
         ChangePasswordDto: {
@@ -1328,11 +1761,6 @@ export interface components {
                 email: string;
                 /** @description Nombre completo */
                 fullName: string;
-                /**
-                 * @description Rol del sistema
-                 * @enum {string}
-                 */
-                role: "admin" | "viewer";
                 /**
                  * @description Estado de la cuenta
                  * @enum {string}
@@ -1361,7 +1789,7 @@ export interface components {
             /** @description Tamaño de página */
             pageSize: number;
         };
-        /** @description Crea un usuario nuevo (solo admin) */
+        /** @description Crea un usuario nuevo (requiere system.users.manage) */
         CreateUserDto: {
             /**
              * Format: email
@@ -1370,13 +1798,10 @@ export interface components {
             email: string;
             /** @description Nombre completo */
             fullName: string;
-            /**
-             * @description Rol: 'admin' o 'viewer'
-             * @enum {string}
-             */
-            role: "admin" | "viewer";
             /** @description Password inicial. Si se omite, se genera una aleatoria y se devuelve en la response (UNA vez). */
             initialPassword?: string;
+            /** @description IDs de roles RBAC para asignar al user. Si se omite, el user queda sin permisos hasta que un admin se los asigne. */
+            roleIds?: string[];
         };
         /** @description Respuesta de creación de usuario */
         CreateUserResponseDto: {
@@ -1394,11 +1819,6 @@ export interface components {
                 email: string;
                 /** @description Nombre completo */
                 fullName: string;
-                /**
-                 * @description Rol del sistema
-                 * @enum {string}
-                 */
-                role: "admin" | "viewer";
                 /**
                  * @description Estado de la cuenta
                  * @enum {string}
@@ -1438,11 +1858,6 @@ export interface components {
             /** @description Nombre completo */
             fullName: string;
             /**
-             * @description Rol del sistema
-             * @enum {string}
-             */
-            role: "admin" | "viewer";
-            /**
              * @description Estado de la cuenta
              * @enum {string}
              */
@@ -1467,11 +1882,6 @@ export interface components {
         UpdateUserDto: {
             /** @description Nombre completo */
             fullName?: string;
-            /**
-             * @description Rol: 'admin' o 'viewer'
-             * @enum {string}
-             */
-            role?: "admin" | "viewer";
             /**
              * @description Estado: 'active' o 'disabled'
              * @enum {string}
@@ -1527,6 +1937,101 @@ export interface components {
         RevokeAllResponseDto: {
             /** @description Sesiones revocadas */
             sessionsRevokedCount: number;
+        };
+        PermissionsListResponseDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
+                code: string;
+                description: string;
+                /** @description Módulo agrupador (ej. "banking", "system") */
+                module: string;
+            }[];
+        };
+        /** @description Catálogo de permisos agrupado por módulo. Útil para UI de gestión. */
+        PermissionsGroupedResponseDto: {
+            modules: {
+                [key: string]: {
+                    /** Format: uuid */
+                    id: string;
+                    /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
+                    code: string;
+                    description: string;
+                    /** @description Módulo agrupador (ej. "banking", "system") */
+                    module: string;
+                }[];
+            };
+        };
+        RolesListResponseDto: {
+            data: {
+                /**
+                 * Format: uuid
+                 * @description UUID del rol
+                 */
+                id: string;
+                /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+                name: string;
+                /** @description Descripción libre del rol */
+                description: string | null;
+                /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+                is_system: boolean;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+        };
+        /** @description Crear rol RBAC nuevo */
+        CreateRoleDto: {
+            /** @description Nombre único del rol */
+            name: string;
+            /** @description Descripción libre opcional */
+            description?: string;
+        };
+        RoleDto: {
+            /**
+             * Format: uuid
+             * @description UUID del rol
+             */
+            id: string;
+            /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+            name: string;
+            /** @description Descripción libre del rol */
+            description: string | null;
+            /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+            is_system: boolean;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+        };
+        /** @description Edita nombre y/o descripción del rol. No editable en roles del sistema. */
+        UpdateRoleDto: {
+            name?: string;
+            description?: string | null;
+        };
+        /** @description Otorga uno o más permisos al rol */
+        GrantPermissionsToRoleDto: {
+            /** @description Lista de codes a otorgar al rol. Codes deben existir en el catálogo. */
+            permission_codes: string[];
+        };
+        /** @description Asigna un rol RBAC al usuario */
+        AssignRoleToUserDto: {
+            /**
+             * Format: uuid
+             * @description UUID del rol a asignar
+             */
+            role_id: string;
+        };
+        /** @description Crea un override individual de permiso para el usuario */
+        SetUserPermissionOverrideDto: {
+            /** @description Code del permiso (ej. "banking.delete"). Debe existir en el catálogo. */
+            permission_code: string;
+            /** @description true = otorga el permiso aunque su rol no lo tenga. false = niega el permiso aunque su rol sí lo tenga. */
+            granted: boolean;
+            /** @description Justificación textual del override (para auditoría) */
+            reason?: string;
         };
         /** @description Respuesta paginada de clientes */
         ClientsListResponseDto: {
@@ -2325,6 +2830,196 @@ export interface components {
             /** Format: date-time */
             called_at?: string;
         };
+        BankPortalListResponseDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                portal_url: string | null;
+                created_at: string;
+                updated_at: string;
+            }[];
+        };
+        BankPortalResponseDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            portal_url: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        CreateBankPortalDto: {
+            /** @description Nombre único del portal bancario. */
+            name: string;
+            /**
+             * Format: uri
+             * @description URL del portal de login del banco. Puede ser null si se desconoce.
+             */
+            portalUrl?: string | null;
+        };
+        UpdateBankPortalDto: {
+            name?: string;
+            /** Format: uri */
+            portalUrl?: string | null;
+        };
+        ClientBankAccountListResponseDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                client_id: string;
+                /** Format: uuid */
+                bank_portal_id: string;
+                /** @enum {string} */
+                status: "active" | "blocked" | "closed";
+                notes: string | null;
+                created_at: string;
+                updated_at: string;
+            }[];
+        };
+        ClientBankAccountResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            client_id: string;
+            /** Format: uuid */
+            bank_portal_id: string;
+            /** @enum {string} */
+            status: "active" | "blocked" | "closed";
+            notes: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        CreateClientBankAccountDto: {
+            /** Format: uuid */
+            bankPortalId: string;
+            username: string;
+            password: string;
+            securityQa?: string;
+            /** @enum {string} */
+            status?: "active" | "blocked" | "closed";
+            notes?: string;
+        };
+        UpdateClientBankAccountDto: {
+            username?: string;
+            password?: string;
+            securityQa?: string | null;
+            /** @enum {string} */
+            status?: "active" | "blocked" | "closed";
+            notes?: string | null;
+        };
+        BankAccountListResponseDto: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                client_bank_account_id: string;
+                account_mask: string;
+                /** @enum {string} */
+                account_type: "checking" | "savings" | "credit_card" | "loan" | "other";
+                label: string | null;
+                /** @enum {string} */
+                status: "active" | "closed" | "blocked";
+                notes: string | null;
+                created_at: string;
+                updated_at: string;
+            }[];
+        };
+        CreateBankAccountDto: {
+            accountMask: string;
+            /** @enum {string} */
+            accountType: "checking" | "savings" | "credit_card" | "loan" | "other";
+            label?: string;
+            /** @enum {string} */
+            status?: "active" | "closed" | "blocked";
+            notes?: string;
+        };
+        BankAccountResponseDto: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            client_bank_account_id: string;
+            account_mask: string;
+            /** @enum {string} */
+            account_type: "checking" | "savings" | "credit_card" | "loan" | "other";
+            label: string | null;
+            /** @enum {string} */
+            status: "active" | "closed" | "blocked";
+            notes: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        UpdateBankAccountDto: {
+            accountMask?: string;
+            /** @enum {string} */
+            accountType?: "checking" | "savings" | "credit_card" | "loan" | "other";
+            label?: string | null;
+            /** @enum {string} */
+            status?: "active" | "closed" | "blocked";
+            notes?: string | null;
+        };
+        ChangeBankAccountStatusDto: {
+            /** @enum {string} */
+            status: "active" | "closed" | "blocked";
+            reason?: string;
+        };
+        ListGlobalCredentialsResponseDto: {
+            items: {
+                /** Format: uuid */
+                id: string;
+                client: {
+                    /** Format: uuid */
+                    id: string;
+                    legal_name: string;
+                };
+                portal: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    portal_url: string | null;
+                };
+                /** @enum {string} */
+                status: "active" | "blocked" | "closed";
+                notes: string | null;
+                created_at: string;
+                updated_at: string;
+            }[];
+            total: number;
+            limit: number;
+            offset: number;
+        };
+        GlobalCredentialResponseDto: {
+            /** Format: uuid */
+            id: string;
+            client: {
+                /** Format: uuid */
+                id: string;
+                legal_name: string;
+            };
+            portal: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                portal_url: string | null;
+            };
+            /** @enum {string} */
+            status: "active" | "blocked" | "closed";
+            notes: string | null;
+            created_at: string;
+            updated_at: string;
+        };
+        CreateGlobalCredentialDto: {
+            /** Format: uuid */
+            clientId: string;
+            /** Format: uuid */
+            bankPortalId: string;
+            username: string;
+            password: string;
+            securityQa?: string;
+            /** @enum {string} */
+            status?: "active" | "blocked" | "closed";
+            notes?: string;
+        };
         /** @description Respuesta del healthcheck principal */
         HealthResponseDto: {
             /**
@@ -2463,6 +3158,25 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeResponseDto"];
+                };
+            };
+        };
+    };
+    AuthController_myPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectivePermissionsResponseDto"];
                 };
             };
         };
@@ -2738,6 +3452,455 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    PermissionsCatalogController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionsListResponseDto"];
+                };
+            };
+        };
+    };
+    PermissionsCatalogController_grouped: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionsGroupedResponseDto"];
+                };
+            };
+        };
+    };
+    RolesController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RolesListResponseDto"];
+                };
+            };
+        };
+    };
+    RolesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDto"];
+                };
+            };
+            /** @description Ya existe un rol con ese nombre */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolesController_getOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDto"];
+                };
+            };
+            /** @description Rol no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolesController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rol eliminado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No eliminable (rol del sistema) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolesController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleDto"];
+                };
+            };
+            /** @description No editable (rol del sistema) */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El nuevo nombre choca con otro rol existente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolePermissionsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionsListResponseDto"];
+                };
+            };
+            /** @description Rol no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolePermissionsController_grant: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GrantPermissionsToRoleDto"];
+            };
+        };
+        responses: {
+            /** @description Permisos otorgados */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol del sistema no editable */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol o algún permission_code no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RolePermissionsController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+                permissionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Permiso revocado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol del sistema no editable */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol o permission_code no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserRolesController_assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignRoleToUserDto"];
+            };
+        };
+        responses: {
+            /** @description Rol asignado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Rol no encontrado */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description El usuario ya tiene ese rol */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserRolesController_revoke: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rol revocado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No se puede revocar el último rol del usuario */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserPermissionsController_set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetUserPermissionOverrideDto"];
+            };
+        };
+        responses: {
+            /** @description Override creado */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Permission code no existe en el catálogo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ya existe un override para este (user, permission) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserPermissionsController_unset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+                permissionCode: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Override eliminado (o no existía) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Permission code no existe en el catálogo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    EffectivePermissionsController_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EffectivePermissionsResponseDto"];
+                };
             };
         };
     };
@@ -4290,6 +5453,609 @@ export interface operations {
                 content?: never;
             };
             /** @description Call log no existe o ya fue eliminado. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankPortalsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de portales. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankPortalListResponseDto"];
+                };
+            };
+        };
+    };
+    BankPortalsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBankPortalDto"];
+            };
+        };
+        responses: {
+            /** @description Portal creado. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankPortalResponseDto"];
+                };
+            };
+            /** @description Nombre duplicado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankPortalsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                portalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankPortalResponseDto"];
+                };
+            };
+            /** @description Portal no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankPortalsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                portalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Portal borrado. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Portal no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Portal tiene credenciales asociadas. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankPortalsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                portalId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBankPortalDto"];
+            };
+        };
+        responses: {
+            /** @description Portal actualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankPortalResponseDto"];
+                };
+            };
+            /** @description Portal no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Nombre duplicado. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientBankAccountsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Credenciales (sin valores encriptados). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientBankAccountListResponseDto"];
+                };
+            };
+        };
+    };
+    ClientBankAccountsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateClientBankAccountDto"];
+            };
+        };
+        responses: {
+            /** @description Credencial creada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
+                };
+            };
+            /** @description Portal no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Cliente ya tiene credencial en ese portal. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientBankAccountsController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Credencial. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
+                };
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientBankAccountsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ClientBankAccountsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClientBankAccountDto"];
+            };
+        };
+        responses: {
+            /** @description Actualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
+                };
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankAccountsController_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista de cuentas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccountListResponseDto"];
+                };
+            };
+        };
+    };
+    BankAccountsController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateBankAccountDto"];
+            };
+        };
+        responses: {
+            /** @description Cuenta creada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccountResponseDto"];
+                };
+            };
+            /** @description Mask duplicado en ese login. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankAccountsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankAccountsController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateBankAccountDto"];
+            };
+        };
+        responses: {
+            /** @description Actualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccountResponseDto"];
+                };
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankAccountsController_changeStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangeBankAccountStatusDto"];
+            };
+        };
+        responses: {
+            /** @description Status cambiado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BankAccountResponseDto"];
+                };
+            };
+        };
+    };
+    BankCredentialsGlobalController_list: {
+        parameters: {
+            query?: {
+                clientId?: string;
+                portalId?: string;
+                status?: "active" | "blocked" | "closed";
+                search?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Lista global de credenciales. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListGlobalCredentialsResponseDto"];
+                };
+            };
+        };
+    };
+    BankCredentialsGlobalController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateGlobalCredentialDto"];
+            };
+        };
+        responses: {
+            /** @description Credencial creada. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
+                };
+            };
+            /** @description Portal no existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Ya hay credencial para ese cliente en ese portal. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankCredentialsGlobalController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Credencial con joins de cliente y portal. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
+                };
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankCredentialsGlobalController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Borrada. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No existe. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankCredentialsGlobalController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                credentialId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateClientBankAccountDto"];
+            };
+        };
+        responses: {
+            /** @description Actualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
+                };
+            };
+            /** @description No existe. */
             404: {
                 headers: {
                     [name: string]: unknown;
