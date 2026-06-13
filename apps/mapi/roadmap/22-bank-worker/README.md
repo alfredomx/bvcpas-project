@@ -126,3 +126,5 @@ En `apps/mapi/src/modules/22-bank-worker/` viven las tablas, repositorios, CRUD 
 | 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)      | [v0.15.0.md](v0.15.0.md) |
 | 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)             | [v0.16.0.md](v0.16.0.md) |
 | 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`) | [v0.16.2.md](v0.16.2.md) |
+| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)       | [v0.16.3.md](v0.16.3.md) |
+| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas) | [v0.16.4.md](v0.16.4.md) |
