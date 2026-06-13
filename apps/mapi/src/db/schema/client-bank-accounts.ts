@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core'
+import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import { clients } from './clients'
 import { bankPortals } from './bank-portals'
@@ -27,41 +27,35 @@ export type ClientBankAccountStatus = (typeof CLIENT_BANK_ACCOUNT_STATUSES)[numb
  * Plaintext jamás toca disco; los DTOs públicos NUNCA exponen los campos
  * `*_encrypted`.
  *
- * UNIQUE `(client_id, bank_portal_id)`: un cliente solo puede tener una
- * credencial por portal. Si necesita un segundo login en el mismo banco,
- * eso es un caso operativo que vemos cuando aparezca.
+ * Decisión D-mapi-BW-004 (v0.16.4): un cliente puede tener N credenciales
+ * en el mismo portal (caso real: Arcmen Engineering tiene 2 logins en
+ * RBFCU, Art and Beauty Granite tiene 2 logins en RBFCU, etc.). Por eso
+ * NO hay UNIQUE(client_id, bank_portal_id). Para diferenciar credenciales
+ * múltiples del mismo portal se usa `nickname` (texto libre opcional).
  */
-export const clientBankAccounts = pgTable(
-  'client_bank_accounts',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    clientId: uuid('client_id')
-      .notNull()
-      .references(() => clients.id, { onDelete: 'cascade' }),
-    bankPortalId: uuid('bank_portal_id')
-      .notNull()
-      .references(() => bankPortals.id, { onDelete: 'restrict' }),
-    usernameEncrypted: text('username_encrypted'),
-    passwordEncrypted: text('password_encrypted'),
-    securityQaEncrypted: text('security_qa_encrypted'),
-    status: varchar('status', { length: 20, enum: CLIENT_BANK_ACCOUNT_STATUSES })
-      .notNull()
-      .default('active'),
-    notes: text('notes'),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .default(sql`now()`),
-    updatedAt: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .default(sql`now()`),
-  },
-  (t) => ({
-    uniqClientPortal: unique('client_bank_accounts_client_portal_unique').on(
-      t.clientId,
-      t.bankPortalId,
-    ),
-  }),
-)
+export const clientBankAccounts = pgTable('client_bank_accounts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  clientId: uuid('client_id')
+    .notNull()
+    .references(() => clients.id, { onDelete: 'cascade' }),
+  bankPortalId: uuid('bank_portal_id')
+    .notNull()
+    .references(() => bankPortals.id, { onDelete: 'restrict' }),
+  nickname: text('nickname'),
+  usernameEncrypted: text('username_encrypted'),
+  passwordEncrypted: text('password_encrypted'),
+  securityQaEncrypted: text('security_qa_encrypted'),
+  status: varchar('status', { length: 20, enum: CLIENT_BANK_ACCOUNT_STATUSES })
+    .notNull()
+    .default('active'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .notNull()
+    .default(sql`now()`),
+})
 
 export type ClientBankAccount = typeof clientBankAccounts.$inferSelect
 export type NewClientBankAccount = typeof clientBankAccounts.$inferInsert
@@ -75,6 +69,7 @@ export interface DecryptedClientBankAccount {
   id: string
   clientId: string
   bankPortalId: string
+  nickname: string | null
   username: string
   password: string
   securityQa: string | null

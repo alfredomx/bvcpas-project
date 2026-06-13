@@ -28,13 +28,6 @@ export class ClientBankAccountNotFoundError extends DomainError {
   }
 }
 
-export class ClientBankAccountAlreadyExistsError extends DomainError {
-  readonly code = 'CLIENT_BANK_ACCOUNT_ALREADY_EXISTS'
-  constructor() {
-    super('Ya existe una credencial para ese cliente en ese portal')
-  }
-}
-
 export class BankAccountNotFoundError extends DomainError {
   readonly code = 'BANK_ACCOUNT_NOT_FOUND'
   constructor(accountId: string) {

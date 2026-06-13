@@ -7,11 +7,7 @@ import {
 import { BankPortalsRepository } from './bank-portals.repository'
 import { EventLogService } from '../95-event-log/event-log.service'
 import { EncryptionService } from '../../core/encryption/encryption.service'
-import {
-  BankPortalNotFoundError,
-  ClientBankAccountAlreadyExistsError,
-  ClientBankAccountNotFoundError,
-} from './bank-worker.errors'
+import { BankPortalNotFoundError, ClientBankAccountNotFoundError } from './bank-worker.errors'
 import type { ClientBankAccount, NewClientBankAccount } from '../../db/schema/client-bank-accounts'
 import type {
   ClientBankAccountResponse,
@@ -50,12 +46,10 @@ export class ClientBankAccountsService {
     const portal = await this.portalsRepo.findById(dto.bankPortalId)
     if (!portal) throw new BankPortalNotFoundError(dto.bankPortalId)
 
-    const dup = await this.repo.findByClientAndPortal(clientId, dto.bankPortalId)
-    if (dup) throw new ClientBankAccountAlreadyExistsError()
-
     const row = await this.repo.create({
       clientId,
       bankPortalId: dto.bankPortalId,
+      nickname: dto.nickname ?? null,
       usernameEncrypted: this.encryption.encrypt(dto.username),
       passwordEncrypted: this.encryption.encrypt(dto.password),
       securityQaEncrypted: dto.securityQa ? this.encryption.encrypt(dto.securityQa) : null,
@@ -113,6 +107,10 @@ export class ClientBankAccountsService {
       patch.notes = dto.notes
     }
 
+    if (dto.nickname !== undefined && dto.nickname !== existing.nickname) {
+      patch.nickname = dto.nickname
+    }
+
     const row = await this.repo.update(id, clientId, patch)
     if (!row) throw new ClientBankAccountNotFoundError(id)
 
@@ -161,8 +159,9 @@ export class ClientBankAccountsService {
       id: row.id,
       client_id: row.clientId,
       bank_portal_id: row.bankPortalId,
-      username: row.usernameEncrypted ? this.encryption.decrypt(row.usernameEncrypted) : '',
-      password: row.passwordEncrypted ? this.encryption.decrypt(row.passwordEncrypted) : '',
+      nickname: row.nickname,
+      username: row.usernameEncrypted ? this.encryption.decrypt(row.usernameEncrypted) : null,
+      password: row.passwordEncrypted ? this.encryption.decrypt(row.passwordEncrypted) : null,
       security_qa: row.securityQaEncrypted
         ? this.encryption.decrypt(row.securityQaEncrypted)
         : null,
@@ -206,12 +205,10 @@ export class ClientBankAccountsService {
     const portal = await this.portalsRepo.findById(dto.bankPortalId)
     if (!portal) throw new BankPortalNotFoundError(dto.bankPortalId)
 
-    const dup = await this.repo.findByClientAndPortal(dto.clientId, dto.bankPortalId)
-    if (dup) throw new ClientBankAccountAlreadyExistsError()
-
     const row = await this.repo.create({
       clientId: dto.clientId,
       bankPortalId: dto.bankPortalId,
+      nickname: dto.nickname ?? null,
       usernameEncrypted: this.encryption.encrypt(dto.username),
       passwordEncrypted: this.encryption.encrypt(dto.password),
       securityQaEncrypted: dto.securityQa ? this.encryption.encrypt(dto.securityQa) : null,
@@ -273,6 +270,9 @@ export class ClientBankAccountsService {
       statusChanged = { from: existing.status, to: dto.status }
     }
     if (dto.notes !== undefined && dto.notes !== existing.notes) patch.notes = dto.notes
+    if (dto.nickname !== undefined && dto.nickname !== existing.nickname) {
+      patch.nickname = dto.nickname
+    }
 
     const row = await this.repo.updateGlobal(id, patch)
     if (!row) throw new ClientBankAccountNotFoundError(id)
@@ -332,12 +332,13 @@ export class ClientBankAccountsService {
       id: row.credential.id,
       client: row.client,
       portal: row.portal,
+      nickname: row.credential.nickname,
       username: row.credential.usernameEncrypted
         ? this.encryption.decrypt(row.credential.usernameEncrypted)
-        : '',
+        : null,
       password: row.credential.passwordEncrypted
         ? this.encryption.decrypt(row.credential.passwordEncrypted)
-        : '',
+        : null,
       security_qa: row.credential.securityQaEncrypted
         ? this.encryption.decrypt(row.credential.securityQaEncrypted)
         : null,

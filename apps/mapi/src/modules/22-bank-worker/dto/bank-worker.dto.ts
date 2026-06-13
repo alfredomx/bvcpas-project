@@ -52,6 +52,7 @@ export class BankPortalListResponseDto extends createZodDto(
 export const CreateClientBankAccountSchema = z
   .object({
     bankPortalId: z.string().uuid(),
+    nickname: z.string().max(200).optional(),
     username: z.string().min(1),
     password: z.string().min(1),
     securityQa: z.string().optional(),
@@ -64,6 +65,7 @@ export class CreateClientBankAccountDto extends createZodDto(CreateClientBankAcc
 
 export const UpdateClientBankAccountSchema = z
   .object({
+    nickname: z.string().max(200).nullable().optional(),
     username: z.string().min(1).optional(),
     password: z.string().min(1).optional(),
     securityQa: z.string().nullable().optional(),
@@ -81,8 +83,9 @@ export const ClientBankAccountResponseSchema = z.object({
   id: z.string().uuid(),
   client_id: z.string().uuid(),
   bank_portal_id: z.string().uuid(),
-  username: z.string(),
-  password: z.string(),
+  nickname: z.string().nullable(),
+  username: z.string().nullable(),
+  password: z.string().nullable(),
   security_qa: z.string().nullable(),
   status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES),
   notes: z.string().nullable(),
@@ -117,6 +120,7 @@ export const CreateGlobalCredentialSchema = z
   .object({
     clientId: z.string().uuid(),
     bankPortalId: z.string().uuid(),
+    nickname: z.string().max(200).optional(),
     username: z.string().min(1),
     password: z.string().min(1),
     securityQa: z.string().optional(),
@@ -135,8 +139,9 @@ export const GlobalCredentialResponseSchema = z.object({
     name: z.string(),
     portal_url: z.string().nullable(),
   }),
-  username: z.string(),
-  password: z.string(),
+  nickname: z.string().nullable(),
+  username: z.string().nullable(),
+  password: z.string().nullable(),
   security_qa: z.string().nullable(),
   status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES),
   notes: z.string().nullable(),

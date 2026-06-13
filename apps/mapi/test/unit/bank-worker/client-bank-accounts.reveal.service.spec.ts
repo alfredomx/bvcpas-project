@@ -25,6 +25,7 @@ function buildRow(overrides: Partial<ClientBankAccount> = {}): ClientBankAccount
     id: 'cred-1',
     clientId: 'client-1',
     bankPortalId: 'portal-1',
+    nickname: null,
     usernameEncrypted: encryption.encrypt('alfredo.user'),
     passwordEncrypted: encryption.encrypt('S3cret!Pass'),
     securityQaEncrypted: encryption.encrypt('mascota: Firulais'),
