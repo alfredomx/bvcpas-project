@@ -56,11 +56,11 @@ de scope" de las versiones cerradas — ver [`BACKLOG.md`](BACKLOG.md)):
 - Tab Settings global cross-cutting (legal_name, tier, industry,
   conexiones) — segunda parte D-bvcpas-033.
 
-> **Deuda de proceso detectada (2026-06-12):** las releases v0.7.0–
-> v0.11.0 tienen commit `release(bvcpas)` pero **no tienen tag git**
-> (`git tag` solo llega a `bvcpas-v0.6.0`). Falta taggear esas 5
-> versiones. Además `17-client-home` no tiene carpeta propia en
-> `roadmap/` (su roadmap está embebido en `15-app-shell/v0.9.0.md`).
+> **Deuda de proceso (actualizado 2026-06-13):** ~~las releases v0.7.0–
+> v0.11.0 no tienen tag git~~ — RESUELTO: taggeadas retroactivamente
+> (`bvcpas-v0.7.0`…`v0.11.0`) junto con `bvcpas-v0.12.0`; ya no hay
+> huecos de tag. Pendiente aún: `17-client-home` no tiene carpeta propia
+> en `roadmap/` (su roadmap está embebido en `15-app-shell/v0.9.0.md`).
 
 ---
 
@@ -320,11 +320,11 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.5.8   | 12-customer-support | ✅     | Delete response (soft-delete) + AlertDialog + formatAmount preciso — D-055/056/057/058                             | bvcpas-v0.5.8  | [12-customer-support/v0.5.8.md](12-customer-support/v0.5.8.md) |
 | 0.5.9   | 12-customer-support | ✅     | Public link management en `<CsConfigSheet>` (enable/disable/regenerate) — D-059…067                                | bvcpas-v0.5.9  | [12-customer-support/v0.5.9.md](12-customer-support/v0.5.9.md) |
 | 0.6.0   | 12-customer-support | ✅     | Suggested Next Action funcional + `<DraftFollowupDialog>` (+ fixes status D-074…078) — D-068…073                   | bvcpas-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
-| 0.7.0   | 12-customer-support | ✅     | Call log — `<CallLogDialog>` (registrar/listar/editar llamadas)                                                    | ⚠️ sin tag     | [12-customer-support/v0.7.0.md](12-customer-support/v0.7.0.md) |
-| 0.8.0   | 16-public-uncats    | ✅     | Pantalla pública de uncats (`/p/uncats/[token]`) sin login                                                         | ⚠️ sin tag     | [16-public-uncats/v0.8.0.md](16-public-uncats/v0.8.0.md)       |
-| 0.9.0   | 15-app-shell        | ✅     | Shell rediseñado: icon rail + Client Home + Integrations (mock)                                                    | ⚠️ sin tag     | [15-app-shell/v0.9.0.md](15-app-shell/v0.9.0.md)               |
-| 0.10.0  | 18-integrations     | ✅     | Integrations conectado al backend real (pause/resume/check status)                                                 | ⚠️ sin tag     | [18-integrations/v0.1.0.md](18-integrations/v0.1.0.md)         |
-| 0.11.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista global cross-cliente de credenciales bancarias                                               | ⚠️ sin tag     | [19-bank-accounts/v0.1.0.md](19-bank-accounts/v0.1.0.md)       |
+| 0.7.0   | 12-customer-support | ✅     | Call log — `<CallLogDialog>` (registrar/listar/editar llamadas)                                                    | bvcpas-v0.7.0  | [12-customer-support/v0.7.0.md](12-customer-support/v0.7.0.md) |
+| 0.8.0   | 16-public-uncats    | ✅     | Pantalla pública de uncats (`/p/uncats/[token]`) sin login                                                         | bvcpas-v0.8.0  | [16-public-uncats/v0.8.0.md](16-public-uncats/v0.8.0.md)       |
+| 0.9.0   | 15-app-shell        | ✅     | Shell rediseñado: icon rail + Client Home + Integrations (mock)                                                    | bvcpas-v0.9.0  | [15-app-shell/v0.9.0.md](15-app-shell/v0.9.0.md)               |
+| 0.10.0  | 18-integrations     | ✅     | Integrations conectado al backend real (pause/resume/check status)                                                 | bvcpas-v0.10.0 | [18-integrations/v0.1.0.md](18-integrations/v0.1.0.md)         |
+| 0.11.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista global cross-cliente de credenciales bancarias                                               | bvcpas-v0.11.0 | [19-bank-accounts/v0.1.0.md](19-bank-accounts/v0.1.0.md)       |
 | 0.12.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista por cliente + credenciales descifradas (bank-worker v0.16.3)                                 | bvcpas-v0.12.0 | [19-bank-accounts/v0.12.0.md](19-bank-accounts/v0.12.0.md)     |
 
 ---
