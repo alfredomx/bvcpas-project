@@ -8,27 +8,25 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 
 ## Por trigger
 
-### Trigger: cuando v0.8.0 lleve ≥2 semanas estable en prod (v0.8.1)
+### Trigger: cuando se reactive deploy (limpieza Intuit legacy)
 
-> v0.8.0 cerró el refactor URLs + Intuit a Connections. Estos items se
-> difieren al patch siguiente para reducir el tamaño del cambio en prod
-> y permitir rollback rápido durante el periodo de validación.
+> v0.8.0 cerró el refactor URLs + Intuit a Connections. Quedan 2 items;
+> el move es organización interna sin valor funcional, el drop necesita
+> deploy. Ambos en pausa hasta nuevo aviso del operador.
 
-- **Drop tabla `intuit_tokens_deprecated`**. Renombrada en migration 0007. Confirmar que `user_connections WHERE provider='intuit'`
-  funciona en prod sin issues durante 2 semanas, después drop.
-- **Mover controllers Intuit a `21-connections/providers/intuit/`**.
-  Hoy `IntuitOauthController`, `IntuitAdminController`,
-  `ClientIntuitController`, `IntuitOauthService`, `IntuitApiService`,
-  `IntuitOauthClientFactory` y `IntuitTokensMetricsCron` viven en
-  `20-intuit-oauth/` por simplicidad del refactor v0.8.0. Las URLs ya
-  están en su path final (Forma C); el move es solo organización
-  interna (file system + imports). Cuando se borre la carpeta vieja,
-  también borrar `roadmap/20-intuit-oauth/` (pero conservar el
-  histórico v0.3.0/v0.3.1/v0.3.2 en `21-connections/`).
-- **Reescribir `migrate-from-v0x.ts` + su e2e spec**. Hoy escribe a
-  `intuit_tokens` (legacy). Reescribir para escribir a
-  `user_connections` con `provider='intuit'`. El spec está en
-  `describe.skip`.
+- **Drop tabla `intuit_tokens_deprecated`** (NECESITA DEPLOY). Renombrada en migration 0007.
+  Ya NO está en el schema de Drizzle (solo comentarios). Sigue existiendo en la DB de prod.
+  Borrarla es un `DROP TABLE` que aplica en el próximo migrate/deploy → hacer cuando deploy
+  se reactive, no antes (evita migración colgada). Revisado 2026-06-13.
+- **Mover controllers Intuit a `21-connections/providers/intuit/`** (refactor grande, cero
+  valor funcional). Hoy `IntuitOauthController`, `IntuitAdminController`, `ClientIntuitController`,
+  `IntuitOauthService`, `IntuitApiService`, `IntuitOauthClientFactory` y `IntuitTokensMetricsCron`
+  viven en `20-intuit-oauth/`. Las URLs ya están en su path final (Forma C); el move es solo
+  file system + imports. Se difiere por riesgo/tiempo vs cero beneficio. Si se hace: borrar
+  también `roadmap/20-intuit-oauth/` conservando histórico v0.3.x en `21-connections/`.
+- ~~**Reescribir `migrate-from-v0x`**~~ ✅ RESUELTO 2026-06-13: la migración de los 77 clientes
+  ya se ejecutó (one-time, mayo 2026). El script no existe en `src/` y el e2e spec en
+  `describe.skip` se borró (código muerto). No hay nada que reescribir — nunca se re-ejecuta.
 
 ### Trigger: cuando los 77 clientes lleven ≥3 días estables en bvcpas-project prod
 
