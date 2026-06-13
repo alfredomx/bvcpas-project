@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { Check, ChevronsUpDown, Landmark, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -25,6 +25,7 @@ import { BankLoginFormDialog } from './bank-login-form-dialog'
 import { BankLoginSheet } from './bank-login-sheet'
 import { CredentialCard } from './credential-card'
 import { DeleteBankLoginDialog } from './delete-bank-login-dialog'
+import { ManagePortalsSheet } from './manage-portals-sheet'
 
 export function BankAccountsScreen() {
   const [clientId, setClientId] = useState<string | null>(null)
@@ -35,6 +36,7 @@ export function BankAccountsScreen() {
   const [editTarget, setEditTarget] = useState<BankLogin | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<BankLogin | null>(null)
   const [bankSearch, setBankSearch] = useState('')
+  const [managePortalsOpen, setManagePortalsOpen] = useState(false)
 
   const { items: clients } = useClients()
   const selectedClient = clients.find((c) => c.id === clientId) ?? null
@@ -62,6 +64,17 @@ export function BankAccountsScreen() {
         kicker="Bank Accounts"
         title="Client bank logins"
         description="Pick a client to see their bank portal credentials and the accounts inside each login."
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setManagePortalsOpen(true)}
+          >
+            <Landmark className="size-4" />
+            Manage portals
+          </Button>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-2">
@@ -178,6 +191,8 @@ export function BankAccountsScreen() {
         }}
         login={deleteTarget}
       />
+
+      <ManagePortalsSheet open={managePortalsOpen} onOpenChange={setManagePortalsOpen} />
     </div>
   )
 }

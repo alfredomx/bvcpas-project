@@ -35,6 +35,9 @@ export type BankAccountType = BankAccount['account_type']
 
 export type BankPortalsListResponse = components['schemas']['BankPortalListResponseDto']
 export type BankPortal = BankPortalsListResponse['data'][number]
+export type BankPortalDetail = components['schemas']['BankPortalResponseDto']
+export type CreateBankPortalBody = components['schemas']['CreateBankPortalDto']
+export type UpdateBankPortalBody = components['schemas']['UpdateBankPortalDto']
 
 export type CreateBankLoginBody = components['schemas']['CreateGlobalCredentialDto']
 // El PATCH global del credential reusa el mismo body del PATCH anidado.
@@ -162,4 +165,31 @@ export async function listBankPortals(): Promise<BankPortalsListResponse> {
   if (error) throw error
   if (!data) throw new Error('listBankPortals: empty response')
   return data
+}
+
+export async function createBankPortal(body: CreateBankPortalBody): Promise<BankPortalDetail> {
+  const { data, error } = await api.POST('/v1/banking/portals', { body })
+  if (error) throw error
+  if (!data) throw new Error('createBankPortal: empty response')
+  return data
+}
+
+export async function updateBankPortal(
+  portalId: string,
+  body: UpdateBankPortalBody,
+): Promise<BankPortalDetail> {
+  const { data, error } = await api.PATCH('/v1/banking/portals/{portalId}', {
+    params: { path: { portalId } },
+    body,
+  })
+  if (error) throw error
+  if (!data) throw new Error('updateBankPortal: empty response')
+  return data
+}
+
+export async function deleteBankPortal(portalId: string): Promise<void> {
+  const { error } = await api.DELETE('/v1/banking/portals/{portalId}', {
+    params: { path: { portalId } },
+  })
+  if (error) throw error
 }
