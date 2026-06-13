@@ -10,9 +10,13 @@ import {
 
 export const BANK_LOGINS_QUERY_KEY = 'bank-logins'
 
-export function useBankLogins(filters: ListBankLoginsParams = {}) {
+export function useBankLogins(
+  filters: ListBankLoginsParams = {},
+  options: { enabled?: boolean } = {},
+) {
   return useQuery<BankLoginsListResponse, Error>({
     queryKey: [BANK_LOGINS_QUERY_KEY, filters],
     queryFn: () => listBankLogins(filters),
+    enabled: options.enabled ?? true,
   })
 }

@@ -118,7 +118,7 @@ Detalle paso a paso vive en cada `vX.Y.Z.md` que lo introduce. Resumen:
 
 ## Versiones
 
-- **v0.2.0** (🚧 en progreso): login + sesión persistente en pestaña +
+- **v0.2.0** (✅ cerrada): login + sesión persistente en pestaña +
   guard básico + placeholder de `/dashboard`. Sin AppShell todavía.
 - **vX.Y.Z futura** (no planeada hoy): change-password self-service
   cuando exista pantalla de Settings.

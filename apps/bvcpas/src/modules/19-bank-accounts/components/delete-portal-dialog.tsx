@@ -11,25 +11,21 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
-import type { BankAccount } from '../api/bank-accounts.api'
-import { useDeleteBankAccount } from '../hooks/use-delete-bank-account'
+import type { BankPortal } from '../api/bank-accounts.api'
+import { useDeleteBankPortal } from '../hooks/use-delete-bank-portal'
 
-export interface DeleteBankAccountDialogProps {
+export interface DeletePortalDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  account: BankAccount | null
+  portal: BankPortal | null
 }
 
-export function DeleteBankAccountDialog({
-  open,
-  onOpenChange,
-  account,
-}: DeleteBankAccountDialogProps) {
-  const deleteMutation = useDeleteBankAccount()
+export function DeletePortalDialog({ open, onOpenChange, portal }: DeletePortalDialogProps) {
+  const deleteMutation = useDeleteBankPortal()
 
   const handleConfirm = () => {
-    if (!account) return
-    deleteMutation.mutate(account.id, {
+    if (!portal) return
+    deleteMutation.mutate(portal.id, {
       onSuccess: () => onOpenChange(false),
     })
   }
@@ -38,11 +34,11 @@ export function DeleteBankAccountDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete account?</AlertDialogTitle>
+          <AlertDialogTitle>Delete portal?</AlertDialogTitle>
           <AlertDialogDescription>
-            {account
-              ? `This removes the account ····${account.account_mask} from this login.`
-              : 'This removes the account from this login.'}{' '}
+            {portal
+              ? `This removes "${portal.name}" from the portal catalog. Logins already using it are not allowed to delete it.`
+              : 'This removes the portal from the catalog.'}{' '}
             This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -53,7 +49,7 @@ export function DeleteBankAccountDialog({
             disabled={deleteMutation.isPending}
             className="bg-red-600 text-white hover:bg-red-700"
           >
-            {deleteMutation.isPending ? 'Deleting…' : 'Delete account'}
+            {deleteMutation.isPending ? 'Deleting…' : 'Delete portal'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -4,19 +4,20 @@ import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
-import { useDeleteBankAccount } from './use-delete-bank-account'
+import { useUpdateBankPortal } from './use-update-bank-portal'
 
-const deleteBankAccountMock = vi.fn()
+const updateBankPortalMock = vi.fn()
 const toastSuccessMock = vi.fn()
+const toastErrorMock = vi.fn()
 
 vi.mock('../api/bank-accounts.api', () => ({
-  deleteBankAccount: (...args: unknown[]) => deleteBankAccountMock(...args),
+  updateBankPortal: (...args: unknown[]) => updateBankPortalMock(...args),
 }))
 
 vi.mock('sonner', () => ({
   toast: {
     success: (...a: unknown[]) => toastSuccessMock(...a),
-    error: vi.fn(),
+    error: (...a: unknown[]) => toastErrorMock(...a),
   },
 }))
 
@@ -27,35 +28,37 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 function Probe() {
-  const m = useDeleteBankAccount()
+  const m = useUpdateBankPortal()
   return (
-    <button type="button" onClick={() => m.mutate('a-1')}>
-      Delete
+    <button
+      type="button"
+      onClick={() => m.mutate({ portalId: 'p-1', body: { name: 'Chase Bank' } })}
+    >
+      Save
     </button>
   )
 }
 
-describe('useDeleteBankAccount', () => {
+describe('useUpdateBankPortal', () => {
   beforeEach(() => {
-    deleteBankAccountMock.mockReset()
+    updateBankPortalMock.mockReset()
     toastSuccessMock.mockReset()
+    toastErrorMock.mockReset()
     queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   })
   afterEach(() => vi.restoreAllMocks())
 
-  it('calls deleteBankAccount and invalidates', async () => {
-    deleteBankAccountMock.mockResolvedValue(undefined)
+  it('updates a portal and invalidates the catalog', async () => {
+    updateBankPortalMock.mockResolvedValue({ id: 'p-1' })
     const invalidate = vi.spyOn(queryClient, 'invalidateQueries')
 
     render(<Probe />, { wrapper })
-    await userEvent.setup().click(screen.getByRole('button', { name: /delete/i }))
+    await userEvent.setup().click(screen.getByRole('button', { name: /save/i }))
 
     await waitFor(() => {
-      expect(deleteBankAccountMock).toHaveBeenCalledWith('a-1')
-      expect(invalidate).toHaveBeenCalledWith({
-        queryKey: ['bank-login-accounts'],
-      })
-      expect(toastSuccessMock).toHaveBeenCalledWith('Account deleted')
+      expect(updateBankPortalMock).toHaveBeenCalledWith('p-1', { name: 'Chase Bank' })
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: ['bank-portals'] })
+      expect(toastSuccessMock).toHaveBeenCalledWith('Portal updated')
     })
   })
 })

@@ -1,10 +1,9 @@
 # 11-clients — Dominio de clientes (frontend)
 
 **App:** bvcpas
-**Status:** 🚧 En desarrollo (mínimo en v0.3.0; crece conforme las
-pantallas lo requieran)
-**Versiones que lo construyen:** v0.3.0 (scaffolding + tipos)
-**Última revisión:** 2026-05-06
+**Status:** ✅ Completo (api `listClients`/`updateClient` + hooks `useClients`/`useUpdateClient`, consumidos por sidebar y detalle de cliente)
+**Versiones que lo construyen:** v0.4.0 (api wrapper + `useClients`) + v0.4.1 (fix paginación sidebar) + v0.5.2 (`useUpdateClient`)
+**Última revisión:** 2026-06-12
 **Espejo backend:** [`apps/mapi/roadmap/11-clients/`](../../../mapi/roadmap/11-clients/README.md)
 
 ---
@@ -21,13 +20,14 @@ admin de clientes; frontend solo consume.
 
 ---
 
-## Estado en v0.3.0
+## Estado
 
-Mínimo: solo `types.ts` con `Client`, `ClientTier`, `ClientStatus`. La
-sidebar de v0.3.0 NO consume `GET /v1/clients` — consume
-`GET /v1/dashboards/customer-support` (D-bvcpas-015). Cuando una
-pantalla necesite el detalle "raw" de un cliente, se agrega aquí el
-api wrapper + hook correspondiente.
+`types.ts` (`Client`, `ClientTier`, `ClientStatus`) + `api/clients.api.ts`
+(`listClients` sobre `GET /v1/clients`, `updateClient` sobre
+`PATCH /v1/clients/:id`) + hooks `useClients` / `useUpdateClient`. La
+sidebar consume `GET /v1/clients` directo desde v0.4.0 (D-bvcpas-027
+superó a D-bvcpas-015; el endpoint `/v1/dashboards/customer-support`
+fue eliminado).
 
 ---
 
@@ -50,7 +50,8 @@ Ver `src/modules/11-clients/README.md`.
 
 ## Versiones
 
-- **v0.3.0** (🚧): scaffolding + tipos. Sin api wrapper.
-
-Versiones futuras: cuando una pantalla pida detalle de cliente, se
-agrega el api wrapper + hook + componentes.
+- **v0.4.0** (✅): api wrapper `listClients` + `useClients`; sidebar
+  consume `GET /v1/clients` directo (D-bvcpas-026/027/028).
+- **v0.4.1** (✅): fix paginación sidebar `pageSize=200` (D-bvcpas-029).
+- **v0.5.2** (✅): `useUpdateClient` (`PATCH /v1/clients/:id`), usado
+  por el config sheet.

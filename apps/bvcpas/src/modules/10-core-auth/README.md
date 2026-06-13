@@ -9,7 +9,7 @@ Login + sesión + guard. Match 1:1 con
 | Símbolo                                                     | Para qué                                                                                                                                       |
 | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `useSession()` (`hooks/use-session.ts`)                     | Hook client-side con `{ user, accessToken, isLoading, login, logout }`. Hidrata desde sessionStorage al montar y valida con `GET /v1/auth/me`. |
-| `<LoginForm />` (`components/login-form.tsx`)               | Form de `/`. (Pendiente — Bloque 5 v0.2.0.)                                                                                                    |
+| `<LoginForm />` (`components/login-form.tsx`)               | Form de `/`.                                                                                                                                   |
 | `login`, `logout`, `me` (`api/auth.api.ts`)                 | Wrappers tipados sobre los endpoints `/v1/auth/*`.                                                                                             |
 | `readToken`, `clearSession`, etc (`lib/session-storage.ts`) | Único punto que toca sessionStorage. Fuera de aquí, nadie.                                                                                     |
 | Tipos `User`, `LoginResponse`, etc (`types.ts`)             | Shape del backend (camelCase, `accessToken` no `access_token`).                                                                                |
@@ -52,5 +52,5 @@ UI no diferencia `SESSION_REVOKED` vs `SESSION_EXPIRED`.
 
 ## Versiones
 
-- v0.2.0 (🚧) — implementación inicial. Ver
+- v0.2.0 (✅) — implementación inicial. Ver
   [`roadmap/10-core-auth/v0.2.0.md`](../../../roadmap/10-core-auth/v0.2.0.md).

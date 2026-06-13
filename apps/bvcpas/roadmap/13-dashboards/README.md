@@ -1,10 +1,9 @@
 # 13-dashboards — Dashboards agregados (frontend)
 
 **App:** bvcpas
-**Status:** 🚧 En desarrollo
-**Versiones que lo construyen:** v0.3.0 (scaffolding + tipos del
-endpoint customer-support)
-**Última revisión:** 2026-05-06
+**Status:** ✅ Completo (api wrapper sobre `GET /v1/clients/:id/uncats` + hook `useUncatsDetail`, consumido por la tab Uncat. Transactions)
+**Versiones que lo construyen:** v0.5.0 (primera view real `uncats-detail`)
+**Última revisión:** 2026-06-12
 **Espejo backend:** [`apps/mapi/roadmap/13-dashboards/`](../../../mapi/roadmap/13-dashboards/README.md)
 
 ---
@@ -20,16 +19,14 @@ Match 1:1 con `apps/mapi/src/modules/13-dashboards/`.
 
 ---
 
-## Estado en v0.3.0
+## Estado
 
-Scaffolding + tipos. El api wrapper (`customer-support.api.ts`) y el
-hook (`useClientsList`) entran en Bloque 3 de v0.3.0 con tests
-TDD-first.
-
-La sidebar consume el endpoint customer-support porque es el único que
-trae los stats agregados que el prototipo muestra (D-bvcpas-015). Si en
-el futuro hay ≥3 dashboards distintos compartiendo sidebar, se evaluará
-un endpoint genérico `/v1/dashboards/sidebar` (BACKLOG).
+`api/uncats-detail.api.ts` (wrapper sobre
+`GET /v1/clients/:id/uncats?from=&to=`) y hook `useUncatsDetail`,
+consumidos por la tab Uncat. Transactions (stats agregados del cliente).
+El endpoint `/v1/dashboards/customer-support` del plan original fue
+eliminado (D-bvcpas-027): la sidebar pasó a `GET /v1/clients` y este
+módulo quedó para el detalle de uncats por cliente.
 
 ---
 
@@ -41,18 +38,14 @@ Ver `src/modules/13-dashboards/README.md`.
 
 ## Endpoints de mapi consumidos
 
-| Endpoint                                                  | Cuándo                                |
-| --------------------------------------------------------- | ------------------------------------- |
-| `GET /v1/dashboards/customer-support?from=&to=`           | Sidebar — lista maestra (v0.3.0).     |
-| `GET /v1/dashboards/customer-support/:clientId?from=&to=` | Detalle por cliente — futuro v0.4.0+. |
+| Endpoint                               | Cuándo                                  |
+| -------------------------------------- | --------------------------------------- |
+| `GET /v1/clients/:id/uncats?from=&to=` | Detalle de uncats por cliente (v0.5.0). |
 
 ---
 
 ## Versiones
 
-- **v0.3.0** (🚧): scaffolding + tipos del endpoint customer-support
-  (lista maestra). El api wrapper y el hook se implementan en Bloque
-  3 con tests TDD-first.
-
-Versiones futuras: detalle por cliente cuando entre la pantalla de
-Customer Support real (v0.4.0+).
+- **v0.5.0** (✅): primera view real `uncats-detail` — api wrapper +
+  `useUncatsDetail` sobre `GET /v1/clients/:id/uncats`, consumido por
+  la tab Uncat. Transactions.

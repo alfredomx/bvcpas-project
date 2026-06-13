@@ -91,9 +91,7 @@ describe('bank-accounts.api', () => {
 
   describe('listBankLogins', () => {
     it('GETs /v1/banking/credentials with no query when no args', async () => {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValue(jsonResponse(200, sampleLoginsList))
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleLoginsList))
       vi.stubGlobal('fetch', fetchMock)
 
       const { listBankLogins } = await importApi()
@@ -107,9 +105,7 @@ describe('bank-accounts.api', () => {
     })
 
     it('forwards filters as query params', async () => {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValue(jsonResponse(200, sampleLoginsList))
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleLoginsList))
       vi.stubGlobal('fetch', fetchMock)
 
       const { listBankLogins } = await importApi()
@@ -134,10 +130,7 @@ describe('bank-accounts.api', () => {
     })
 
     it('throws on non-2xx', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue(jsonResponse(500, { code: 'INTERNAL' })),
-      )
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(500, { code: 'INTERNAL' })))
       const { listBankLogins } = await importApi()
       await expect(listBankLogins()).rejects.toBeDefined()
     })
@@ -185,10 +178,7 @@ describe('bank-accounts.api', () => {
     })
 
     it('throws on 409 (duplicate)', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockResolvedValue(jsonResponse(409, { code: 'DUPLICATE' })),
-      )
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { code: 'DUPLICATE' })))
       const { createBankLogin } = await importApi()
       await expect(
         createBankLogin({
@@ -236,18 +226,14 @@ describe('bank-accounts.api', () => {
 
   describe('listBankAccounts', () => {
     it('GETs /v1/banking/credentials/:credentialId/accounts', async () => {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValue(jsonResponse(200, sampleAccountsList))
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, sampleAccountsList))
       vi.stubGlobal('fetch', fetchMock)
 
       const { listBankAccounts } = await importApi()
       const result = await listBankAccounts('cred-1')
 
       const [req] = fetchMock.mock.calls[0]
-      expect(req.url).toBe(
-        `${TEST_BASE_URL}/v1/banking/credentials/cred-1/accounts`,
-      )
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/credentials/cred-1/accounts`)
       expect(req.method).toBe('GET')
       expect(result.data[0].account_mask).toBe('4242')
     })
@@ -265,9 +251,7 @@ describe('bank-accounts.api', () => {
       })
 
       const [req] = fetchMock.mock.calls[0]
-      expect(req.url).toBe(
-        `${TEST_BASE_URL}/v1/banking/credentials/cred-1/accounts`,
-      )
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/credentials/cred-1/accounts`)
       expect(req.method).toBe('POST')
       const body = await req.text()
       expect(JSON.parse(body)).toEqual({
@@ -329,9 +313,7 @@ describe('bank-accounts.api', () => {
 
   describe('listBankPortals', () => {
     it('GETs /v1/banking/portals', async () => {
-      const fetchMock = vi
-        .fn()
-        .mockResolvedValue(jsonResponse(200, samplePortalsList))
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, samplePortalsList))
       vi.stubGlobal('fetch', fetchMock)
 
       const { listBankPortals } = await importApi()
@@ -341,6 +323,69 @@ describe('bank-accounts.api', () => {
       expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals`)
       expect(req.method).toBe('GET')
       expect(result.data[0].name).toBe('Chase')
+    })
+  })
+
+  describe('createBankPortal', () => {
+    it('POSTs /v1/banking/portals with body', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(201, samplePortalsList.data[0]))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { createBankPortal } = await importApi()
+      const result = await createBankPortal({
+        name: 'Frost Bank',
+        portalUrl: 'https://frostbank.com',
+      })
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals`)
+      expect(req.method).toBe('POST')
+      expect(JSON.parse(await req.text())).toEqual({
+        name: 'Frost Bank',
+        portalUrl: 'https://frostbank.com',
+      })
+      expect(result.name).toBe('Chase')
+    })
+
+    it('throws on 409 (duplicate name)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { code: 'DUPLICATE' })))
+      const { createBankPortal } = await importApi()
+      await expect(createBankPortal({ name: 'Chase' })).rejects.toBeDefined()
+    })
+  })
+
+  describe('updateBankPortal', () => {
+    it('PATCHes /v1/banking/portals/:portalId with body', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, samplePortalsList.data[0]))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { updateBankPortal } = await importApi()
+      await updateBankPortal('p-1', { name: 'Chase Bank' })
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals/p-1`)
+      expect(req.method).toBe('PATCH')
+      expect(JSON.parse(await req.text())).toEqual({ name: 'Chase Bank' })
+    })
+  })
+
+  describe('deleteBankPortal', () => {
+    it('DELETEs /v1/banking/portals/:portalId', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(noContentResponse())
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { deleteBankPortal } = await importApi()
+      await deleteBankPortal('p-1')
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals/p-1`)
+      expect(req.method).toBe('DELETE')
+    })
+
+    it('throws on 409 (portal in use)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { code: 'IN_USE' })))
+      const { deleteBankPortal } = await importApi()
+      await expect(deleteBankPortal('p-1')).rejects.toBeDefined()
     })
   })
 })

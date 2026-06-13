@@ -32,9 +32,7 @@ function Probe() {
   return (
     <button
       type="button"
-      onClick={() =>
-        m.mutate({ credentialId: 'cred-1', body: { password: 'newpw' } })
-      }
+      onClick={() => m.mutate({ credentialId: 'cred-1', body: { password: 'newpw' } })}
     >
       Update
     </button>

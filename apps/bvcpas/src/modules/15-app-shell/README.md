@@ -67,6 +67,6 @@ TDD-first.
 
 ## Versiones
 
-- v0.3.0 (🚧) — primera implementación. Scaffolding + componentes
+- v0.3.0 (✅) — primera implementación. Scaffolding + componentes
   visuales + tabs con placeholders. Ver
   [`roadmap/15-app-shell/v0.3.0.md`](../../../roadmap/15-app-shell/v0.3.0.md).
