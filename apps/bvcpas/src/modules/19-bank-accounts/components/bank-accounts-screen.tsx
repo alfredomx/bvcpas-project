@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useQueries } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, Landmark, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -13,12 +14,14 @@ import {
   CommandList,
 } from '@/components/ui/command'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { SectionHeader } from '@/components/shared/section-header'
 
 import { useClients } from '@/modules/11-clients/hooks/use-clients'
 
-import type { BankLogin } from '../api/bank-accounts.api'
+import { listBankAccounts, type BankLogin } from '../api/bank-accounts.api'
+import { BANK_LOGIN_ACCOUNTS_QUERY_KEY } from '../hooks/use-bank-login-accounts'
 import { useBankLogins } from '../hooks/use-bank-logins'
 
 import { BankLoginFormDialog } from './bank-login-form-dialog'
@@ -44,8 +47,31 @@ export function BankAccountsScreen() {
   const query = useBankLogins({ clientId: clientId ?? undefined }, { enabled: clientId !== null })
   const logins = query.data?.items ?? []
   const term = bankSearch.trim().toLowerCase()
+
+  // Solo cargamos las cuentas a nivel pantalla cuando hay búsqueda activa
+  // (para poder filtrar por cuenta). Sin búsqueda no las tocamos aquí —
+  // las cards las cargan solas. Mismo queryKey que las cards, así que
+  // React Query reusa la caché. Esto evita re-renders y espera de N
+  // peticiones al solo cambiar de cliente.
+  const accountQueries = useQueries({
+    queries: logins.map((l) => ({
+      queryKey: [BANK_LOGIN_ACCOUNTS_QUERY_KEY, l.id],
+      queryFn: () => listBankAccounts(l.id),
+      enabled: term.length > 0,
+    })),
+  })
+  const accountsByLogin = new Map(logins.map((l, i) => [l.id, accountQueries[i]?.data?.data ?? []]))
   const filteredLogins = term
-    ? logins.filter((l) => l.portal.name.toLowerCase().includes(term))
+    ? logins.filter((l) => {
+        if (l.portal.name.toLowerCase().includes(term)) return true
+        if ((l.notes ?? '').toLowerCase().includes(term)) return true
+        return (accountsByLogin.get(l.id) ?? []).some(
+          (a) =>
+            a.account_mask.toLowerCase().includes(term) ||
+            (a.label ?? '').toLowerCase().includes(term) ||
+            a.account_type.toLowerCase().includes(term),
+        )
+      })
     : logins
 
   const openCreate = () => {
@@ -77,61 +103,67 @@ export function BankAccountsScreen() {
         }
       />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
-          <PopoverTrigger asChild>
-            <Button type="button" variant="outline" className="w-[280px] justify-between">
-              <span className="min-w-0 truncate">
-                {selectedClient?.legal_name ?? 'Select a client…'}
-              </span>
-              <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[280px] p-0">
-            <Command>
-              <CommandInput placeholder="Search client…" />
-              <CommandList>
-                <CommandEmpty>No clients found.</CommandEmpty>
-                <CommandGroup>
-                  {clients.map((c) => (
-                    <CommandItem
-                      key={c.id}
-                      value={c.legal_name}
-                      onSelect={() => {
-                        setClientId(c.id)
-                        setBankSearch('')
-                        setClientPickerOpen(false)
-                      }}
-                    >
-                      <Check
-                        className={`mr-2 size-4 ${clientId === c.id ? 'opacity-100' : 'opacity-0'}`}
-                      />
-                      {c.legal_name}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
-        {clientId !== null && (
-          <Button type="button" size="sm" onClick={openCreate}>
-            <Plus className="size-4" />
-            Add bank login
-          </Button>
-        )}
-
+      <div className="flex flex-wrap items-end gap-2">
         {clientId !== null && logins.length > 0 && (
-          <Input
-            type="search"
-            value={bankSearch}
-            onChange={(e) => setBankSearch(e.target.value)}
-            placeholder="Filter by bank…"
-            className="w-[220px] md:ml-auto"
-            aria-label="Filter credentials by bank"
-          />
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="bank-search">Search</Label>
+            <Input
+              id="bank-search"
+              type="search"
+              value={bankSearch}
+              onChange={(e) => setBankSearch(e.target.value)}
+              placeholder="Filter by bank, account, notes…"
+              className="w-[480px] max-w-full"
+              aria-label="Filter credentials by bank, account or notes"
+            />
+          </div>
         )}
+
+        <div className="flex items-center gap-2 md:ml-auto">
+          <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button type="button" variant="outline" className="w-[280px] justify-between">
+                <span className="min-w-0 truncate">
+                  {selectedClient?.legal_name ?? 'Select a client…'}
+                </span>
+                <ChevronsUpDown className="size-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px] p-0">
+              <Command>
+                <CommandInput placeholder="Search client…" />
+                <CommandList>
+                  <CommandEmpty>No clients found.</CommandEmpty>
+                  <CommandGroup>
+                    {clients.map((c) => (
+                      <CommandItem
+                        key={c.id}
+                        value={c.legal_name}
+                        onSelect={() => {
+                          setClientId(c.id)
+                          setBankSearch('')
+                          setClientPickerOpen(false)
+                        }}
+                      >
+                        <Check
+                          className={`mr-2 size-4 ${clientId === c.id ? 'opacity-100' : 'opacity-0'}`}
+                        />
+                        {c.legal_name}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {clientId !== null && (
+            <Button type="button" size="sm" onClick={openCreate}>
+              <Plus className="size-4" />
+              Add bank login
+            </Button>
+          )}
+        </div>
       </div>
 
       {clientId === null && <SelectClientPrompt />}
@@ -151,7 +183,7 @@ export function BankAccountsScreen() {
 
       {clientId !== null && query.data && logins.length > 0 && filteredLogins.length === 0 && (
         <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
-          No bank matches &ldquo;{bankSearch}&rdquo;.
+          No matches for &ldquo;{bankSearch}&rdquo;.
         </div>
       )}
 
