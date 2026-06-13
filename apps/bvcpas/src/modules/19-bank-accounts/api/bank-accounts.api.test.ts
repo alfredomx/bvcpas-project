@@ -325,4 +325,67 @@ describe('bank-accounts.api', () => {
       expect(result.data[0].name).toBe('Chase')
     })
   })
+
+  describe('createBankPortal', () => {
+    it('POSTs /v1/banking/portals with body', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(201, samplePortalsList.data[0]))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { createBankPortal } = await importApi()
+      const result = await createBankPortal({
+        name: 'Frost Bank',
+        portalUrl: 'https://frostbank.com',
+      })
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals`)
+      expect(req.method).toBe('POST')
+      expect(JSON.parse(await req.text())).toEqual({
+        name: 'Frost Bank',
+        portalUrl: 'https://frostbank.com',
+      })
+      expect(result.name).toBe('Chase')
+    })
+
+    it('throws on 409 (duplicate name)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { code: 'DUPLICATE' })))
+      const { createBankPortal } = await importApi()
+      await expect(createBankPortal({ name: 'Chase' })).rejects.toBeDefined()
+    })
+  })
+
+  describe('updateBankPortal', () => {
+    it('PATCHes /v1/banking/portals/:portalId with body', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, samplePortalsList.data[0]))
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { updateBankPortal } = await importApi()
+      await updateBankPortal('p-1', { name: 'Chase Bank' })
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals/p-1`)
+      expect(req.method).toBe('PATCH')
+      expect(JSON.parse(await req.text())).toEqual({ name: 'Chase Bank' })
+    })
+  })
+
+  describe('deleteBankPortal', () => {
+    it('DELETEs /v1/banking/portals/:portalId', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(noContentResponse())
+      vi.stubGlobal('fetch', fetchMock)
+
+      const { deleteBankPortal } = await importApi()
+      await deleteBankPortal('p-1')
+
+      const [req] = fetchMock.mock.calls[0]
+      expect(req.url).toBe(`${TEST_BASE_URL}/v1/banking/portals/p-1`)
+      expect(req.method).toBe('DELETE')
+    })
+
+    it('throws on 409 (portal in use)', async () => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { code: 'IN_USE' })))
+      const { deleteBankPortal } = await importApi()
+      await expect(deleteBankPortal('p-1')).rejects.toBeDefined()
+    })
+  })
 })

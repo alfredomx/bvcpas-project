@@ -34,3 +34,15 @@ class ResizeObserverStub {
 }
 ;(globalThis as { ResizeObserver?: typeof ResizeObserver }).ResizeObserver =
   ResizeObserverStub as unknown as typeof ResizeObserver
+
+// Radix (Select, Dropdown, etc.) usa APIs de puntero/scroll que JSDOM no
+// implementa. Stubs mínimos para que abran sin tronar en tests.
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {}
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
+}
