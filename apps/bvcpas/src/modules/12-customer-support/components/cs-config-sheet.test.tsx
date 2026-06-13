@@ -86,12 +86,7 @@ describe('<CsConfigSheet>', () => {
 
   it('renders with the current client values when open', () => {
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
@@ -146,12 +141,7 @@ describe('<CsConfigSheet>', () => {
 
   it('rejects invalid email and does not call api', async () => {
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
@@ -169,20 +159,12 @@ describe('<CsConfigSheet>', () => {
   it('accepts multiple emails separated by comma in ccEmail', async () => {
     updateClientMock.mockResolvedValue({ ...sampleClient })
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
     const user = userEvent.setup()
-    await user.type(
-      screen.getByLabelText(/cc email/i),
-      'lorena@bv-cpas.com, ileana@bv-cpas.com',
-    )
+    await user.type(screen.getByLabelText(/cc email/i), 'lorena@bv-cpas.com, ileana@bv-cpas.com')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
@@ -195,20 +177,12 @@ describe('<CsConfigSheet>', () => {
   it('normalizes whitespace around commas', async () => {
     updateClientMock.mockResolvedValue({ ...sampleClient })
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
     const user = userEvent.setup()
-    await user.type(
-      screen.getByLabelText(/cc email/i),
-      '  a@b.com  ,c@d.com,   e@f.com  ',
-    )
+    await user.type(screen.getByLabelText(/cc email/i), '  a@b.com  ,c@d.com,   e@f.com  ')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
@@ -220,20 +194,12 @@ describe('<CsConfigSheet>', () => {
 
   it('rejects when one of the CSV emails is invalid', async () => {
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
     const user = userEvent.setup()
-    await user.type(
-      screen.getByLabelText(/cc email/i),
-      'a@b.com, not-email, c@d.com',
-    )
+    await user.type(screen.getByLabelText(/cc email/i), 'a@b.com, not-email, c@d.com')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
     await waitFor(() => {
@@ -245,12 +211,7 @@ describe('<CsConfigSheet>', () => {
   it('shows error toast on api rejection', async () => {
     updateClientMock.mockRejectedValue(new Error('boom'))
     render(
-      <CsConfigSheet
-        open={true}
-        onOpenChange={() => {}}
-        client={sampleClient}
-        publicLink={null}
-      />,
+      <CsConfigSheet open={true} onOpenChange={() => {}} client={sampleClient} publicLink={null} />,
       { wrapper },
     )
 
@@ -279,9 +240,7 @@ describe('<CsConfigSheet>', () => {
       expect(screen.queryByLabelText(/^enabled$/i)).not.toBeInTheDocument()
       expect(screen.queryByRole('button', { name: /copy/i })).not.toBeInTheDocument()
       expect(screen.getByRole('button', { name: /generate/i })).toBeInTheDocument()
-      expect(
-        screen.queryByRole('button', { name: /regenerate/i }),
-      ).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /regenerate/i })).not.toBeInTheDocument()
     })
 
     it('with active link: URL filled, switch ON, Copy + Regenerate visible', () => {
@@ -298,7 +257,9 @@ describe('<CsConfigSheet>', () => {
       const enabledSwitch = screen.getByLabelText(/^enabled$/i)
       expect(enabledSwitch).toBeChecked()
       const urlInput = screen.getByLabelText(/public link url/i) as HTMLInputElement
-      expect(urlInput.value).toBe(samplePublicLink.url)
+      // El componente muestra la URL pública del frontend (origin + token),
+      // no publicLink.url (que apunta al endpoint API).
+      expect(urlInput.value).toBe(`${window.location.origin}/p/uncats/${samplePublicLink.token}`)
       expect(screen.getByRole('button', { name: /copy/i })).toBeInTheDocument()
       expect(screen.getByRole('button', { name: /regenerate/i })).toBeInTheDocument()
       expect(screen.getByText(/created/i)).toBeInTheDocument()
@@ -318,7 +279,7 @@ describe('<CsConfigSheet>', () => {
       const enabledSwitch = screen.getByLabelText(/^enabled$/i)
       expect(enabledSwitch).not.toBeChecked()
       const urlInput = screen.getByLabelText(/public link url/i) as HTMLInputElement
-      expect(urlInput.value).toBe(sampleRevokedLink.url)
+      expect(urlInput.value).toBe(`${window.location.origin}/p/uncats/${sampleRevokedLink.token}`)
     })
 
     it('Generate button: POSTs create (no force)', async () => {
@@ -357,9 +318,7 @@ describe('<CsConfigSheet>', () => {
       const user = userEvent.setup()
       await user.click(screen.getByLabelText(/^enabled$/i))
 
-      expect(
-        await screen.findByText(/disable public link/i),
-      ).toBeInTheDocument()
+      expect(await screen.findByText(/disable public link/i)).toBeInTheDocument()
 
       await user.click(screen.getByRole('button', { name: /^disable$/i }))
 
@@ -407,9 +366,7 @@ describe('<CsConfigSheet>', () => {
       const user = userEvent.setup()
       await user.click(screen.getByRole('button', { name: /regenerate/i }))
 
-      expect(
-        await screen.findByText(/regenerate link\?/i),
-      ).toBeInTheDocument()
+      expect(await screen.findByText(/regenerate link\?/i)).toBeInTheDocument()
 
       const dialog = screen.getByRole('alertdialog')
       const confirmBtn = await import('@testing-library/dom').then(({ within }) =>
@@ -446,7 +403,9 @@ describe('<CsConfigSheet>', () => {
       await user.click(screen.getByRole('button', { name: /copy/i }))
 
       await waitFor(() => {
-        expect(writeTextSpy).toHaveBeenCalledWith(samplePublicLink.url)
+        expect(writeTextSpy).toHaveBeenCalledWith(
+          `${window.location.origin}/p/uncats/${samplePublicLink.token}`,
+        )
       })
       expect(toastSuccessMock).toHaveBeenCalled()
     })

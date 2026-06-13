@@ -59,8 +59,10 @@ de scope" de las versiones cerradas — ver [`BACKLOG.md`](BACKLOG.md)):
 > **Deuda de proceso (actualizado 2026-06-13):** ~~las releases v0.7.0–
 > v0.11.0 no tienen tag git~~ — RESUELTO: taggeadas retroactivamente
 > (`bvcpas-v0.7.0`…`v0.11.0`) junto con `bvcpas-v0.12.0`; ya no hay
-> huecos de tag. Pendiente aún: `17-client-home` no tiene carpeta propia
-> en `roadmap/` (su roadmap está embebido en `15-app-shell/v0.9.0.md`).
+> huecos de tag. ~~`17-client-home` no tiene carpeta propia en
+> `roadmap/`~~ — RESUELTO (2026-06-13): se creó
+> [`17-client-home/README.md`](17-client-home/README.md) que apunta a su
+> bitácora en `15-app-shell/v0.9.0.md`. Sin deuda de proceso pendiente.
 
 ---
 
@@ -291,7 +293,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 14-transactions     | ✅     | [README.md](14-transactions/README.md)     | [v0.5.1](14-transactions/v0.5.1.md)                                                                                                |
 | 15-app-shell        | ✅     | [README.md](15-app-shell/README.md)        | [v0.3.0](15-app-shell/v0.3.0.md) + [v0.3.1](15-app-shell/v0.3.1.md) + [v0.9.0](15-app-shell/v0.9.0.md)                             |
 | 16-public-uncats    | ✅     | (sin README; TDD en v0.8.0)                | [v0.8.0](16-public-uncats/v0.8.0.md) → app v0.8.0                                                                                  |
-| 17-client-home      | ✅     | (sin carpeta; TDD en 15-app-shell/v0.9.0)  | (entregado en app v0.9.0)                                                                                                          |
+| 17-client-home      | ✅     | [README.md](17-client-home/README.md)      | (entregado en app v0.9.0; bitácora en 15-app-shell/v0.9.0)                                                                         |
 | 18-integrations     | ✅     | (sin README; TDD en v0.1.0)                | [v0.1.0](18-integrations/v0.1.0.md) → app v0.10.0                                                                                  |
 | 19-bank-accounts    | ✅     | (sin README; TDD en v0.1.0/v0.12.0)        | [v0.1.0](19-bank-accounts/v0.1.0.md) (app v0.11.0) + v0.12.0 … v0.14.0 + [v0.15.0](19-bank-accounts/v0.15.0.md)                    |
 
