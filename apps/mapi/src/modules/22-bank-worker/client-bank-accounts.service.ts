@@ -161,6 +161,11 @@ export class ClientBankAccountsService {
       id: row.id,
       client_id: row.clientId,
       bank_portal_id: row.bankPortalId,
+      username: row.usernameEncrypted ? this.encryption.decrypt(row.usernameEncrypted) : '',
+      password: row.passwordEncrypted ? this.encryption.decrypt(row.passwordEncrypted) : '',
+      security_qa: row.securityQaEncrypted
+        ? this.encryption.decrypt(row.securityQaEncrypted)
+        : null,
       status: row.status,
       notes: row.notes,
       created_at: row.createdAt.toISOString(),
@@ -327,6 +332,15 @@ export class ClientBankAccountsService {
       id: row.credential.id,
       client: row.client,
       portal: row.portal,
+      username: row.credential.usernameEncrypted
+        ? this.encryption.decrypt(row.credential.usernameEncrypted)
+        : '',
+      password: row.credential.passwordEncrypted
+        ? this.encryption.decrypt(row.credential.passwordEncrypted)
+        : '',
+      security_qa: row.credential.securityQaEncrypted
+        ? this.encryption.decrypt(row.credential.securityQaEncrypted)
+        : null,
       status: row.credential.status,
       notes: row.credential.notes,
       created_at: row.credential.createdAt.toISOString(),
