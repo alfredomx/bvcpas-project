@@ -8,6 +8,7 @@
 
 import {
   Home,
+  Landmark,
   LayoutGrid,
   LineChart,
   Plug,
@@ -40,6 +41,7 @@ export const ICON_RAIL_ITEMS: IconRailGroups = {
     { key: 'home', label: 'Home', icon: Home, href: '/dashboard' },
     { key: 'connect', label: 'Connect', icon: Plug, href: '/connect' },
     { key: 'reports', label: 'Reports', icon: LineChart, href: '/reports' },
+    { key: 'bank-accounts', label: 'Bank Accounts', icon: Landmark, href: '/bank-accounts' },
     { key: 'all-apps', label: 'All apps', icon: LayoutGrid, href: '/apps' },
   ],
   pinned: [],
