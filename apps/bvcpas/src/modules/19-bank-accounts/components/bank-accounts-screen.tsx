@@ -16,11 +16,18 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { SectionHeader } from '@/components/shared/section-header'
 
 import { useClients } from '@/modules/11-clients/hooks/use-clients'
 
-import { listBankAccounts, type BankLogin } from '../api/bank-accounts.api'
+import { listBankAccounts, type BankLogin, type BankLoginStatus } from '../api/bank-accounts.api'
 import { BANK_LOGIN_ACCOUNTS_QUERY_KEY } from '../hooks/use-bank-login-accounts'
 import { useBankLogins } from '../hooks/use-bank-logins'
 
@@ -43,6 +50,7 @@ export function BankAccountsScreen() {
   // null = modo per-cliente (filtro local). string = búsqueda global
   // cross-cliente activa con ese término (combo bloqueado).
   const [globalTerm, setGlobalTerm] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<BankLoginStatus | 'all'>('all')
 
   const { items: clients } = useClients()
   const selectedClient = clients.find((c) => c.id === clientId) ?? null
@@ -70,21 +78,23 @@ export function BankAccountsScreen() {
   })
   const accountsByLogin = new Map(logins.map((l, i) => [l.id, accountQueries[i]?.data?.data ?? []]))
 
-  // En modo global los resultados ya vienen filtrados por el backend
-  // (client.legal_name + portal.name + notes); no re-filtramos local.
-  const filteredLogins =
-    globalMode || !term
-      ? logins
-      : logins.filter((l) => {
-          if (l.portal.name.toLowerCase().includes(term)) return true
-          if ((l.notes ?? '').toLowerCase().includes(term)) return true
-          return (accountsByLogin.get(l.id) ?? []).some(
-            (a) =>
-              a.account_mask.toLowerCase().includes(term) ||
-              (a.label ?? '').toLowerCase().includes(term) ||
-              a.account_type.toLowerCase().includes(term),
-          )
-        })
+  // Filtro de texto: en modo global el backend ya filtró; en local
+  // matchea banco + notes + cuentas.
+  const matchesText = (l: BankLogin) => {
+    if (globalMode || !term) return true
+    if (l.portal.name.toLowerCase().includes(term)) return true
+    if ((l.notes ?? '').toLowerCase().includes(term)) return true
+    return (accountsByLogin.get(l.id) ?? []).some(
+      (a) =>
+        a.account_mask.toLowerCase().includes(term) ||
+        (a.label ?? '').toLowerCase().includes(term) ||
+        a.account_type.toLowerCase().includes(term),
+    )
+  }
+  // El filtro de estatus afecta todo lo visible (ambos modos).
+  const filteredLogins = logins.filter(
+    (l) => (statusFilter === 'all' || l.status === statusFilter) && matchesText(l),
+  )
 
   const runGlobalSearch = () => {
     const t = bankSearch.trim()
@@ -153,6 +163,26 @@ export function BankAccountsScreen() {
             )}
           </div>
         </div>
+
+        {showResults && (
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="status-filter">Status</Label>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as BankLoginStatus | 'all')}
+            >
+              <SelectTrigger id="status-filter" className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="blocked">Blocked</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex items-center gap-2 md:ml-auto">
           <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
@@ -228,15 +258,11 @@ export function BankAccountsScreen() {
           <CredentialsEmpty onAdd={openCreate} />
         ))}
 
-      {!globalMode &&
-        showResults &&
-        query.data &&
-        logins.length > 0 &&
-        filteredLogins.length === 0 && (
-          <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
-            No matches for &ldquo;{bankSearch}&rdquo;.
-          </div>
-        )}
+      {showResults && query.data && logins.length > 0 && filteredLogins.length === 0 && (
+        <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
+          No matches for the current filters.
+        </div>
+      )}
 
       {showResults && query.data && filteredLogins.length > 0 && (
         <div className="flex flex-col gap-3">

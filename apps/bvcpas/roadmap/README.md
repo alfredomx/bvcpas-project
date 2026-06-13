@@ -36,7 +36,7 @@ falta.
 - `16-public-uncats` ✅ (v0.8.0 — pantalla pública `/p/uncats/[token]` sin login para el cliente final).
 - `17-client-home` ✅ (v0.9.0 — Client Home; su roadmap vive en `15-app-shell/v0.9.0`).
 - `18-integrations` ✅ (v0.10.0 — pantalla de integraciones del cliente conectada al backend real: pause/resume/check status).
-- `19-bank-accounts` ✅ (v0.11.0 vista global + v0.12.0 vista por cliente con credenciales descifradas + v0.13.0 CRUD de portales + v0.14.0 buscador + v0.15.0 búsqueda global cross-cliente).
+- `19-bank-accounts` ✅ (v0.11.0 vista global + v0.12.0 vista por cliente con credenciales descifradas + v0.13.0 CRUD de portales + v0.14.0 buscador + v0.15.0 búsqueda global cross-cliente + v0.15.1 filtro por estatus).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
@@ -330,6 +330,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.13.1  | 19-bank-accounts    | ✅     | fix: "Add account" se abría con datos previos (reset explícito del form)                                           | bvcpas-v0.13.1 | [19-bank-accounts/v0.13.1.md](19-bank-accounts/v0.13.1.md)     |
 | 0.14.0  | 19-bank-accounts    | ✅     | Buscador filtra por banco + cuentas + notes (+ fix perf + cosmético del layout)                                    | bvcpas-v0.14.0 | [19-bank-accounts/v0.14.0.md](19-bank-accounts/v0.14.0.md)     |
 | 0.15.0  | 19-bank-accounts    | ✅     | Búsqueda global cross-cliente (botón Buscar/Limpiar, bloquea combo, resultados con cliente)                        | bvcpas-v0.15.0 | [19-bank-accounts/v0.15.0.md](19-bank-accounts/v0.15.0.md)     |
+| 0.15.1  | 19-bank-accounts    | ✅     | Filtro por estatus de credencial (Active/Blocked/Closed) sobre lo visible                                          | bvcpas-v0.15.1 | [19-bank-accounts/v0.15.1.md](19-bank-accounts/v0.15.1.md)     |
 
 ---
 
