@@ -15,6 +15,8 @@ import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import { RequirePermission } from '../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import {
+  BankPortalListResponseDto,
+  BankPortalResponseDto,
   CreateBankPortalDto,
   CreateBankPortalSchema,
   UpdateBankPortalDto,
@@ -32,7 +34,7 @@ export class BankPortalsController {
   @Get()
   @RequirePermission('banking.read')
   @ApiOperation({ summary: 'GET /v1/banking/portals — lista todos los portales bancarios' })
-  @ApiResponse({ status: 200, description: 'Lista de portales.' })
+  @ApiResponse({ status: 200, description: 'Lista de portales.', type: BankPortalListResponseDto })
   async list(): Promise<{ data: BankPortalResponse[] }> {
     const data = await this.service.listAll()
     return { data }
@@ -41,7 +43,7 @@ export class BankPortalsController {
   @Get(':portalId')
   @RequirePermission('banking.read')
   @ApiOperation({ summary: 'GET /v1/banking/portals/:portalId — detalle de un portal' })
-  @ApiResponse({ status: 200, description: 'Portal.' })
+  @ApiResponse({ status: 200, description: 'Portal.', type: BankPortalResponseDto })
   @ApiResponse({ status: 404, description: 'Portal no existe.' })
   async findOne(@Param('portalId', ParseUUIDPipe) portalId: string): Promise<BankPortalResponse> {
     return this.service.findById(portalId)
@@ -51,7 +53,7 @@ export class BankPortalsController {
   @HttpCode(201)
   @RequirePermission('banking.create')
   @ApiOperation({ summary: 'POST /v1/banking/portals — crea un portal' })
-  @ApiResponse({ status: 201, description: 'Portal creado.' })
+  @ApiResponse({ status: 201, description: 'Portal creado.', type: BankPortalResponseDto })
   @ApiResponse({ status: 409, description: 'Nombre duplicado.' })
   async create(
     @Body(new ZodValidationPipe(CreateBankPortalSchema)) dto: CreateBankPortalDto,
@@ -63,7 +65,7 @@ export class BankPortalsController {
   @Patch(':portalId')
   @RequirePermission('banking.update')
   @ApiOperation({ summary: 'PATCH /v1/banking/portals/:portalId — edita un portal' })
-  @ApiResponse({ status: 200, description: 'Portal actualizado.' })
+  @ApiResponse({ status: 200, description: 'Portal actualizado.', type: BankPortalResponseDto })
   @ApiResponse({ status: 404, description: 'Portal no existe.' })
   @ApiResponse({ status: 409, description: 'Nombre duplicado.' })
   async update(

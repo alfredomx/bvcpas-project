@@ -17,6 +17,8 @@ import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
 import { RequirePermission } from '../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import {
+  ClientBankAccountListResponseDto,
+  ClientBankAccountResponseDto,
   CreateClientBankAccountDto,
   CreateClientBankAccountSchema,
   UpdateClientBankAccountDto,
@@ -37,7 +39,11 @@ export class ClientBankAccountsController {
   @ApiOperation({
     summary: 'GET /v1/clients/:id/banking/credentials — lista credenciales del cliente',
   })
-  @ApiResponse({ status: 200, description: 'Credenciales (sin valores encriptados).' })
+  @ApiResponse({
+    status: 200,
+    description: 'Credenciales (sin valores encriptados).',
+    type: ClientBankAccountListResponseDto,
+  })
   async list(
     @Param('id', ParseUUIDPipe) clientId: string,
   ): Promise<{ data: ClientBankAccountResponse[] }> {
@@ -48,7 +54,7 @@ export class ClientBankAccountsController {
   @Get(':credentialId')
   @RequirePermission('banking.read')
   @ApiOperation({ summary: 'GET /v1/clients/:id/banking/credentials/:credentialId — detalle' })
-  @ApiResponse({ status: 200, description: 'Credencial.' })
+  @ApiResponse({ status: 200, description: 'Credencial.', type: ClientBankAccountResponseDto })
   @ApiResponse({ status: 404, description: 'No existe.' })
   async findOne(
     @Param('id', ParseUUIDPipe) clientId: string,
@@ -61,7 +67,11 @@ export class ClientBankAccountsController {
   @HttpCode(201)
   @RequirePermission('banking.create')
   @ApiOperation({ summary: 'POST /v1/clients/:id/banking/credentials — crea credencial' })
-  @ApiResponse({ status: 201, description: 'Credencial creada.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Credencial creada.',
+    type: ClientBankAccountResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Portal no existe.' })
   @ApiResponse({ status: 409, description: 'Cliente ya tiene credencial en ese portal.' })
   async create(
@@ -75,7 +85,7 @@ export class ClientBankAccountsController {
   @Patch(':credentialId')
   @RequirePermission('banking.update')
   @ApiOperation({ summary: 'PATCH /v1/clients/:id/banking/credentials/:credentialId — edita' })
-  @ApiResponse({ status: 200, description: 'Actualizada.' })
+  @ApiResponse({ status: 200, description: 'Actualizada.', type: ClientBankAccountResponseDto })
   @ApiResponse({ status: 404, description: 'No existe.' })
   async update(
     @Param('id', ParseUUIDPipe) clientId: string,

@@ -15,6 +15,8 @@ import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import { RequirePermission } from '../../core/permissions/decorators/require-permission.decorator'
 import type { SessionContext } from '../../core/auth/sessions.service'
 import {
+  BankAccountListResponseDto,
+  BankAccountResponseDto,
   ChangeBankAccountStatusDto,
   ChangeBankAccountStatusSchema,
   CreateBankAccountDto,
@@ -36,7 +38,7 @@ export class BankAccountsController {
   @ApiOperation({
     summary: 'GET /v1/banking/credentials/:credentialId/accounts — cuentas dentro del login',
   })
-  @ApiResponse({ status: 200, description: 'Lista de cuentas.' })
+  @ApiResponse({ status: 200, description: 'Lista de cuentas.', type: BankAccountListResponseDto })
   async list(
     @Param('credentialId', ParseUUIDPipe) credentialId: string,
   ): Promise<{ data: BankAccountResponse[] }> {
@@ -48,7 +50,7 @@ export class BankAccountsController {
   @HttpCode(201)
   @RequirePermission('banking.create')
   @ApiOperation({ summary: 'POST /v1/banking/credentials/:credentialId/accounts — crea cuenta' })
-  @ApiResponse({ status: 201, description: 'Cuenta creada.' })
+  @ApiResponse({ status: 201, description: 'Cuenta creada.', type: BankAccountResponseDto })
   @ApiResponse({ status: 409, description: 'Mask duplicado en ese login.' })
   async create(
     @Param('credentialId', ParseUUIDPipe) credentialId: string,
@@ -61,7 +63,7 @@ export class BankAccountsController {
   @Patch('accounts/:accountId')
   @RequirePermission('banking.update')
   @ApiOperation({ summary: 'PATCH /v1/banking/accounts/:accountId — edita cuenta' })
-  @ApiResponse({ status: 200, description: 'Actualizada.' })
+  @ApiResponse({ status: 200, description: 'Actualizada.', type: BankAccountResponseDto })
   @ApiResponse({ status: 404, description: 'No existe.' })
   async update(
     @Param('accountId', ParseUUIDPipe) accountId: string,
@@ -74,7 +76,7 @@ export class BankAccountsController {
   @Post('accounts/:accountId/status')
   @RequirePermission('banking.update')
   @ApiOperation({ summary: 'POST /v1/banking/accounts/:accountId/status — cambia status' })
-  @ApiResponse({ status: 200, description: 'Status cambiado.' })
+  @ApiResponse({ status: 200, description: 'Status cambiado.', type: BankAccountResponseDto })
   async changeStatus(
     @Param('accountId', ParseUUIDPipe) accountId: string,
     @Body(new ZodValidationPipe(ChangeBankAccountStatusSchema)) dto: ChangeBankAccountStatusDto,
