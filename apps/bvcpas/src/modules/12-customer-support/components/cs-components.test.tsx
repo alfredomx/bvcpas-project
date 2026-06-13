@@ -147,9 +147,7 @@ describe('<CsSuggestedAction>', () => {
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /draft follow-up/i }))
 
-    expect(
-      await screen.findByRole('dialog', { name: /send follow-up email/i }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /send follow-up email/i })).toBeInTheDocument()
   })
 
   it('mentions the contact name in the message', () => {
@@ -168,16 +166,14 @@ describe('<CsSuggestedAction>', () => {
 })
 
 describe('<CsQuickLinks>', () => {
-  it('renders 6 buttons; placeholder click dispatches toast', async () => {
+  it('renders 3 buttons; placeholder click dispatches toast', async () => {
     toastMessageMock.mockReset()
-    render(
-      withQueryClient(
-        <CsQuickLinks client={sample.client} publicLink={sample.public_link} />,
-      ),
-    )
+    render(withQueryClient(<CsQuickLinks client={sample.client} publicLink={sample.public_link} />))
 
+    // Sheet (placeholder) + Follow-up email + Log a call. Los otros 3
+    // placeholders se removieron al volverse funcionales (v0.7.0).
     const buttons = screen.getAllByRole('button')
-    expect(buttons).toHaveLength(6)
+    expect(buttons).toHaveLength(3)
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /^sheet$/i }))
@@ -185,26 +181,18 @@ describe('<CsQuickLinks>', () => {
   })
 
   it('Follow-up email button opens DraftFollowupDialog', async () => {
-    render(
-      withQueryClient(
-        <CsQuickLinks client={sample.client} publicLink={sample.public_link} />,
-      ),
-    )
+    render(withQueryClient(<CsQuickLinks client={sample.client} publicLink={sample.public_link} />))
 
     const user = userEvent.setup()
     await user.click(screen.getByRole('button', { name: /follow-up email/i }))
 
-    expect(
-      await screen.findByRole('dialog', { name: /send follow-up email/i }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: /send follow-up email/i })).toBeInTheDocument()
   })
 })
 
 describe('<CsActivityTimeline>', () => {
   it('default mode "uncategorized" plots uncats per month', () => {
-    render(
-      <CsActivityTimeline monthly={sample.monthly} now={new Date('2026-05-09T12:00:00Z')} />,
-    )
+    render(<CsActivityTimeline monthly={sample.monthly} now={new Date('2026-05-09T12:00:00Z')} />)
     expect(screen.getByLabelText(/January 16 uncats/)).toBeInTheDocument()
     expect(screen.getByLabelText(/April 0 uncats/)).toBeInTheDocument()
     expect(screen.getByText(/uncats per month · April highlighted/)).toBeInTheDocument()
@@ -225,16 +213,10 @@ describe('<CsActivityTimeline>', () => {
     }
 
     render(
-      <CsActivityTimeline
-        monthly={monthly}
-        mode="amas"
-        now={new Date('2026-05-09T12:00:00Z')}
-      />,
+      <CsActivityTimeline monthly={monthly} mode="amas" now={new Date('2026-05-09T12:00:00Z')} />,
     )
     expect(screen.getByLabelText(/January 5 AMAs/)).toBeInTheDocument()
     expect(screen.getByLabelText(/February 0 AMAs/)).toBeInTheDocument()
-    expect(
-      screen.getByText(/ask my accountant per month · April highlighted/),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/ask my accountant per month · April highlighted/)).toBeInTheDocument()
   })
 })
