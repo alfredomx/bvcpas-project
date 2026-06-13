@@ -46,23 +46,6 @@ export class ClientBankAccountsRepository {
     return row ?? null
   }
 
-  async findByClientAndPortal(
-    clientId: string,
-    bankPortalId: string,
-  ): Promise<ClientBankAccount | null> {
-    const [row] = await this.db
-      .select()
-      .from(clientBankAccounts)
-      .where(
-        and(
-          eq(clientBankAccounts.clientId, clientId),
-          eq(clientBankAccounts.bankPortalId, bankPortalId),
-        ),
-      )
-      .limit(1)
-    return row ?? null
-  }
-
   async create(data: NewClientBankAccount): Promise<ClientBankAccount> {
     const [row] = await this.db.insert(clientBankAccounts).values(data).returning()
     if (!row) throw new Error('create: no row returned')
