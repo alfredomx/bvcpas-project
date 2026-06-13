@@ -31,13 +31,21 @@ export const UpdateBankPortalSchema = z
 
 export class UpdateBankPortalDto extends createZodDto(UpdateBankPortalSchema) {}
 
-export interface BankPortalResponse {
-  id: string
-  name: string
-  portal_url: string | null
-  created_at: string
-  updated_at: string
-}
+export const BankPortalResponseSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  portal_url: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type BankPortalResponse = z.infer<typeof BankPortalResponseSchema>
+
+export class BankPortalResponseDto extends createZodDto(BankPortalResponseSchema) {}
+
+export class BankPortalListResponseDto extends createZodDto(
+  z.object({ data: z.array(BankPortalResponseSchema) }),
+) {}
 
 // ───── Client Bank Accounts (credenciales) ───────────────────────────────
 
@@ -69,15 +77,23 @@ export const UpdateClientBankAccountSchema = z
 
 export class UpdateClientBankAccountDto extends createZodDto(UpdateClientBankAccountSchema) {}
 
-export interface ClientBankAccountResponse {
-  id: string
-  client_id: string
-  bank_portal_id: string
-  status: (typeof CLIENT_BANK_ACCOUNT_STATUSES)[number]
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
+export const ClientBankAccountResponseSchema = z.object({
+  id: z.string().uuid(),
+  client_id: z.string().uuid(),
+  bank_portal_id: z.string().uuid(),
+  status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES),
+  notes: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type ClientBankAccountResponse = z.infer<typeof ClientBankAccountResponseSchema>
+
+export class ClientBankAccountResponseDto extends createZodDto(ClientBankAccountResponseSchema) {}
+
+export class ClientBankAccountListResponseDto extends createZodDto(
+  z.object({ data: z.array(ClientBankAccountResponseSchema) }),
+) {}
 
 // ───── Global Credentials (v0.16.1) ───────────────────────────────────────
 
@@ -108,22 +124,36 @@ export const CreateGlobalCredentialSchema = z
 
 export class CreateGlobalCredentialDto extends createZodDto(CreateGlobalCredentialSchema) {}
 
-export interface GlobalCredentialResponse {
-  id: string
-  client: { id: string; legal_name: string }
-  portal: { id: string; name: string; portal_url: string | null }
-  status: (typeof CLIENT_BANK_ACCOUNT_STATUSES)[number]
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
+export const GlobalCredentialResponseSchema = z.object({
+  id: z.string().uuid(),
+  client: z.object({ id: z.string().uuid(), legal_name: z.string() }),
+  portal: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    portal_url: z.string().nullable(),
+  }),
+  status: z.enum(CLIENT_BANK_ACCOUNT_STATUSES),
+  notes: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
 
-export interface ListGlobalCredentialsResponse {
-  items: GlobalCredentialResponse[]
-  total: number
-  limit: number
-  offset: number
-}
+export type GlobalCredentialResponse = z.infer<typeof GlobalCredentialResponseSchema>
+
+export class GlobalCredentialResponseDto extends createZodDto(GlobalCredentialResponseSchema) {}
+
+export const ListGlobalCredentialsResponseSchema = z.object({
+  items: z.array(GlobalCredentialResponseSchema),
+  total: z.number(),
+  limit: z.number(),
+  offset: z.number(),
+})
+
+export type ListGlobalCredentialsResponse = z.infer<typeof ListGlobalCredentialsResponseSchema>
+
+export class ListGlobalCredentialsResponseDto extends createZodDto(
+  ListGlobalCredentialsResponseSchema,
+) {}
 
 // ───── Bank Accounts (cuentas individuales) ──────────────────────────────
 
@@ -163,14 +193,22 @@ export const ChangeBankAccountStatusSchema = z
 
 export class ChangeBankAccountStatusDto extends createZodDto(ChangeBankAccountStatusSchema) {}
 
-export interface BankAccountResponse {
-  id: string
-  client_bank_account_id: string
-  account_mask: string
-  account_type: (typeof BANK_ACCOUNT_TYPES)[number]
-  label: string | null
-  status: (typeof BANK_ACCOUNT_STATUSES)[number]
-  notes: string | null
-  created_at: string
-  updated_at: string
-}
+export const BankAccountResponseSchema = z.object({
+  id: z.string().uuid(),
+  client_bank_account_id: z.string().uuid(),
+  account_mask: z.string(),
+  account_type: z.enum(BANK_ACCOUNT_TYPES),
+  label: z.string().nullable(),
+  status: z.enum(BANK_ACCOUNT_STATUSES),
+  notes: z.string().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export type BankAccountResponse = z.infer<typeof BankAccountResponseSchema>
+
+export class BankAccountResponseDto extends createZodDto(BankAccountResponseSchema) {}
+
+export class BankAccountListResponseDto extends createZodDto(
+  z.object({ data: z.array(BankAccountResponseSchema) }),
+) {}

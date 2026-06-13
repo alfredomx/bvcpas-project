@@ -18,8 +18,10 @@ import type { SessionContext } from '../../core/auth/sessions.service'
 import {
   CreateGlobalCredentialDto,
   CreateGlobalCredentialSchema,
+  GlobalCredentialResponseDto,
   ListGlobalCredentialsQueryDto,
   ListGlobalCredentialsQuerySchema,
+  ListGlobalCredentialsResponseDto,
   UpdateClientBankAccountDto,
   UpdateClientBankAccountSchema,
   type GlobalCredentialResponse,
@@ -50,7 +52,11 @@ export class BankCredentialsGlobalController {
     description:
       'Devuelve todas las credenciales con cliente y portal poblados. Filtros: clientId, portalId, status, search (busca en client.legal_name, portal.name y notes).',
   })
-  @ApiResponse({ status: 200, description: 'Lista global de credenciales.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista global de credenciales.',
+    type: ListGlobalCredentialsResponseDto,
+  })
   async list(
     @Query(new ZodValidationPipe(ListGlobalCredentialsQuerySchema))
     query: ListGlobalCredentialsQueryDto,
@@ -70,7 +76,11 @@ export class BankCredentialsGlobalController {
   @ApiOperation({
     summary: 'GET /v1/banking/credentials/:credentialId — detalle global',
   })
-  @ApiResponse({ status: 200, description: 'Credencial con joins de cliente y portal.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Credencial con joins de cliente y portal.',
+    type: GlobalCredentialResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'No existe.' })
   async findOne(
     @Param('credentialId', ParseUUIDPipe) credentialId: string,
@@ -84,7 +94,11 @@ export class BankCredentialsGlobalController {
   @ApiOperation({
     summary: 'POST /v1/banking/credentials — crea credencial pasando clientId en el body',
   })
-  @ApiResponse({ status: 201, description: 'Credencial creada.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Credencial creada.',
+    type: GlobalCredentialResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Portal no existe.' })
   @ApiResponse({ status: 409, description: 'Ya hay credencial para ese cliente en ese portal.' })
   async create(
@@ -99,7 +113,7 @@ export class BankCredentialsGlobalController {
   @ApiOperation({
     summary: 'PATCH /v1/banking/credentials/:credentialId — edita credencial (global)',
   })
-  @ApiResponse({ status: 200, description: 'Actualizada.' })
+  @ApiResponse({ status: 200, description: 'Actualizada.', type: GlobalCredentialResponseDto })
   @ApiResponse({ status: 404, description: 'No existe.' })
   async update(
     @Param('credentialId', ParseUUIDPipe) credentialId: string,
