@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
-import { Check, ChevronsUpDown, Landmark, Plus } from 'lucide-react'
+import { Check, ChevronsUpDown, Landmark, Plus, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -40,39 +40,60 @@ export function BankAccountsScreen() {
   const [deleteTarget, setDeleteTarget] = useState<BankLogin | null>(null)
   const [bankSearch, setBankSearch] = useState('')
   const [managePortalsOpen, setManagePortalsOpen] = useState(false)
+  // null = modo per-cliente (filtro local). string = búsqueda global
+  // cross-cliente activa con ese término (combo bloqueado).
+  const [globalTerm, setGlobalTerm] = useState<string | null>(null)
 
   const { items: clients } = useClients()
   const selectedClient = clients.find((c) => c.id === clientId) ?? null
 
-  const query = useBankLogins({ clientId: clientId ?? undefined }, { enabled: clientId !== null })
+  const globalMode = globalTerm !== null
+  const showResults = globalMode || clientId !== null
+
+  // Modo global: búsqueda cross-cliente vía backend (?search=, sin
+  // clientId). Modo per-cliente: credenciales del cliente seleccionado.
+  const query = useBankLogins(
+    globalMode ? { search: globalTerm } : { clientId: clientId ?? undefined },
+    { enabled: showResults },
+  )
   const logins = query.data?.items ?? []
   const term = bankSearch.trim().toLowerCase()
 
-  // Solo cargamos las cuentas a nivel pantalla cuando hay búsqueda activa
-  // (para poder filtrar por cuenta). Sin búsqueda no las tocamos aquí —
-  // las cards las cargan solas. Mismo queryKey que las cards, así que
-  // React Query reusa la caché. Esto evita re-renders y espera de N
-  // peticiones al solo cambiar de cliente.
+  // Filtro local por cuenta: solo en modo per-cliente y con texto. Carga
+  // las cuentas reusando el queryKey de las cards (React Query dedupea).
   const accountQueries = useQueries({
     queries: logins.map((l) => ({
       queryKey: [BANK_LOGIN_ACCOUNTS_QUERY_KEY, l.id],
       queryFn: () => listBankAccounts(l.id),
-      enabled: term.length > 0,
+      enabled: !globalMode && term.length > 0,
     })),
   })
   const accountsByLogin = new Map(logins.map((l, i) => [l.id, accountQueries[i]?.data?.data ?? []]))
-  const filteredLogins = term
-    ? logins.filter((l) => {
-        if (l.portal.name.toLowerCase().includes(term)) return true
-        if ((l.notes ?? '').toLowerCase().includes(term)) return true
-        return (accountsByLogin.get(l.id) ?? []).some(
-          (a) =>
-            a.account_mask.toLowerCase().includes(term) ||
-            (a.label ?? '').toLowerCase().includes(term) ||
-            a.account_type.toLowerCase().includes(term),
-        )
-      })
-    : logins
+
+  // En modo global los resultados ya vienen filtrados por el backend
+  // (client.legal_name + portal.name + notes); no re-filtramos local.
+  const filteredLogins =
+    globalMode || !term
+      ? logins
+      : logins.filter((l) => {
+          if (l.portal.name.toLowerCase().includes(term)) return true
+          if ((l.notes ?? '').toLowerCase().includes(term)) return true
+          return (accountsByLogin.get(l.id) ?? []).some(
+            (a) =>
+              a.account_mask.toLowerCase().includes(term) ||
+              (a.label ?? '').toLowerCase().includes(term) ||
+              a.account_type.toLowerCase().includes(term),
+          )
+        })
+
+  const runGlobalSearch = () => {
+    const t = bankSearch.trim()
+    if (t) setGlobalTerm(t)
+  }
+  const clearSearch = () => {
+    setGlobalTerm(null)
+    setBankSearch('')
+  }
 
   const openCreate = () => {
     setEditTarget(null)
@@ -104,25 +125,44 @@ export function BankAccountsScreen() {
       />
 
       <div className="flex flex-wrap items-end gap-2">
-        {clientId !== null && logins.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <Label htmlFor="bank-search">Search</Label>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="bank-search">Search</Label>
+          <div className="flex items-center gap-2">
             <Input
               id="bank-search"
               type="search"
               value={bankSearch}
               onChange={(e) => setBankSearch(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') runGlobalSearch()
+              }}
               placeholder="Filter by bank, account, notes…"
               className="w-[480px] max-w-full"
+              disabled={globalMode}
               aria-label="Filter credentials by bank, account or notes"
             />
+            {globalMode ? (
+              <Button type="button" variant="outline" onClick={clearSearch}>
+                Limpiar
+              </Button>
+            ) : (
+              <Button type="button" onClick={runGlobalSearch} disabled={!bankSearch.trim()}>
+                <Search className="size-4" />
+                Buscar
+              </Button>
+            )}
           </div>
-        )}
+        </div>
 
         <div className="flex items-center gap-2 md:ml-auto">
           <Popover open={clientPickerOpen} onOpenChange={setClientPickerOpen}>
             <PopoverTrigger asChild>
-              <Button type="button" variant="outline" className="w-[280px] justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-[280px] justify-between"
+                disabled={globalMode}
+              >
                 <span className="min-w-0 truncate">
                   {selectedClient?.legal_name ?? 'Select a client…'}
                 </span>
@@ -157,7 +197,7 @@ export function BankAccountsScreen() {
             </PopoverContent>
           </Popover>
 
-          {clientId !== null && (
+          {!globalMode && clientId !== null && (
             <Button type="button" size="sm" onClick={openCreate}>
               <Plus className="size-4" />
               Add bank login
@@ -166,33 +206,45 @@ export function BankAccountsScreen() {
         </div>
       </div>
 
-      {clientId === null && <SelectClientPrompt />}
+      {!showResults && <SelectClientPrompt />}
 
-      {clientId !== null && query.isLoading && <CardsLoading />}
+      {showResults && query.isLoading && <CardsLoading />}
 
-      {clientId !== null && query.isError && (
+      {showResults && query.isError && (
         <CardsError
           message={query.error?.message ?? 'Could not load bank logins.'}
           onRetry={() => query.refetch()}
         />
       )}
 
-      {clientId !== null && query.data && logins.length === 0 && (
-        <CredentialsEmpty onAdd={openCreate} />
-      )}
+      {showResults &&
+        query.data &&
+        logins.length === 0 &&
+        (globalMode ? (
+          <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
+            No credentials match &ldquo;{globalTerm}&rdquo; across clients.
+          </div>
+        ) : (
+          <CredentialsEmpty onAdd={openCreate} />
+        ))}
 
-      {clientId !== null && query.data && logins.length > 0 && filteredLogins.length === 0 && (
-        <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
-          No matches for &ldquo;{bankSearch}&rdquo;.
-        </div>
-      )}
+      {!globalMode &&
+        showResults &&
+        query.data &&
+        logins.length > 0 &&
+        filteredLogins.length === 0 && (
+          <div className="rounded-md border border-dashed bg-muted/20 px-6 py-8 text-center text-sm text-muted-foreground">
+            No matches for &ldquo;{bankSearch}&rdquo;.
+          </div>
+        )}
 
-      {clientId !== null && query.data && filteredLogins.length > 0 && (
+      {showResults && query.data && filteredLogins.length > 0 && (
         <div className="flex flex-col gap-3">
           {filteredLogins.map((login) => (
             <CredentialCard
               key={login.id}
               login={login}
+              showClient={globalMode}
               onOpenAccounts={(l) => {
                 setSelected(l)
                 setSheetOpen(true)

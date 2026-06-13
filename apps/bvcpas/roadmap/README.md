@@ -36,7 +36,7 @@ falta.
 - `16-public-uncats` ✅ (v0.8.0 — pantalla pública `/p/uncats/[token]` sin login para el cliente final).
 - `17-client-home` ✅ (v0.9.0 — Client Home; su roadmap vive en `15-app-shell/v0.9.0`).
 - `18-integrations` ✅ (v0.10.0 — pantalla de integraciones del cliente conectada al backend real: pause/resume/check status).
-- `19-bank-accounts` ✅ (v0.11.0 vista global + v0.12.0 vista por cliente con credenciales descifradas + v0.13.0 CRUD de portales + v0.14.0 buscador por banco/cuentas/notes).
+- `19-bank-accounts` ✅ (v0.11.0 vista global + v0.12.0 vista por cliente con credenciales descifradas + v0.13.0 CRUD de portales + v0.14.0 buscador + v0.15.0 búsqueda global cross-cliente).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
@@ -293,7 +293,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 16-public-uncats    | ✅     | (sin README; TDD en v0.8.0)                | [v0.8.0](16-public-uncats/v0.8.0.md) → app v0.8.0                                                                                  |
 | 17-client-home      | ✅     | (sin carpeta; TDD en 15-app-shell/v0.9.0)  | (entregado en app v0.9.0)                                                                                                          |
 | 18-integrations     | ✅     | (sin README; TDD en v0.1.0)                | [v0.1.0](18-integrations/v0.1.0.md) → app v0.10.0                                                                                  |
-| 19-bank-accounts    | ✅     | (sin README; TDD en v0.1.0/v0.12.0)        | [v0.1.0](19-bank-accounts/v0.1.0.md) (app v0.11.0) + v0.12.0 + v0.13.0 + v0.13.1 + [v0.14.0](19-bank-accounts/v0.14.0.md)          |
+| 19-bank-accounts    | ✅     | (sin README; TDD en v0.1.0/v0.12.0)        | [v0.1.0](19-bank-accounts/v0.1.0.md) (app v0.11.0) + v0.12.0 … v0.14.0 + [v0.15.0](19-bank-accounts/v0.15.0.md)                    |
 
 ---
 
@@ -329,6 +329,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.13.0  | 19-bank-accounts    | ✅     | Manage portals — CRUD del catálogo de portales (banco/utility/payroll)                                             | bvcpas-v0.13.0 | [19-bank-accounts/v0.13.0.md](19-bank-accounts/v0.13.0.md)     |
 | 0.13.1  | 19-bank-accounts    | ✅     | fix: "Add account" se abría con datos previos (reset explícito del form)                                           | bvcpas-v0.13.1 | [19-bank-accounts/v0.13.1.md](19-bank-accounts/v0.13.1.md)     |
 | 0.14.0  | 19-bank-accounts    | ✅     | Buscador filtra por banco + cuentas + notes (+ fix perf + cosmético del layout)                                    | bvcpas-v0.14.0 | [19-bank-accounts/v0.14.0.md](19-bank-accounts/v0.14.0.md)     |
+| 0.15.0  | 19-bank-accounts    | ✅     | Búsqueda global cross-cliente (botón Buscar/Limpiar, bloquea combo, resultados con cliente)                        | bvcpas-v0.15.0 | [19-bank-accounts/v0.15.0.md](19-bank-accounts/v0.15.0.md)     |
 
 ---
 

@@ -25,11 +25,19 @@ export interface CredentialCardProps {
   onOpenAccounts: (login: BankLogin) => void
   onEdit: (login: BankLogin) => void
   onDelete: (login: BankLogin) => void
+  // En resultados globales (cross-cliente) muestra a qué cliente pertenece.
+  showClient?: boolean
 }
 
 const fieldLabel = 'text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'
 
-export function CredentialCard({ login, onOpenAccounts, onEdit, onDelete }: CredentialCardProps) {
+export function CredentialCard({
+  login,
+  onOpenAccounts,
+  onEdit,
+  onDelete,
+  showClient = false,
+}: CredentialCardProps) {
   const accountsQuery = useBankLoginAccounts(login.id)
   const accounts = accountsQuery.data?.data ?? []
 
@@ -43,6 +51,7 @@ export function CredentialCard({ login, onOpenAccounts, onEdit, onDelete }: Cred
     <div className="flex flex-col gap-2 rounded-md border p-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
+          {showClient && <span className={fieldLabel}>{login.client.legal_name}</span>}
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-semibold">{login.portal.name}</span>
             <StatusPill status={LOGIN_STATUS[login.status]} />
