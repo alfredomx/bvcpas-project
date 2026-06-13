@@ -2,10 +2,7 @@
 // el bullet de color. Badge texto neutro, bullet con color: coherente
 // con el resto del frontend y satisface la instrucción de mapi.
 
-import type {
-  BankAccountStatus,
-  BankLoginStatus,
-} from '../api/bank-accounts.api'
+import type { BankAccountStatus, BankLoginStatus } from '../api/bank-accounts.api'
 
 export interface StatusDef {
   label: string

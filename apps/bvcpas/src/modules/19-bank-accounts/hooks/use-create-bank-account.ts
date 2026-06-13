@@ -19,8 +19,7 @@ export function useCreateBankAccount() {
   const queryClient = useQueryClient()
 
   return useMutation<BankAccountDetail, Error, CreateBankAccountVars>({
-    mutationFn: ({ credentialId, body }) =>
-      createBankAccount(credentialId, body),
+    mutationFn: ({ credentialId, body }) => createBankAccount(credentialId, body),
     onSuccess: (_, { credentialId }) => {
       queryClient.invalidateQueries({
         queryKey: [BANK_LOGIN_ACCOUNTS_QUERY_KEY, credentialId],

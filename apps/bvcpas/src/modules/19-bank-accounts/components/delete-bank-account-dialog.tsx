@@ -47,9 +47,7 @@ export function DeleteBankAccountDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMutation.isPending}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteMutation.isPending}

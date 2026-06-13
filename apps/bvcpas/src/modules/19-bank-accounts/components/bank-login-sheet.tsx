@@ -4,17 +4,9 @@ import { useState } from 'react'
 import { ExternalLink, Pencil, Plus, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
-import type {
-  BankAccount,
-  BankLogin,
-} from '../api/bank-accounts.api'
+import type { BankAccount, BankLogin } from '../api/bank-accounts.api'
 import { useBankLoginAccounts } from '../hooks/use-bank-login-accounts'
 import { ACCOUNT_TYPE_LABEL } from '../lib/account-types'
 import { ACCOUNT_STATUS, LOGIN_STATUS } from '../lib/status-labels'
@@ -27,22 +19,12 @@ export interface BankLoginSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   login: BankLogin | null
-  onEditLogin: (login: BankLogin) => void
-  onDeleteLogin: (login: BankLogin) => void
 }
 
-export function BankLoginSheet({
-  open,
-  onOpenChange,
-  login,
-  onEditLogin,
-  onDeleteLogin,
-}: BankLoginSheetProps) {
+export function BankLoginSheet({ open, onOpenChange, login }: BankLoginSheetProps) {
   const [accountFormOpen, setAccountFormOpen] = useState(false)
   const [accountForEdit, setAccountForEdit] = useState<BankAccount | null>(null)
-  const [accountForDelete, setAccountForDelete] = useState<BankAccount | null>(
-    null,
-  )
+  const [accountForDelete, setAccountForDelete] = useState<BankAccount | null>(null)
 
   const accountsQuery = useBankLoginAccounts(login?.id ?? null)
   const accounts = accountsQuery.data?.data ?? []
@@ -52,17 +34,12 @@ export function BankLoginSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent
-          side="right"
-          className="w-[720px] sm:max-w-[720px] p-0"
-        >
+        <SheetContent side="right" className="w-[720px] sm:max-w-[720px] p-0">
           <SheetHeader className="gap-3 border-b p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <SheetTitle className="text-lg">{login.portal.name}</SheetTitle>
-                <p className="text-xs text-muted-foreground">
-                  {login.client.legal_name}
-                </p>
+                <p className="text-xs text-muted-foreground">{login.client.legal_name}</p>
                 <div className="mt-1 flex items-center gap-2">
                   <StatusPill status={LOGIN_STATUS[login.status]} />
                   {login.portal.portal_url && (
@@ -78,27 +55,6 @@ export function BankLoginSheet({
                     </a>
                   )}
                 </div>
-              </div>
-              <div className="flex shrink-0 items-center gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEditLogin(login)}
-                >
-                  <Pencil className="size-3.5" />
-                  Edit login
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => onDeleteLogin(login)}
-                >
-                  <Trash2 className="size-3.5" />
-                  Delete
-                </Button>
               </div>
             </div>
           </SheetHeader>
@@ -146,16 +102,21 @@ export function BankLoginSheet({
                 <tbody>
                   {accountsQuery.isLoading && (
                     <tr>
-                      <td colSpan={5} className="px-3 py-6 text-center text-xs text-muted-foreground">
+                      <td
+                        colSpan={5}
+                        className="px-3 py-6 text-center text-xs text-muted-foreground"
+                      >
                         Loading…
                       </td>
                     </tr>
                   )}
                   {!accountsQuery.isLoading && accounts.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="px-3 py-6 text-center text-xs text-muted-foreground">
-                        No accounts yet. Click &ldquo;Add account&rdquo; to
-                        register one.
+                      <td
+                        colSpan={5}
+                        className="px-3 py-6 text-center text-xs text-muted-foreground"
+                      >
+                        No accounts yet. Click &ldquo;Add account&rdquo; to register one.
                       </td>
                     </tr>
                   )}
@@ -202,9 +163,7 @@ export function BankLoginSheet({
             {login.notes && (
               <div className="mt-6">
                 <h3 className="text-sm font-semibold">Notes</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {login.notes}
-                </p>
+                <p className="mt-1 text-xs text-muted-foreground">{login.notes}</p>
               </div>
             )}
           </div>

@@ -31,9 +31,7 @@ function Probe() {
   return (
     <button
       type="button"
-      onClick={() =>
-        m.mutate({ accountId: 'a-1', body: { status: 'closed' } })
-      }
+      onClick={() => m.mutate({ accountId: 'a-1', body: { status: 'closed' } })}
     >
       Change
     </button>

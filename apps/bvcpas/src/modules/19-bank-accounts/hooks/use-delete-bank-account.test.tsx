@@ -28,7 +28,11 @@ function wrapper({ children }: { children: ReactNode }) {
 
 function Probe() {
   const m = useDeleteBankAccount()
-  return <button type="button" onClick={() => m.mutate('a-1')}>Delete</button>
+  return (
+    <button type="button" onClick={() => m.mutate('a-1')}>
+      Delete
+    </button>
+  )
 }
 
 describe('useDeleteBankAccount', () => {

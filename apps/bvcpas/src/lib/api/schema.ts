@@ -4,6093 +4,6133 @@
  */
 
 export interface paths {
-    "/v1/auth/login": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * /v1/auth/login
-         * @description Devuelve un JWT firmado válido por JWT_EXPIRES_IN (default 7d) + datos del usuario. Crea una sesión revocable en `user_sessions`. Rate limit: 10 intentos/min por IP.
-         */
-        post: operations["AuthController_login"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/logout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * /v1/auth/logout
-         * @description Revoca solo la sesión correspondiente al JWT que mandó la request.
-         */
-        post: operations["AuthController_logout"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/logout-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * /v1/auth/logout-all
-         * @description Revoca todas las sesiones activas del usuario actual (incluida ésta). Útil si pierde un dispositivo.
-         */
-        post: operations["AuthController_logoutAll"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /v1/auth/me
-         * @description Devuelve id, email, nombre, role, status, último login del usuario actual.
-         */
-        get: operations["AuthController_me"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/me/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /v1/auth/me/permissions
-         * @description Devuelve roles + permisos efectivos del usuario actual. Endpoint clave para el frontend — bvcpas lo llama después del login para decidir qué secciones del sidebar mostrar (D-mapi-PRM-010). Wildcards EXPANDIDOS literalmente (D-mapi-PRM-009): si el user tiene el rol Administrator (`*`), recibe los 27 codes del catálogo en la lista.
-         */
-        get: operations["AuthController_myPermissions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/auth/me/password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * /v1/auth/me/password
-         * @description Requiere old_password correcta. Mínimo 8 caracteres. Revoca todas las otras sesiones del usuario (la actual sigue activa).
-         */
-        patch: operations["AuthController_changePassword"];
-        trace?: never;
-    };
-    "/v1/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /v1/users
-         * @description Listado paginado de todos los usuarios. Solo admin.
-         */
-        get: operations["AdminUsersController_list"];
-        put?: never;
-        /**
-         * /v1/users
-         * @description Crea un usuario nuevo. Si initialPassword no se proporciona, se genera una aleatoria y se devuelve UNA vez en la response.
-         */
-        post: operations["AdminUsersController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** /v1/users/:id */
-        get: operations["AdminUsersController_getOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * /v1/users/:id
-         * @description Edita full_name, role o status. NO incluye password (usar /reset-password). Cambiar status a disabled NO revoca sesiones existentes — usar /sessions/revoke-all para eso.
-         */
-        patch: operations["AdminUsersController_update"];
-        trace?: never;
-    };
-    "/v1/users/{id}/reset-password": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * /v1/users/:id/reset-password
-         * @description Genera password aleatoria, la asigna y revoca TODAS las sesiones del usuario. Devuelve la temporary password UNA vez.
-         */
-        post: operations["AdminUsersController_resetPassword"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/users/{userId}/sessions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /v1/users/:userId/sessions
-         * @description Devuelve todas las sesiones (activas + revocadas) del usuario. Útil para detectar dispositivos sospechosos.
-         */
-        get: operations["AdminUsersSessionsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/users/{userId}/sessions/revoke-all": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * /v1/users/:userId/sessions/revoke-all
-         * @description Revoca TODAS las sesiones del usuario. Útil tras detectar laptop perdido o despido. Combinar con PATCH status=disabled para bloqueo permanente.
-         */
-        post: operations["AdminUsersSessionsController_revokeAll"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/users/{userId}/sessions/{sessionId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * /v1/users/:userId/sessions/:sessionId/revoke
-         * @description Revoca una sesión individual por su id. La próxima request del usuario en ese dispositivo fallará con 401 SESSION_REVOKED.
-         */
-        patch: operations["AdminUsersSessionsController_revokeOne"];
-        trace?: never;
-    };
-    "/v1/permissions/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/permissions/permissions
-         * @description Lista plana de los permisos atómicos del catálogo. Ordenados por module + code. Útil para auditoría o consumo programático.
-         */
-        get: operations["PermissionsCatalogController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/permissions/grouped": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/permissions/permissions/grouped
-         * @description Catálogo agrupado por módulo (`system`, `clients`, `banking`, etc.). Diseñado para la UI de gestión de permisos por rol.
-         */
-        get: operations["PermissionsCatalogController_grouped"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/permissions/roles
-         * @description Lista todos los roles del sistema ordenados por nombre.
-         */
-        get: operations["RolesController_list"];
-        put?: never;
-        /**
-         * POST /v1/permissions/roles
-         * @description Crea un rol nuevo. El rol queda sin permisos hasta que se asignen.
-         */
-        post: operations["RolesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/roles/{roleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/permissions/roles/:roleId */
-        get: operations["RolesController_getOne"];
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/permissions/roles/:roleId
-         * @description Elimina el rol. Cascade: borra todas las `role_permissions` y `user_roles` asociadas. Falla 403 si el rol es del sistema.
-         */
-        delete: operations["RolesController_delete"];
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/permissions/roles/:roleId
-         * @description Edita name y/o description. Falla 403 si el rol es del sistema.
-         */
-        patch: operations["RolesController_update"];
-        trace?: never;
-    };
-    "/v1/permissions/roles/{roleId}/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/permissions/roles/:roleId/permissions
-         * @description Lista los permisos asignados al rol.
-         */
-        get: operations["RolePermissionsController_list"];
-        put?: never;
-        /**
-         * POST /v1/permissions/roles/:roleId/permissions
-         * @description Otorga uno o más permisos al rol. Idempotente — si el rol ya tiene un permiso del set, se ignora silenciosamente. Falla 403 si el rol es del sistema.
-         */
-        post: operations["RolePermissionsController_grant"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/roles/{roleId}/permissions/{permissionCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/permissions/roles/:roleId/permissions/:permissionCode
-         * @description Revoca un permiso del rol. Falla 403 si el rol es del sistema.
-         */
-        delete: operations["RolePermissionsController_revoke"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/users/{userId}/roles": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/permissions/users/:userId/roles
-         * @description Asigna un rol RBAC al usuario.
-         */
-        post: operations["UserRolesController_assign"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/users/{userId}/roles/{roleId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/permissions/users/:userId/roles/:roleId
-         * @description Revoca un rol del usuario. Falla 422 si es el último rol del usuario (debe tener al menos uno).
-         */
-        delete: operations["UserRolesController_revoke"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/users/{userId}/permissions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/permissions/users/:userId/permissions
-         * @description Crea un override individual para el usuario. Si ya existe un override para `(user, permission)`, falla 409 — para cambiarlo, eliminar el actual y crear uno nuevo.
-         */
-        post: operations["UserPermissionsController_set"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/users/{userId}/permissions/{permissionCode}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/permissions/users/:userId/permissions/:permissionCode
-         * @description Elimina el override. El permiso del usuario vuelve a depender únicamente de sus roles.
-         */
-        delete: operations["UserPermissionsController_unset"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/permissions/users/{userId}/effective": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/permissions/users/:userId/effective
-         * @description Devuelve roles asignados al usuario + sus permisos efectivos (expandidos, ya con overrides aplicados). Para que admin pueda inspeccionar qué puede hacer otro usuario.
-         */
-        get: operations["EffectivePermissionsController_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients
-         * @description Listado paginado de clientes. Filtros opcionales: `status`, `tier`, `search`. Solo devuelve clientes a los que el usuario tiene acceso (user_client_access).
-         */
-        get: operations["ClientsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id
-         * @description Detalle completo de un cliente. Incluye metadata expandida (intuit_*).
-         */
-        get: operations["ClientsController_getOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/clients/:id
-         * @description Edita campos operativos. NO acepta `id`, `qbo_realm_id`, `status` (este último vía /status). Emite `client.updated` en event_log con la lista de campos cambiados.
-         */
-        patch: operations["ClientsController_update"];
-        trace?: never;
-    };
-    "/v1/clients/{id}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/clients/:id/status
-         * @description Cambia el status del cliente. Idempotente: si el nuevo status es el actual, no hace nada. Emite `client.status_changed` en event_log.
-         */
-        post: operations["ClientsController_changeStatus"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/intuit/oauth/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/intuit/oauth/connect
-         * @description Genera URL de Intuit para conectar QBO sin cliente existente. Si el realm devuelto en el callback ya pertenece a un cliente, hace silent re-auth; si no, crea cliente nuevo con datos canónicos de Intuit.
-         */
-        post: operations["IntuitOauthController_connectNew"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/intuit/oauth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/intuit/oauth/callback
-         * @description Callback de Intuit tras autorización. Es @Public porque Intuit redirige al usuario sin JWT. Devuelve HTML simple con resumen del flow.
-         */
-        get: operations["IntuitOauthController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/intuit/realms/{realmId}/call": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/intuit/realms/:realmId/call
-         * @description Proxy genérico contra la V3 API de Intuit. Resuelve clientId desde el realm via user_connections, refresca tokens si hace falta, hace la HTTP call y retorna el JSON crudo de Intuit. Body: {method, path, body?}.
-         */
-        post: operations["IntuitAdminController_call"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/intuit/oauth/tokens": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/intuit/oauth/tokens
-         * @description Listado de status de conexiones Intuit (admin). NO incluye access_token ni refresh_token plaintext, solo metadata: expiraciones, últimos refresh, días hasta expiración.
-         */
-        get: operations["IntuitAdminController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/intuit/reconnect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/clients/:id/intuit/reconnect
-         * @description Genera URL de Intuit para reconectar QBO a un cliente existente. Pre-asigna el cliente target. El callback valida que el realm devuelto coincida (o asocia uno nuevo si el cliente no tenía).
-         */
-        post: operations["ClientIntuitController_reconnect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/intuit/connection": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/clients/:id/intuit/connection
-         * @description Borra TODAS las conexiones Intuit del cliente (de cualquier user que las haya creado). El cliente tendrá que re-autorizar QBO. La fila clients no se toca.
-         */
-        delete: operations["ClientIntuitController_disconnect"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/connections
-         * @description Lista todas las conexiones del usuario actual. Filtro opcional por provider. NO devuelve tokens.
-         */
-        get: operations["ConnectionsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/connections/:id
-         * @description Desconecta (borra row + tokens). Solo si la conexión es del usuario actual.
-         */
-        delete: operations["ConnectionsController_delete"];
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/connections/:id
-         * @description Actualiza el label de una conexión propia. Único campo editable.
-         */
-        patch: operations["ConnectionsController_updateLabel"];
-        trace?: never;
-    };
-    "/v1/connections/{id}/test": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/connections/:id/test
-         * @description Prueba la conexión. Para OAuth: refresca + delega al provider. Para api_key: descifra credentials + delega al provider api-key correspondiente.
-         */
-        post: operations["ConnectionsController_test"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/share": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/connections/:id/share
-         * @description Comparte la conexión con otro user. Solo el dueño puede llamarlo. Errores: 403 NOT_OWNER, 400 SHARE_SELF, 409 SHARE_DUPLICATE, 404 connection no existe.
-         */
-        post: operations["ConnectionShareController_share"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/share/{userId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/connections/:id/share/:userId
-         * @description Quita un user de los compartidos. Solo dueño.
-         */
-        delete: operations["ConnectionShareController_revoke"];
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/connections/:id/share/:userId
-         * @description Cambia el permission de un share existente. Solo dueño.
-         */
-        patch: operations["ConnectionShareController_update"];
-        trace?: never;
-    };
-    "/v1/connections/{id}/shared": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/connections/:id/shared
-         * @description Lista los users con quienes la conexión está compartida. Solo dueño.
-         */
-        get: operations["ConnectionShareListController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/api-key": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/connections/api-key
-         * @description Crea (o reemplaza) una conexión `auth_type=api_key` con credentials estáticas. El shape de `credentials` lo define cada provider concreto (ej. Clover: `{api_token, merchant_id}`).
-         */
-        post: operations["ConnectionsApiKeyController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/api-key": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/connections/:id/api-key
-         * @description Actualiza solo `credentials` de una conexión api_key. Solo el dueño.
-         */
-        patch: operations["ConnectionsApiKeyController_updateCredentials"];
-        trace?: never;
-    };
-    "/v1/microsoft/oauth/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/microsoft/oauth/connect
-         * @description Devuelve URL de consent de Microsoft. El frontend la abre en pestaña/popup; al aprobar, el callback persiste la conexión.
-         */
-        post: operations["MicrosoftConnectionController_connect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/microsoft/oauth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/microsoft/oauth/callback
-         * @description Callback de Microsoft tras autorización. @Public porque Microsoft redirige sin JWT. Devuelve HTML simple de confirmación.
-         */
-        get: operations["MicrosoftConnectionController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/dropbox/oauth/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/dropbox/oauth/connect
-         * @description Devuelve URL de consent de Dropbox. El frontend la abre; al aprobar, el callback persiste la conexión.
-         */
-        post: operations["DropboxConnectionController_connect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/dropbox/oauth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/dropbox/oauth/callback
-         * @description Callback de Dropbox tras autorización. @Public porque Dropbox redirige sin JWT. Devuelve HTML de confirmación.
-         */
-        get: operations["DropboxConnectionController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/dropbox/files": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/connections/:id/dropbox/files
-         * @description Lista archivos/carpetas del Dropbox del owner de la conexión. Default `path=""` (raíz). Solo devuelve la página actual; cursor para paginación incremental viene en `cursor` cuando `has_more=true`.
-         */
-        get: operations["DropboxFilesController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/google/oauth/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/google/oauth/connect
-         * @description Devuelve URL de consent de Google. Scopes pedidos: openid email profile drive.readonly. El frontend la abre; el callback persiste la conexión.
-         */
-        post: operations["GoogleConnectionController_connect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/google/oauth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/google/oauth/callback
-         * @description Callback de Google tras autorización. @Public porque Google redirige sin JWT. Devuelve HTML de confirmación.
-         */
-        get: operations["GoogleConnectionController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/google/files": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/connections/:id/google/files
-         * @description Lista archivos/carpetas dentro de una carpeta de Drive del owner. Default `folderId=root` (My Drive). `nextPageToken` para paginación.
-         */
-        get: operations["GoogleFilesController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/merchants/clover/{merchantId}/reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/merchants/clover/:merchantId/reports
-         * @description Reporte custom de Clover para un (cliente × merchant × fecha). v0.11.0 devuelve placeholder; la generación real entra en v0.11.1+.
-         */
-        get: operations["CloverReportController_report"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/square/oauth/connect": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/square/oauth/connect
-         * @description Genera URL de autorización Square. El frontend la abre en pestaña; el merchant aprueba; Square redirige al callback.
-         */
-        post: operations["SquareConnectionController_connect"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/square/oauth/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/square/oauth/callback
-         * @description Callback de Square. @Public porque Square redirige sin JWT. Recibe code + state, o error si el merchant rechazó.
-         */
-        get: operations["SquareConnectionController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/merchants/square/{locationId}/reports": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/merchants/square/:locationId/reports
-         * @description Reporte custom Square para un (cliente × location × fecha). v0.12.0 placeholder.
-         */
-        get: operations["SquareReportController_report"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/pause": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/connections/:id/pause
-         * @description Pausa la conexión. El dashboard la mostrará con status `paused`. Body opcional `{ reason }` para anotar contexto.
-         */
-        post: operations["ConnectionPauseController_pause"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/connections/{id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/connections/:id/resume
-         * @description Reanuda una conexión previamente pausada.
-         */
-        post: operations["ConnectionPauseController_resume"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/transactions/sync": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/clients/:id/transactions/sync
-         * @description Pulla TransactionList de Intuit para el cliente y reescribe el snapshot dentro del rango. Borrón total + INSERT.
-         */
-        post: operations["ClientTransactionsController_sync"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/transactions
-         * @description Listado de transacciones del snapshot del cliente. Filtros opcionales: category, filter (all/income/expense), startDate/endDate.
-         */
-        get: operations["ClientTransactionsController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/transactions/{txId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/clients/:id/transactions/:txId
-         * @description Borra una transacción individual del snapshot por su id UUID. La respuesta del cliente (si la había) se preserva en client_transaction_responses.
-         */
-        delete: operations["ClientTransactionsController_deleteOne"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/transactions/responses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/transactions/responses
-         * @description Listado de respuestas del cliente. Persistente — incluye respuestas históricas que ya no aparecen en el snapshot actual.
-         */
-        get: operations["ClientTransactionResponsesController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/transactions/responses/{txnId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/clients/:id/transactions/responses/:txnId
-         * @description Soft-delete del response asociado a una transacción. La fila se marca con `deleted_at` pero NO se borra. Si el cliente vuelve a guardar nota sobre esa transacción, el response se reactiva automáticamente (transparente para frontend). El listado público y el listado admin estándar ocultan responses borrados.
-         */
-        delete: operations["ClientTransactionResponsesController_softDelete"];
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/clients/:id/transactions/responses/:txnId
-         * @description Admin guarda o edita la nota de una transacción en nombre del cliente. UPSERT — si ya existe respuesta, la actualiza.
-         *
-         *     Si se manda `?qbo_sync=true`, además del upsert local hace writeback a QBO: GET → mergea AccountRef + PrivateNote → POST update. Requiere `qbo_account_id` no-null. Solo soporta Purchase y Deposit en v1; otros tipos devuelven `TXN_TYPE_NOT_SUPPORTED`. Cuando el writeback tiene éxito, marca `synced_to_qbo_at` y fuerza `completed=true`. Si falla, el response queda guardado para reintentar.
-         */
-        patch: operations["ClientTransactionResponsesController_saveNote"];
-        trace?: never;
-    };
-    "/v1/clients/{id}/followups/{period}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/followups/:period
-         * @description Status del cliente en un periodo (YYYY-MM). Si no existe row, retorna default `pending`.
-         */
-        get: operations["ClientPeriodFollowupsController_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/clients/:id/followups/:period
-         * @description Actualiza status / sentAt / lastReplyAt / sentByUserId / internalNotes para el cliente y periodo. UPSERT.
-         */
-        patch: operations["ClientPeriodFollowupsController_update"];
-        trace?: never;
-    };
-    "/v1/clients/{id}/public-links": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/public-links
-         * @description Lista todos los links del cliente (activos y revocados).
-         */
-        get: operations["ClientPublicLinksController_list"];
-        put?: never;
-        /**
-         * POST /v1/clients/:id/public-links
-         * @description Crea (o devuelve, idempotente) un link público para el cliente. Pasa `force: true` para revocar el activo y crear uno nuevo. Body: `{purpose, expiresAt?, maxUses?, metadata?, force?}`.
-         */
-        post: operations["ClientPublicLinksController_createOrGet"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/public-links/{linkId}/revoke": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * POST /v1/clients/:id/public-links/:linkId/revoke
-         * @description Revoca el link inmediatamente. El cliente que lo use recibe 410.
-         */
-        post: operations["ClientPublicLinksController_revoke"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/public-links/{linkId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/clients/:id/public-links/:linkId
-         * @description Edita un link existente. Campos opcionales: `expiresAt`, `maxUses`, `metadata`. Para anular una revocación: mandar `revokedAt: null` (única forma soportada de des-revocar). Si al des-revocar ya hay otro link activo del mismo `purpose`, devuelve 409. `token` y `purpose` son inmutables — para rotar el token usar POST con `force: true`.
-         */
-        patch: operations["ClientPublicLinksController_update"];
-        trace?: never;
-    };
-    "/v1/public/uncats/{token}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /v1/public/uncats/:token
-         * @description Endpoint público (sin JWT, autenticado por token) para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.
-         */
-        get: operations["PublicTransactionsController_getTransactions"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/public/uncats/{token}/{txnId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * /v1/public/uncats/:token/:txnId
-         * @description El cliente borra su nota para una transacción (soft-delete del response). La transacción vuelve a estado "sin contestar" en el GET. Idempotente: si no hay nota o ya estaba borrada, también responde 204.
-         */
-        delete: operations["PublicTransactionsController_deleteNote"];
-        options?: never;
-        head?: never;
-        /**
-         * /v1/public/uncats/:token/:txnId
-         * @description El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita. `:txnId` es el id UUID interno de la transacción.
-         */
-        patch: operations["PublicTransactionsController_saveNote"];
-        trace?: never;
-    };
-    "/v1/views/uncats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/views/uncats
-         * @description Lista maestra de Customer Support: por cada cliente activo, devuelve stats agregados (uncats, amas, responded, amount, progress), distribución mensual del año actual y total del año anterior. Requiere `from` y `to` (YYYY-MM-DD).
-         */
-        get: operations["UncatsViewController_list"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/uncats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/uncats
-         * @description Detalle del cliente para el panel central del dashboard de Customer Support. Stats + datos del cliente + followup + silent_streak_days. Requiere `from` y `to` (YYYY-MM-DD).
-         */
-        get: operations["ClientUncatsController_detail"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/integrations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/integrations
-         * @description Dashboard de integraciones del cliente. Lista conexiones Clover/Square con su status (healthy | needs_reauth | paused) y KPIs agregados (connected, healthy, needsAttention, errors, providersInUse). Status derivado en runtime desde columnas DB (no llama APIs externas). Para validar credenciales en vivo, el frontend usa POST /v1/connections/:id/test.
-         */
-        get: operations["ClientIntegrationsController_getIntegrations"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/call-logs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/clients/:id/call-logs
-         * @description Lista call logs del cliente ordenados por called_at DESC. Excluye soft-deleted. Paginación con limit/offset.
-         */
-        get: operations["CallLogsController_list"];
-        put?: never;
-        /**
-         * POST /v1/clients/:id/call-logs
-         * @description Registra una llamada al cliente. `user_id` se toma del JWT. `called_at` default = now() si no se manda.
-         */
-        post: operations["CallLogsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/call-logs/{logId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * DELETE /v1/clients/:id/call-logs/:logId
-         * @description Hard delete del call log: lo elimina físicamente de la DB. El evento call_log.deleted queda en event_log para auditoría.
-         */
-        delete: operations["CallLogsController_delete"];
-        options?: never;
-        head?: never;
-        /**
-         * PATCH /v1/clients/:id/call-logs/:logId
-         * @description Actualiza un call log. Al menos un campo requerido. Cualquier admin del despacho puede editarlo.
-         */
-        patch: operations["CallLogsController_update"];
-        trace?: never;
-    };
-    "/v1/banking/portals": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/banking/portals — lista todos los portales bancarios */
-        get: operations["BankPortalsController_list"];
-        put?: never;
-        /** POST /v1/banking/portals — crea un portal */
-        post: operations["BankPortalsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/banking/portals/{portalId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/banking/portals/:portalId — detalle de un portal */
-        get: operations["BankPortalsController_findOne"];
-        put?: never;
-        post?: never;
-        /** DELETE /v1/banking/portals/:portalId — borra un portal */
-        delete: operations["BankPortalsController_delete"];
-        options?: never;
-        head?: never;
-        /** PATCH /v1/banking/portals/:portalId — edita un portal */
-        patch: operations["BankPortalsController_update"];
-        trace?: never;
-    };
-    "/v1/clients/{id}/banking/credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/clients/:id/banking/credentials — lista credenciales del cliente */
-        get: operations["ClientBankAccountsController_list"];
-        put?: never;
-        /** POST /v1/clients/:id/banking/credentials — crea credencial */
-        post: operations["ClientBankAccountsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/clients/{id}/banking/credentials/{credentialId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/clients/:id/banking/credentials/:credentialId — detalle */
-        get: operations["ClientBankAccountsController_findOne"];
-        put?: never;
-        post?: never;
-        /** DELETE /v1/clients/:id/banking/credentials/:credentialId — borra */
-        delete: operations["ClientBankAccountsController_delete"];
-        options?: never;
-        head?: never;
-        /** PATCH /v1/clients/:id/banking/credentials/:credentialId — edita */
-        patch: operations["ClientBankAccountsController_update"];
-        trace?: never;
-    };
-    "/v1/banking/credentials/{credentialId}/accounts": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/banking/credentials/:credentialId/accounts — cuentas dentro del login */
-        get: operations["BankAccountsController_list"];
-        put?: never;
-        /** POST /v1/banking/credentials/:credentialId/accounts — crea cuenta */
-        post: operations["BankAccountsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/banking/accounts/{accountId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** DELETE /v1/banking/accounts/:accountId — borra cuenta */
-        delete: operations["BankAccountsController_delete"];
-        options?: never;
-        head?: never;
-        /** PATCH /v1/banking/accounts/:accountId — edita cuenta */
-        patch: operations["BankAccountsController_update"];
-        trace?: never;
-    };
-    "/v1/banking/accounts/{accountId}/status": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** POST /v1/banking/accounts/:accountId/status — cambia status */
-        post: operations["BankAccountsController_changeStatus"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/banking/credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * GET /v1/banking/credentials — lista global de todas las credenciales
-         * @description Devuelve todas las credenciales con cliente y portal poblados. Filtros: clientId, portalId, status, search (busca en client.legal_name, portal.name y notes).
-         */
-        get: operations["BankCredentialsGlobalController_list"];
-        put?: never;
-        /** POST /v1/banking/credentials — crea credencial pasando clientId en el body */
-        post: operations["BankCredentialsGlobalController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/banking/credentials/{credentialId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** GET /v1/banking/credentials/:credentialId — detalle global */
-        get: operations["BankCredentialsGlobalController_findOne"];
-        put?: never;
-        post?: never;
-        /** DELETE /v1/banking/credentials/:credentialId — borra credencial (global) */
-        delete: operations["BankCredentialsGlobalController_delete"];
-        options?: never;
-        head?: never;
-        /** PATCH /v1/banking/credentials/:credentialId — edita credencial (global) */
-        patch: operations["BankCredentialsGlobalController_update"];
-        trace?: never;
-    };
-    "/v1/healthz": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * /healthz
-         * @description Verifica que el backend está vivo y conectado a sus dependencias (Postgres). Devuelve 503 si algún componente está down.
-         */
-        get: operations["HealthController_check"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
+  '/v1/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * /v1/auth/login
+     * @description Devuelve un JWT firmado válido por JWT_EXPIRES_IN (default 7d) + datos del usuario. Crea una sesión revocable en `user_sessions`. Rate limit: 10 intentos/min por IP.
+     */
+    post: operations['AuthController_login']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * /v1/auth/logout
+     * @description Revoca solo la sesión correspondiente al JWT que mandó la request.
+     */
+    post: operations['AuthController_logout']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/logout-all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * /v1/auth/logout-all
+     * @description Revoca todas las sesiones activas del usuario actual (incluida ésta). Útil si pierde un dispositivo.
+     */
+    post: operations['AuthController_logoutAll']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /v1/auth/me
+     * @description Devuelve id, email, nombre, role, status, último login del usuario actual.
+     */
+    get: operations['AuthController_me']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/me/permissions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /v1/auth/me/permissions
+     * @description Devuelve roles + permisos efectivos del usuario actual. Endpoint clave para el frontend — bvcpas lo llama después del login para decidir qué secciones del sidebar mostrar (D-mapi-PRM-010). Wildcards EXPANDIDOS literalmente (D-mapi-PRM-009): si el user tiene el rol Administrator (`*`), recibe los 27 codes del catálogo en la lista.
+     */
+    get: operations['AuthController_myPermissions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/auth/me/password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * /v1/auth/me/password
+     * @description Requiere old_password correcta. Mínimo 8 caracteres. Revoca todas las otras sesiones del usuario (la actual sigue activa).
+     */
+    patch: operations['AuthController_changePassword']
+    trace?: never
+  }
+  '/v1/users': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /v1/users
+     * @description Listado paginado de todos los usuarios. Solo admin.
+     */
+    get: operations['AdminUsersController_list']
+    put?: never
+    /**
+     * /v1/users
+     * @description Crea un usuario nuevo. Si initialPassword no se proporciona, se genera una aleatoria y se devuelve UNA vez en la response.
+     */
+    post: operations['AdminUsersController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/users/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** /v1/users/:id */
+    get: operations['AdminUsersController_getOne']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * /v1/users/:id
+     * @description Edita full_name, role o status. NO incluye password (usar /reset-password). Cambiar status a disabled NO revoca sesiones existentes — usar /sessions/revoke-all para eso.
+     */
+    patch: operations['AdminUsersController_update']
+    trace?: never
+  }
+  '/v1/users/{id}/reset-password': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * /v1/users/:id/reset-password
+     * @description Genera password aleatoria, la asigna y revoca TODAS las sesiones del usuario. Devuelve la temporary password UNA vez.
+     */
+    post: operations['AdminUsersController_resetPassword']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/users/{userId}/sessions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /v1/users/:userId/sessions
+     * @description Devuelve todas las sesiones (activas + revocadas) del usuario. Útil para detectar dispositivos sospechosos.
+     */
+    get: operations['AdminUsersSessionsController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/users/{userId}/sessions/revoke-all': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * /v1/users/:userId/sessions/revoke-all
+     * @description Revoca TODAS las sesiones del usuario. Útil tras detectar laptop perdido o despido. Combinar con PATCH status=disabled para bloqueo permanente.
+     */
+    post: operations['AdminUsersSessionsController_revokeAll']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/users/{userId}/sessions/{sessionId}/revoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * /v1/users/:userId/sessions/:sessionId/revoke
+     * @description Revoca una sesión individual por su id. La próxima request del usuario en ese dispositivo fallará con 401 SESSION_REVOKED.
+     */
+    patch: operations['AdminUsersSessionsController_revokeOne']
+    trace?: never
+  }
+  '/v1/permissions/permissions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/permissions/permissions
+     * @description Lista plana de los permisos atómicos del catálogo. Ordenados por module + code. Útil para auditoría o consumo programático.
+     */
+    get: operations['PermissionsCatalogController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/permissions/grouped': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/permissions/permissions/grouped
+     * @description Catálogo agrupado por módulo (`system`, `clients`, `banking`, etc.). Diseñado para la UI de gestión de permisos por rol.
+     */
+    get: operations['PermissionsCatalogController_grouped']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/roles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/permissions/roles
+     * @description Lista todos los roles del sistema ordenados por nombre.
+     */
+    get: operations['RolesController_list']
+    put?: never
+    /**
+     * POST /v1/permissions/roles
+     * @description Crea un rol nuevo. El rol queda sin permisos hasta que se asignen.
+     */
+    post: operations['RolesController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/roles/{roleId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/permissions/roles/:roleId */
+    get: operations['RolesController_getOne']
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/permissions/roles/:roleId
+     * @description Elimina el rol. Cascade: borra todas las `role_permissions` y `user_roles` asociadas. Falla 403 si el rol es del sistema.
+     */
+    delete: operations['RolesController_delete']
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/permissions/roles/:roleId
+     * @description Edita name y/o description. Falla 403 si el rol es del sistema.
+     */
+    patch: operations['RolesController_update']
+    trace?: never
+  }
+  '/v1/permissions/roles/{roleId}/permissions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/permissions/roles/:roleId/permissions
+     * @description Lista los permisos asignados al rol.
+     */
+    get: operations['RolePermissionsController_list']
+    put?: never
+    /**
+     * POST /v1/permissions/roles/:roleId/permissions
+     * @description Otorga uno o más permisos al rol. Idempotente — si el rol ya tiene un permiso del set, se ignora silenciosamente. Falla 403 si el rol es del sistema.
+     */
+    post: operations['RolePermissionsController_grant']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/roles/{roleId}/permissions/{permissionCode}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/permissions/roles/:roleId/permissions/:permissionCode
+     * @description Revoca un permiso del rol. Falla 403 si el rol es del sistema.
+     */
+    delete: operations['RolePermissionsController_revoke']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/users/{userId}/roles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/permissions/users/:userId/roles
+     * @description Asigna un rol RBAC al usuario.
+     */
+    post: operations['UserRolesController_assign']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/users/{userId}/roles/{roleId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/permissions/users/:userId/roles/:roleId
+     * @description Revoca un rol del usuario. Falla 422 si es el último rol del usuario (debe tener al menos uno).
+     */
+    delete: operations['UserRolesController_revoke']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/users/{userId}/permissions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/permissions/users/:userId/permissions
+     * @description Crea un override individual para el usuario. Si ya existe un override para `(user, permission)`, falla 409 — para cambiarlo, eliminar el actual y crear uno nuevo.
+     */
+    post: operations['UserPermissionsController_set']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/users/{userId}/permissions/{permissionCode}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/permissions/users/:userId/permissions/:permissionCode
+     * @description Elimina el override. El permiso del usuario vuelve a depender únicamente de sus roles.
+     */
+    delete: operations['UserPermissionsController_unset']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/permissions/users/{userId}/effective': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/permissions/users/:userId/effective
+     * @description Devuelve roles asignados al usuario + sus permisos efectivos (expandidos, ya con overrides aplicados). Para que admin pueda inspeccionar qué puede hacer otro usuario.
+     */
+    get: operations['EffectivePermissionsController_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients
+     * @description Listado paginado de clientes. Filtros opcionales: `status`, `tier`, `search`. Solo devuelve clientes a los que el usuario tiene acceso (user_client_access).
+     */
+    get: operations['ClientsController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id
+     * @description Detalle completo de un cliente. Incluye metadata expandida (intuit_*).
+     */
+    get: operations['ClientsController_getOne']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/clients/:id
+     * @description Edita campos operativos. NO acepta `id`, `qbo_realm_id`, `status` (este último vía /status). Emite `client.updated` en event_log con la lista de campos cambiados.
+     */
+    patch: operations['ClientsController_update']
+    trace?: never
+  }
+  '/v1/clients/{id}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/clients/:id/status
+     * @description Cambia el status del cliente. Idempotente: si el nuevo status es el actual, no hace nada. Emite `client.status_changed` en event_log.
+     */
+    post: operations['ClientsController_changeStatus']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/intuit/oauth/connect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/intuit/oauth/connect
+     * @description Genera URL de Intuit para conectar QBO sin cliente existente. Si el realm devuelto en el callback ya pertenece a un cliente, hace silent re-auth; si no, crea cliente nuevo con datos canónicos de Intuit.
+     */
+    post: operations['IntuitOauthController_connectNew']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/intuit/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/intuit/oauth/callback
+     * @description Callback de Intuit tras autorización. Es @Public porque Intuit redirige al usuario sin JWT. Devuelve HTML simple con resumen del flow.
+     */
+    get: operations['IntuitOauthController_callback']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/intuit/realms/{realmId}/call': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/intuit/realms/:realmId/call
+     * @description Proxy genérico contra la V3 API de Intuit. Resuelve clientId desde el realm via user_connections, refresca tokens si hace falta, hace la HTTP call y retorna el JSON crudo de Intuit. Body: {method, path, body?}.
+     */
+    post: operations['IntuitAdminController_call']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/intuit/oauth/tokens': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/intuit/oauth/tokens
+     * @description Listado de status de conexiones Intuit (admin). NO incluye access_token ni refresh_token plaintext, solo metadata: expiraciones, últimos refresh, días hasta expiración.
+     */
+    get: operations['IntuitAdminController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/intuit/reconnect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/clients/:id/intuit/reconnect
+     * @description Genera URL de Intuit para reconectar QBO a un cliente existente. Pre-asigna el cliente target. El callback valida que el realm devuelto coincida (o asocia uno nuevo si el cliente no tenía).
+     */
+    post: operations['ClientIntuitController_reconnect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/intuit/connection': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/clients/:id/intuit/connection
+     * @description Borra TODAS las conexiones Intuit del cliente (de cualquier user que las haya creado). El cliente tendrá que re-autorizar QBO. La fila clients no se toca.
+     */
+    delete: operations['ClientIntuitController_disconnect']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/connections
+     * @description Lista todas las conexiones del usuario actual. Filtro opcional por provider. NO devuelve tokens.
+     */
+    get: operations['ConnectionsController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/connections/:id
+     * @description Desconecta (borra row + tokens). Solo si la conexión es del usuario actual.
+     */
+    delete: operations['ConnectionsController_delete']
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/connections/:id
+     * @description Actualiza el label de una conexión propia. Único campo editable.
+     */
+    patch: operations['ConnectionsController_updateLabel']
+    trace?: never
+  }
+  '/v1/connections/{id}/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/connections/:id/test
+     * @description Prueba la conexión. Para OAuth: refresca + delega al provider. Para api_key: descifra credentials + delega al provider api-key correspondiente.
+     */
+    post: operations['ConnectionsController_test']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/share': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/connections/:id/share
+     * @description Comparte la conexión con otro user. Solo el dueño puede llamarlo. Errores: 403 NOT_OWNER, 400 SHARE_SELF, 409 SHARE_DUPLICATE, 404 connection no existe.
+     */
+    post: operations['ConnectionShareController_share']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/share/{userId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/connections/:id/share/:userId
+     * @description Quita un user de los compartidos. Solo dueño.
+     */
+    delete: operations['ConnectionShareController_revoke']
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/connections/:id/share/:userId
+     * @description Cambia el permission de un share existente. Solo dueño.
+     */
+    patch: operations['ConnectionShareController_update']
+    trace?: never
+  }
+  '/v1/connections/{id}/shared': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/connections/:id/shared
+     * @description Lista los users con quienes la conexión está compartida. Solo dueño.
+     */
+    get: operations['ConnectionShareListController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/api-key': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/connections/api-key
+     * @description Crea (o reemplaza) una conexión `auth_type=api_key` con credentials estáticas. El shape de `credentials` lo define cada provider concreto (ej. Clover: `{api_token, merchant_id}`).
+     */
+    post: operations['ConnectionsApiKeyController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/api-key': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/connections/:id/api-key
+     * @description Actualiza solo `credentials` de una conexión api_key. Solo el dueño.
+     */
+    patch: operations['ConnectionsApiKeyController_updateCredentials']
+    trace?: never
+  }
+  '/v1/microsoft/oauth/connect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/microsoft/oauth/connect
+     * @description Devuelve URL de consent de Microsoft. El frontend la abre en pestaña/popup; al aprobar, el callback persiste la conexión.
+     */
+    post: operations['MicrosoftConnectionController_connect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/microsoft/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/microsoft/oauth/callback
+     * @description Callback de Microsoft tras autorización. @Public porque Microsoft redirige sin JWT. Devuelve HTML simple de confirmación.
+     */
+    get: operations['MicrosoftConnectionController_callback']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/dropbox/oauth/connect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/dropbox/oauth/connect
+     * @description Devuelve URL de consent de Dropbox. El frontend la abre; al aprobar, el callback persiste la conexión.
+     */
+    post: operations['DropboxConnectionController_connect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/dropbox/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/dropbox/oauth/callback
+     * @description Callback de Dropbox tras autorización. @Public porque Dropbox redirige sin JWT. Devuelve HTML de confirmación.
+     */
+    get: operations['DropboxConnectionController_callback']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/dropbox/files': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/connections/:id/dropbox/files
+     * @description Lista archivos/carpetas del Dropbox del owner de la conexión. Default `path=""` (raíz). Solo devuelve la página actual; cursor para paginación incremental viene en `cursor` cuando `has_more=true`.
+     */
+    get: operations['DropboxFilesController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/google/oauth/connect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/google/oauth/connect
+     * @description Devuelve URL de consent de Google. Scopes pedidos: openid email profile drive.readonly. El frontend la abre; el callback persiste la conexión.
+     */
+    post: operations['GoogleConnectionController_connect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/google/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/google/oauth/callback
+     * @description Callback de Google tras autorización. @Public porque Google redirige sin JWT. Devuelve HTML de confirmación.
+     */
+    get: operations['GoogleConnectionController_callback']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/google/files': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/connections/:id/google/files
+     * @description Lista archivos/carpetas dentro de una carpeta de Drive del owner. Default `folderId=root` (My Drive). `nextPageToken` para paginación.
+     */
+    get: operations['GoogleFilesController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/merchants/clover/{merchantId}/reports': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/merchants/clover/:merchantId/reports
+     * @description Reporte custom de Clover para un (cliente × merchant × fecha). v0.11.0 devuelve placeholder; la generación real entra en v0.11.1+.
+     */
+    get: operations['CloverReportController_report']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/square/oauth/connect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/square/oauth/connect
+     * @description Genera URL de autorización Square. El frontend la abre en pestaña; el merchant aprueba; Square redirige al callback.
+     */
+    post: operations['SquareConnectionController_connect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/square/oauth/callback': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/square/oauth/callback
+     * @description Callback de Square. @Public porque Square redirige sin JWT. Recibe code + state, o error si el merchant rechazó.
+     */
+    get: operations['SquareConnectionController_callback']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/merchants/square/{locationId}/reports': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/merchants/square/:locationId/reports
+     * @description Reporte custom Square para un (cliente × location × fecha). v0.12.0 placeholder.
+     */
+    get: operations['SquareReportController_report']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/pause': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/connections/:id/pause
+     * @description Pausa la conexión. El dashboard la mostrará con status `paused`. Body opcional `{ reason }` para anotar contexto.
+     */
+    post: operations['ConnectionPauseController_pause']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/connections/{id}/resume': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/connections/:id/resume
+     * @description Reanuda una conexión previamente pausada.
+     */
+    post: operations['ConnectionPauseController_resume']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/transactions/sync': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/clients/:id/transactions/sync
+     * @description Pulla TransactionList de Intuit para el cliente y reescribe el snapshot dentro del rango. Borrón total + INSERT.
+     */
+    post: operations['ClientTransactionsController_sync']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/transactions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/transactions
+     * @description Listado de transacciones del snapshot del cliente. Filtros opcionales: category, filter (all/income/expense), startDate/endDate.
+     */
+    get: operations['ClientTransactionsController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/transactions/{txId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/clients/:id/transactions/:txId
+     * @description Borra una transacción individual del snapshot por su id UUID. La respuesta del cliente (si la había) se preserva en client_transaction_responses.
+     */
+    delete: operations['ClientTransactionsController_deleteOne']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/transactions/responses': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/transactions/responses
+     * @description Listado de respuestas del cliente. Persistente — incluye respuestas históricas que ya no aparecen en el snapshot actual.
+     */
+    get: operations['ClientTransactionResponsesController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/transactions/responses/{txnId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/clients/:id/transactions/responses/:txnId
+     * @description Soft-delete del response asociado a una transacción. La fila se marca con `deleted_at` pero NO se borra. Si el cliente vuelve a guardar nota sobre esa transacción, el response se reactiva automáticamente (transparente para frontend). El listado público y el listado admin estándar ocultan responses borrados.
+     */
+    delete: operations['ClientTransactionResponsesController_softDelete']
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/clients/:id/transactions/responses/:txnId
+     * @description Admin guarda o edita la nota de una transacción en nombre del cliente. UPSERT — si ya existe respuesta, la actualiza.
+     *
+     *     Si se manda `?qbo_sync=true`, además del upsert local hace writeback a QBO: GET → mergea AccountRef + PrivateNote → POST update. Requiere `qbo_account_id` no-null. Solo soporta Purchase y Deposit en v1; otros tipos devuelven `TXN_TYPE_NOT_SUPPORTED`. Cuando el writeback tiene éxito, marca `synced_to_qbo_at` y fuerza `completed=true`. Si falla, el response queda guardado para reintentar.
+     */
+    patch: operations['ClientTransactionResponsesController_saveNote']
+    trace?: never
+  }
+  '/v1/clients/{id}/followups/{period}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/followups/:period
+     * @description Status del cliente en un periodo (YYYY-MM). Si no existe row, retorna default `pending`.
+     */
+    get: operations['ClientPeriodFollowupsController_get']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/clients/:id/followups/:period
+     * @description Actualiza status / sentAt / lastReplyAt / sentByUserId / internalNotes para el cliente y periodo. UPSERT.
+     */
+    patch: operations['ClientPeriodFollowupsController_update']
+    trace?: never
+  }
+  '/v1/clients/{id}/public-links': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/public-links
+     * @description Lista todos los links del cliente (activos y revocados).
+     */
+    get: operations['ClientPublicLinksController_list']
+    put?: never
+    /**
+     * POST /v1/clients/:id/public-links
+     * @description Crea (o devuelve, idempotente) un link público para el cliente. Pasa `force: true` para revocar el activo y crear uno nuevo. Body: `{purpose, expiresAt?, maxUses?, metadata?, force?}`.
+     */
+    post: operations['ClientPublicLinksController_createOrGet']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/public-links/{linkId}/revoke': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /**
+     * POST /v1/clients/:id/public-links/:linkId/revoke
+     * @description Revoca el link inmediatamente. El cliente que lo use recibe 410.
+     */
+    post: operations['ClientPublicLinksController_revoke']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/public-links/{linkId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/clients/:id/public-links/:linkId
+     * @description Edita un link existente. Campos opcionales: `expiresAt`, `maxUses`, `metadata`. Para anular una revocación: mandar `revokedAt: null` (única forma soportada de des-revocar). Si al des-revocar ya hay otro link activo del mismo `purpose`, devuelve 409. `token` y `purpose` son inmutables — para rotar el token usar POST con `force: true`.
+     */
+    patch: operations['ClientPublicLinksController_update']
+    trace?: never
+  }
+  '/v1/public/uncats/{token}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /v1/public/uncats/:token
+     * @description Endpoint público (sin JWT, autenticado por token) para que el cliente vea sus transacciones uncategorized. Excluye AMAs siempre. Aplica `transactions_filter` del cliente.
+     */
+    get: operations['PublicTransactionsController_getTransactions']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/public/uncats/{token}/{txnId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * /v1/public/uncats/:token/:txnId
+     * @description El cliente borra su nota para una transacción (soft-delete del response). La transacción vuelve a estado "sin contestar" en el GET. Idempotente: si no hay nota o ya estaba borrada, también responde 204.
+     */
+    delete: operations['PublicTransactionsController_deleteNote']
+    options?: never
+    head?: never
+    /**
+     * /v1/public/uncats/:token/:txnId
+     * @description El cliente guarda su nota para una transacción. UPSERT — si ya respondió antes, edita. `:txnId` es el id UUID interno de la transacción.
+     */
+    patch: operations['PublicTransactionsController_saveNote']
+    trace?: never
+  }
+  '/v1/views/uncats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/views/uncats
+     * @description Lista maestra de Customer Support: por cada cliente activo, devuelve stats agregados (uncats, amas, responded, amount, progress), distribución mensual del año actual y total del año anterior. Requiere `from` y `to` (YYYY-MM-DD).
+     */
+    get: operations['UncatsViewController_list']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/uncats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/uncats
+     * @description Detalle del cliente para el panel central del dashboard de Customer Support. Stats + datos del cliente + followup + silent_streak_days. Requiere `from` y `to` (YYYY-MM-DD).
+     */
+    get: operations['ClientUncatsController_detail']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/integrations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/integrations
+     * @description Dashboard de integraciones del cliente. Lista conexiones Clover/Square con su status (healthy | needs_reauth | paused) y KPIs agregados (connected, healthy, needsAttention, errors, providersInUse). Status derivado en runtime desde columnas DB (no llama APIs externas). Para validar credenciales en vivo, el frontend usa POST /v1/connections/:id/test.
+     */
+    get: operations['ClientIntegrationsController_getIntegrations']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/call-logs': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/clients/:id/call-logs
+     * @description Lista call logs del cliente ordenados por called_at DESC. Excluye soft-deleted. Paginación con limit/offset.
+     */
+    get: operations['CallLogsController_list']
+    put?: never
+    /**
+     * POST /v1/clients/:id/call-logs
+     * @description Registra una llamada al cliente. `user_id` se toma del JWT. `called_at` default = now() si no se manda.
+     */
+    post: operations['CallLogsController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/call-logs/{logId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /**
+     * DELETE /v1/clients/:id/call-logs/:logId
+     * @description Hard delete del call log: lo elimina físicamente de la DB. El evento call_log.deleted queda en event_log para auditoría.
+     */
+    delete: operations['CallLogsController_delete']
+    options?: never
+    head?: never
+    /**
+     * PATCH /v1/clients/:id/call-logs/:logId
+     * @description Actualiza un call log. Al menos un campo requerido. Cualquier admin del despacho puede editarlo.
+     */
+    patch: operations['CallLogsController_update']
+    trace?: never
+  }
+  '/v1/banking/portals': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/banking/portals — lista todos los portales bancarios */
+    get: operations['BankPortalsController_list']
+    put?: never
+    /** POST /v1/banking/portals — crea un portal */
+    post: operations['BankPortalsController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/banking/portals/{portalId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/banking/portals/:portalId — detalle de un portal */
+    get: operations['BankPortalsController_findOne']
+    put?: never
+    post?: never
+    /** DELETE /v1/banking/portals/:portalId — borra un portal */
+    delete: operations['BankPortalsController_delete']
+    options?: never
+    head?: never
+    /** PATCH /v1/banking/portals/:portalId — edita un portal */
+    patch: operations['BankPortalsController_update']
+    trace?: never
+  }
+  '/v1/clients/{id}/banking/credentials': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/clients/:id/banking/credentials — lista credenciales del cliente */
+    get: operations['ClientBankAccountsController_list']
+    put?: never
+    /** POST /v1/clients/:id/banking/credentials — crea credencial */
+    post: operations['ClientBankAccountsController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/clients/{id}/banking/credentials/{credentialId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/clients/:id/banking/credentials/:credentialId — detalle */
+    get: operations['ClientBankAccountsController_findOne']
+    put?: never
+    post?: never
+    /** DELETE /v1/clients/:id/banking/credentials/:credentialId — borra */
+    delete: operations['ClientBankAccountsController_delete']
+    options?: never
+    head?: never
+    /** PATCH /v1/clients/:id/banking/credentials/:credentialId — edita */
+    patch: operations['ClientBankAccountsController_update']
+    trace?: never
+  }
+  '/v1/banking/credentials/{credentialId}/accounts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/banking/credentials/:credentialId/accounts — cuentas dentro del login */
+    get: operations['BankAccountsController_list']
+    put?: never
+    /** POST /v1/banking/credentials/:credentialId/accounts — crea cuenta */
+    post: operations['BankAccountsController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/banking/accounts/{accountId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    /** DELETE /v1/banking/accounts/:accountId — borra cuenta */
+    delete: operations['BankAccountsController_delete']
+    options?: never
+    head?: never
+    /** PATCH /v1/banking/accounts/:accountId — edita cuenta */
+    patch: operations['BankAccountsController_update']
+    trace?: never
+  }
+  '/v1/banking/accounts/{accountId}/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    /** POST /v1/banking/accounts/:accountId/status — cambia status */
+    post: operations['BankAccountsController_changeStatus']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/banking/credentials': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * GET /v1/banking/credentials — lista global de todas las credenciales
+     * @description Devuelve todas las credenciales con cliente y portal poblados. Filtros: clientId, portalId, status, search (busca en client.legal_name, portal.name y notes).
+     */
+    get: operations['BankCredentialsGlobalController_list']
+    put?: never
+    /** POST /v1/banking/credentials — crea credencial pasando clientId en el body */
+    post: operations['BankCredentialsGlobalController_create']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/v1/banking/credentials/{credentialId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** GET /v1/banking/credentials/:credentialId — detalle global */
+    get: operations['BankCredentialsGlobalController_findOne']
+    put?: never
+    post?: never
+    /** DELETE /v1/banking/credentials/:credentialId — borra credencial (global) */
+    delete: operations['BankCredentialsGlobalController_delete']
+    options?: never
+    head?: never
+    /** PATCH /v1/banking/credentials/:credentialId — edita credencial (global) */
+    patch: operations['BankCredentialsGlobalController_update']
+    trace?: never
+  }
+  '/v1/healthz': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /**
+     * /healthz
+     * @description Verifica que el backend está vivo y conectado a sus dependencias (Postgres). Devuelve 503 si algún componente está down.
+     */
+    get: operations['HealthController_check']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
 }
-export type webhooks = Record<string, never>;
+export type webhooks = Record<string, never>
 export interface components {
-    schemas: {
-        /** @description Credenciales para login */
-        LoginDto: {
-            /**
-             * Format: email
-             * @description Email del usuario registrado
-             */
-            email: string;
-            /** @description Contraseña del usuario */
-            password: string;
-        };
-        /** @description Respuesta exitosa de login */
-        LoginResponseDto: {
-            /** @description JWT con expiry según JWT_EXPIRES_IN */
-            accessToken: string;
-            user: {
-                /**
-                 * Format: uuid
-                 * @description ID del usuario
-                 */
-                id: string;
-                /**
-                 * Format: email
-                 * @description Email del usuario
-                 */
-                email: string;
-                /** @description Nombre completo */
-                fullName: string;
-                /**
-                 * @description Estado de la cuenta
-                 * @enum {string}
-                 */
-                status: "active" | "disabled";
-            };
-        };
-        /** @description Respuesta de logout-all */
-        LogoutAllResponseDto: {
-            /** @description Sesiones revocadas */
-            sessionsRevokedCount: number;
-        };
-        /** @description Datos del usuario autenticado */
-        MeResponseDto: {
-            /**
-             * Format: uuid
-             * @description ID del usuario
-             */
-            id: string;
-            /**
-             * Format: email
-             * @description Email del usuario
-             */
-            email: string;
-            /** @description Nombre completo */
-            fullName: string;
-            /**
-             * @description Estado de la cuenta
-             * @enum {string}
-             */
-            status: "active" | "disabled";
-            /**
-             * Format: date-time
-             * @description Último login exitoso (ISO)
-             */
-            lastLoginAt: string | null;
-        };
-        /** @description Permisos efectivos del usuario después de aplicar roles + overrides */
-        EffectivePermissionsResponseDto: {
-            /** @description Roles asignados al usuario */
-            roles: {
-                /**
-                 * Format: uuid
-                 * @description UUID del rol
-                 */
-                id: string;
-                /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
-                name: string;
-                /** @description Descripción libre del rol */
-                description: string | null;
-                /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
-                is_system: boolean;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-            /** @description Permission codes EFECTIVOS (expandidos literalmente, ya incluyendo overrides individuales) */
-            permissions: string[];
-        };
-        /** @description Cambio de contraseña self-service */
-        ChangePasswordDto: {
-            /** @description Contraseña actual del usuario */
-            oldPassword: string;
-            /** @description Nueva contraseña (mínimo 8 caracteres) */
-            newPassword: string;
-        };
-        /** @description Listado paginado de usuarios */
-        UsersListResponseDto: {
-            /** @description Usuarios de la página */
-            items: {
-                /**
-                 * Format: uuid
-                 * @description ID del usuario
-                 */
-                id: string;
-                /**
-                 * Format: email
-                 * @description Email del usuario
-                 */
-                email: string;
-                /** @description Nombre completo */
-                fullName: string;
-                /**
-                 * @description Estado de la cuenta
-                 * @enum {string}
-                 */
-                status: "active" | "disabled";
-                /**
-                 * Format: date-time
-                 * @description Último login (ISO)
-                 */
-                lastLoginAt: string | null;
-                /**
-                 * Format: date-time
-                 * @description Fecha de creación (ISO)
-                 */
-                createdAt: string;
-                /**
-                 * Format: date-time
-                 * @description Última actualización (ISO)
-                 */
-                updatedAt: string;
-            }[];
-            /** @description Total de usuarios */
-            total: number;
-            /** @description Página actual */
-            page: number;
-            /** @description Tamaño de página */
-            pageSize: number;
-        };
-        /** @description Crea un usuario nuevo (requiere system.users.manage) */
-        CreateUserDto: {
-            /**
-             * Format: email
-             * @description Email único del nuevo usuario
-             */
-            email: string;
-            /** @description Nombre completo */
-            fullName: string;
-            /** @description Password inicial. Si se omite, se genera una aleatoria y se devuelve en la response (UNA vez). */
-            initialPassword?: string;
-            /** @description IDs de roles RBAC para asignar al user. Si se omite, el user queda sin permisos hasta que un admin se los asigne. */
-            roleIds?: string[];
-        };
-        /** @description Respuesta de creación de usuario */
-        CreateUserResponseDto: {
-            /** @description Datos públicos de un usuario (sin password_hash) */
-            user: {
-                /**
-                 * Format: uuid
-                 * @description ID del usuario
-                 */
-                id: string;
-                /**
-                 * Format: email
-                 * @description Email del usuario
-                 */
-                email: string;
-                /** @description Nombre completo */
-                fullName: string;
-                /**
-                 * @description Estado de la cuenta
-                 * @enum {string}
-                 */
-                status: "active" | "disabled";
-                /**
-                 * Format: date-time
-                 * @description Último login (ISO)
-                 */
-                lastLoginAt: string | null;
-                /**
-                 * Format: date-time
-                 * @description Fecha de creación (ISO)
-                 */
-                createdAt: string;
-                /**
-                 * Format: date-time
-                 * @description Última actualización (ISO)
-                 */
-                updatedAt: string;
-            };
-            /** @description Password inicial generada (UNA vez). Pasársela al usuario por canal seguro. */
-            initialPassword: string;
-        };
-        /** @description Datos públicos de un usuario (sin password_hash) */
-        UserDto: {
-            /**
-             * Format: uuid
-             * @description ID del usuario
-             */
-            id: string;
-            /**
-             * Format: email
-             * @description Email del usuario
-             */
-            email: string;
-            /** @description Nombre completo */
-            fullName: string;
-            /**
-             * @description Estado de la cuenta
-             * @enum {string}
-             */
-            status: "active" | "disabled";
-            /**
-             * Format: date-time
-             * @description Último login (ISO)
-             */
-            lastLoginAt: string | null;
-            /**
-             * Format: date-time
-             * @description Fecha de creación (ISO)
-             */
-            createdAt: string;
-            /**
-             * Format: date-time
-             * @description Última actualización (ISO)
-             */
-            updatedAt: string;
-        };
-        /** @description Edita un usuario (no incluye password — usar /reset-password) */
-        UpdateUserDto: {
-            /** @description Nombre completo */
-            fullName?: string;
-            /**
-             * @description Estado: 'active' o 'disabled'
-             * @enum {string}
-             */
-            status?: "active" | "disabled";
-        };
-        /** @description Respuesta de reset password admin */
-        ResetPasswordResponseDto: {
-            /** @description Password temporal (UNA vez). El user debe cambiarla en su primer login. */
-            temporaryPassword: string;
-        };
-        /** @description Listado de sesiones de un usuario */
-        SessionsListResponseDto: {
-            /** @description Sesiones del usuario */
-            items: {
-                /**
-                 * Format: uuid
-                 * @description ID de la sesión
-                 */
-                id: string;
-                /**
-                 * Format: uuid
-                 * @description ID del usuario dueño
-                 */
-                userId: string;
-                /** @description User agent del cliente */
-                userAgent: string | null;
-                /** @description IP del login */
-                ip: string | null;
-                /**
-                 * Format: date-time
-                 * @description Cuándo se creó
-                 */
-                createdAt: string;
-                /**
-                 * Format: date-time
-                 * @description Última actividad
-                 */
-                lastSeenAt: string;
-                /**
-                 * Format: date-time
-                 * @description Cuándo se revocó
-                 */
-                revokedAt: string | null;
-                /**
-                 * Format: date-time
-                 * @description Cuándo expira
-                 */
-                expiresAt: string;
-            }[];
-        };
-        /** @description Respuesta de revoke-all */
-        RevokeAllResponseDto: {
-            /** @description Sesiones revocadas */
-            sessionsRevokedCount: number;
-        };
-        PermissionsListResponseDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
-                code: string;
-                description: string;
-                /** @description Módulo agrupador (ej. "banking", "system") */
-                module: string;
-            }[];
-        };
-        /** @description Catálogo de permisos agrupado por módulo. Útil para UI de gestión. */
-        PermissionsGroupedResponseDto: {
-            modules: {
-                [key: string]: {
-                    /** Format: uuid */
-                    id: string;
-                    /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
-                    code: string;
-                    description: string;
-                    /** @description Módulo agrupador (ej. "banking", "system") */
-                    module: string;
-                }[];
-            };
-        };
-        RolesListResponseDto: {
-            data: {
-                /**
-                 * Format: uuid
-                 * @description UUID del rol
-                 */
-                id: string;
-                /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
-                name: string;
-                /** @description Descripción libre del rol */
-                description: string | null;
-                /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
-                is_system: boolean;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        /** @description Crear rol RBAC nuevo */
-        CreateRoleDto: {
-            /** @description Nombre único del rol */
-            name: string;
-            /** @description Descripción libre opcional */
-            description?: string;
-        };
-        RoleDto: {
-            /**
-             * Format: uuid
-             * @description UUID del rol
-             */
-            id: string;
-            /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
-            name: string;
-            /** @description Descripción libre del rol */
-            description: string | null;
-            /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
-            is_system: boolean;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        /** @description Edita nombre y/o descripción del rol. No editable en roles del sistema. */
-        UpdateRoleDto: {
-            name?: string;
-            description?: string | null;
-        };
-        /** @description Otorga uno o más permisos al rol */
-        GrantPermissionsToRoleDto: {
-            /** @description Lista de codes a otorgar al rol. Codes deben existir en el catálogo. */
-            permission_codes: string[];
-        };
-        /** @description Asigna un rol RBAC al usuario */
-        AssignRoleToUserDto: {
-            /**
-             * Format: uuid
-             * @description UUID del rol a asignar
-             */
-            role_id: string;
-        };
-        /** @description Crea un override individual de permiso para el usuario */
-        SetUserPermissionOverrideDto: {
-            /** @description Code del permiso (ej. "banking.delete"). Debe existir en el catálogo. */
-            permission_code: string;
-            /** @description true = otorga el permiso aunque su rol no lo tenga. false = niega el permiso aunque su rol sí lo tenga. */
-            granted: boolean;
-            /** @description Justificación textual del override (para auditoría) */
-            reason?: string;
-        };
-        /** @description Respuesta paginada de clientes */
-        ClientsListResponseDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                legal_name: string;
-                dba: string | null;
-                qbo_realm_id: string | null;
-                industry: string | null;
-                entity_type: string | null;
-                fiscal_year_start: number | null;
-                timezone: string | null;
-                /** @enum {string} */
-                status: "active" | "paused" | "offboarded";
-                /** @enum {string} */
-                tier: "silver" | "gold" | "platinum";
-                draft_email_enabled: boolean;
-                /** @enum {string} */
-                transactions_filter: "all" | "income" | "expense";
-                cc_email: string | null;
-                primary_contact_name: string | null;
-                primary_contact_email: string | null;
-                notes: string | null;
-                metadata: {
-                    [key: string]: unknown;
-                } | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-            total: number;
-            page: number;
-            pageSize: number;
-        };
-        ClientDto: {
-            /** Format: uuid */
-            id: string;
-            legal_name: string;
-            dba: string | null;
-            qbo_realm_id: string | null;
-            industry: string | null;
-            entity_type: string | null;
-            fiscal_year_start: number | null;
-            timezone: string | null;
-            /** @enum {string} */
-            status: "active" | "paused" | "offboarded";
-            /** @enum {string} */
-            tier: "silver" | "gold" | "platinum";
-            draft_email_enabled: boolean;
-            /** @enum {string} */
-            transactions_filter: "all" | "income" | "expense";
-            cc_email: string | null;
-            primary_contact_name: string | null;
-            primary_contact_email: string | null;
-            notes: string | null;
-            metadata: {
-                [key: string]: unknown;
-            } | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        /** @description Campos editables de un cliente. Solo se aplican los presentes en el body. Pasar campos NO editables (status, qbo_realm_id, etc.) devuelve 400. */
-        UpdateClientDto: {
-            legalName?: string;
-            dba?: string | null;
-            industry?: string | null;
-            entityType?: string | null;
-            fiscalYearStart?: number | null;
-            timezone?: string | null;
-            /** @enum {string} */
-            tier?: "silver" | "gold" | "platinum";
-            draftEmailEnabled?: boolean;
-            /** @enum {string} */
-            transactionsFilter?: "all" | "income" | "expense";
-            ccEmail?: string | null;
-            primaryContactName?: string | null;
-            primaryContactEmail?: string | null;
-            notes?: string | null;
-        };
-        /** @description Cambio de status (active/paused/offboarded) */
-        ChangeStatusDto: {
-            /**
-             * @description Nuevo status del cliente
-             * @enum {string}
-             */
-            status: "active" | "paused" | "offboarded";
-        };
-        /** @description Respuesta con URL de Intuit a la que redirigir */
-        AuthorizeResponseDto: {
-            /**
-             * Format: uri
-             * @description URL a la que redirigir al admin
-             */
-            authorizationUrl: string;
-        };
-        /** @description Request al proxy genérico V3 de Intuit */
-        IntuitCallRequestDto: {
-            /**
-             * @description Método HTTP
-             * @enum {string}
-             */
-            method: "GET" | "POST" | "PUT" | "DELETE";
-            /** @description Path relativo a la base /v3 de Intuit, ej: /company/<realmId>/account/1 */
-            path: string;
-            /** @description Body para POST/PUT (JSON arbitrario) */
-            body?: unknown;
-        };
-        /** @description Lista de status de tokens Intuit (sin secretos) */
-        TokensListResponseDto: {
-            items: {
-                /** Format: uuid */
-                client_id: string;
-                realm_id: string;
-                /** Format: date-time */
-                access_token_expires_at: string;
-                /** Format: date-time */
-                refresh_token_expires_at: string;
-                /** Format: date-time */
-                last_refreshed_at: string | null;
-                days_until_refresh_expiry: number;
-            }[];
-        };
-        /** @description Lista de conexiones del usuario */
-        ListConnectionsResponseDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                provider: "intuit" | "microsoft" | "google" | "dropbox" | "clover" | "square";
-                externalAccountId: string;
-                /**
-                 * @description Mecanismo de auth de la conexión
-                 * @enum {string}
-                 */
-                authType: "oauth" | "api_key";
-                /** Format: email */
-                email: string | null;
-                label: string | null;
-                scopes: string | null;
-                /**
-                 * @description Rol del user actual sobre esta conexión
-                 * @enum {string}
-                 */
-                accessRole: "owner" | "shared-read" | "shared-write";
-                /** Format: date-time */
-                accessTokenExpiresAt: string | null;
-                /** Format: date-time */
-                createdAt: string;
-                /** Format: date-time */
-                updatedAt: string;
-            }[];
-        };
-        /** @description Body para actualizar el label de una conexión */
-        UpdateLabelDto: {
-            label: string | null;
-        };
-        /** @description Conexión pública (sin tokens) con rol del user actual */
-        ConnectionItemDto: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            provider: "intuit" | "microsoft" | "google" | "dropbox" | "clover" | "square";
-            externalAccountId: string;
-            /**
-             * @description Mecanismo de auth de la conexión
-             * @enum {string}
-             */
-            authType: "oauth" | "api_key";
-            /** Format: email */
-            email: string | null;
-            label: string | null;
-            scopes: string | null;
-            /**
-             * @description Rol del user actual sobre esta conexión
-             * @enum {string}
-             */
-            accessRole: "owner" | "shared-read" | "shared-write";
-            /** Format: date-time */
-            accessTokenExpiresAt: string | null;
-            /** Format: date-time */
-            createdAt: string;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        /** @description Resultado del test() del provider */
-        TestConnectionResponseDto: {
-            /** @enum {boolean} */
-            ok: true;
-            message: string;
-        };
-        /** @description Comparte la conexión con otro user */
-        ShareConnectionDto: {
-            /**
-             * Format: uuid
-             * @description UUID del user invitado
-             */
-            user_id: string;
-            /**
-             * @description Nivel de acceso compartido
-             * @enum {string}
-             */
-            permission: "read" | "write";
-        };
-        ConnectionShareDto: {
-            /** Format: uuid */
-            connection_id: string;
-            /** Format: uuid */
-            user_id: string;
-            /**
-             * @description Nivel de acceso compartido
-             * @enum {string}
-             */
-            permission: "read" | "write";
-            user: {
-                /** Format: uuid */
-                id: string;
-                email: string;
-                full_name: string;
-            };
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        /** @description Cambia el permission de un share existente */
-        UpdateShareDto: {
-            /**
-             * @description Nivel de acceso compartido
-             * @enum {string}
-             */
-            permission: "read" | "write";
-        };
-        ListSharesResponseDto: {
-            items: {
-                /** Format: uuid */
-                connection_id: string;
-                /** Format: uuid */
-                user_id: string;
-                /**
-                 * @description Nivel de acceso compartido
-                 * @enum {string}
-                 */
-                permission: "read" | "write";
-                user: {
-                    /** Format: uuid */
-                    id: string;
-                    email: string;
-                    full_name: string;
-                };
-                /** Format: date-time */
-                created_at: string;
-                /** Format: date-time */
-                updated_at: string;
-            }[];
-        };
-        /** @description Body para crear una conexión api_key */
-        CreateApiKeyConnectionDto: {
-            /** @enum {string} */
-            provider: "intuit" | "microsoft" | "google" | "dropbox" | "clover" | "square";
-            /** @description ID propio del provider (merchant_id, etc.) */
-            externalAccountId: string;
-            label?: string;
-            /**
-             * Format: uuid
-             * @description clients.id de BV CPAs (opcional)
-             */
-            clientId?: string;
-            /** @description JSON con shape definida por el provider concreto */
-            credentials: {
-                [key: string]: unknown;
-            };
-        };
-        /** @description Body para actualizar credentials de una conexión api_key */
-        UpdateApiKeyConnectionDto: {
-            credentials: {
-                [key: string]: unknown;
-            };
-        };
-        /** @description Body opcional al iniciar OAuth Microsoft */
-        MicrosoftConnectDto: {
-            /** @description Etiqueta humana opcional */
-            label?: string;
-        };
-        /** @description Respuesta con URL para abrir el consent */
-        MicrosoftAuthorizeResponseDto: {
-            /**
-             * Format: uri
-             * @description URL de consent de Microsoft
-             */
-            authorizationUrl: string;
-        };
-        /** @description Body opcional al iniciar OAuth Dropbox */
-        DropboxConnectDto: {
-            /** @description Etiqueta humana opcional */
-            label?: string;
-        };
-        /** @description Respuesta con URL para abrir el consent */
-        DropboxAuthorizeResponseDto: {
-            /**
-             * Format: uri
-             * @description URL de consent de Dropbox
-             */
-            authorizationUrl: string;
-        };
-        /** @description Listado de carpeta de Dropbox */
-        DropboxListFilesResponseDto: {
-            items: {
-                /** @enum {string} */
-                type: "file" | "folder";
-                name: string;
-                /** @description Path lower-case canonical de Dropbox */
-                path: string;
-                /** @description ID interno de Dropbox (id:xxxxx) */
-                id: string;
-                /** @description Bytes (null para folders) */
-                size: number | null;
-                /** @description ISO timestamp del último cambio (null para folders) */
-                modified: string | null;
-            }[];
-            /** @description Cursor de Dropbox para paginación / sync incremental (null si no hay más) */
-            cursor: string | null;
-            has_more: boolean;
-        };
-        /** @description Body opcional al iniciar OAuth Google */
-        GoogleConnectDto: {
-            /** @description Etiqueta humana opcional */
-            label?: string;
-        };
-        /** @description Respuesta con URL para abrir el consent */
-        GoogleAuthorizeResponseDto: {
-            /**
-             * Format: uri
-             * @description URL de consent de Google
-             */
-            authorizationUrl: string;
-        };
-        /** @description Listado de carpeta de Drive */
-        GoogleListFilesResponseDto: {
-            items: {
-                id: string;
-                name: string;
-                mimeType: string;
-                /** @enum {string} */
-                type: "file" | "folder";
-                size: number | null;
-                modified: string | null;
-            }[];
-            nextPageToken: string | null;
-        };
-        /** @description Respuesta placeholder del reporte (la lógica real entra en v0.11.1+) */
-        CloverReportResponseDto: {
-            message: string;
-            /** Format: uuid */
-            clientId: string;
-            merchantId: string;
-            date: string;
-        };
-        /** @description Body de inicio OAuth Square */
-        SquareConnectDto: {
-            /**
-             * Format: uuid
-             * @description clients.id de BV CPAs al que se asocia el merchant
-             */
-            clientId: string;
-            label?: string;
-        };
-        /** @description Respuesta con URL para abrir el consent */
-        SquareAuthorizeResponseDto: {
-            /**
-             * Format: uri
-             * @description URL de Square para autorizar
-             */
-            authorizationUrl: string;
-        };
-        /** @description Respuesta placeholder del reporte (la lógica real entra en v0.12.1+) */
-        SquareReportResponseDto: {
-            message: string;
-            /** Format: uuid */
-            clientId: string;
-            locationId: string;
-            merchantId: string;
-            date: string;
-        };
-        PauseBodyDto: {
-            reason?: string;
-        };
-        /** @description Body para sync con Intuit (rango de fechas; clientId va en path) */
-        SyncTransactionsBodyDto: {
-            startDate: string;
-            endDate: string;
-        };
-        SyncResultDto: {
-            /** Format: uuid */
-            client_id: string;
-            start_date: string;
-            end_date: string;
-            deleted_count: number;
-            inserted_count: number;
-            duration_ms: number;
-        };
-        TransactionsListResponseDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                realm_id: string;
-                qbo_txn_type: string;
-                qbo_txn_id: string;
-                /** Format: uuid */
-                client_id: string;
-                txn_date: string;
-                docnum: string | null;
-                vendor_name: string | null;
-                memo: string | null;
-                split_account: string | null;
-                /** @enum {string} */
-                category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
-                amount: string;
-                qbo_account_id: string | null;
-                /** Format: date-time */
-                synced_at: string;
-                response: {
-                    client_note: string;
-                    appended_text: string | null;
-                    qbo_account_id: string | null;
-                    completed: boolean;
-                    /** Format: date-time */
-                    responded_at: string;
-                    /** Format: date-time */
-                    synced_to_qbo_at: string | null;
-                } | null;
-            }[];
-            total: number;
-        };
-        TransactionResponsesListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                client_id: string;
-                realm_id: string;
-                qbo_txn_type: string;
-                qbo_txn_id: string;
-                txn_date: string;
-                vendor_name: string | null;
-                memo: string | null;
-                split_account: string | null;
-                /** @enum {string} */
-                category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
-                amount: string;
-                client_note: string;
-                appended_text: string | null;
-                qbo_account_id: string | null;
-                completed: boolean;
-                /** Format: date-time */
-                responded_at: string;
-                /** Format: date-time */
-                synced_to_qbo_at: string | null;
-            }[];
-        };
-        /** @description Cuerpo del PATCH para guardar nota + account del cliente/operador */
-        SaveNoteBodyDto: {
-            note: string;
-            /** @description Sufijo opcional que se concatena a `note` al hacer writeback a QBO (no afecta el note guardado en mapi). Ej: "as per client's notes (05-10-2026)". */
-            appended_text?: string | null;
-            /** @description AccountRef.value del COA de QBO — guardado temporalmente hasta writeback */
-            qbo_account_id?: string | null;
-            /** @description true cuando el operador/cliente considera el llenado correcto */
-            completed?: boolean;
-        };
-        TransactionResponseDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            client_id: string;
-            realm_id: string;
-            qbo_txn_type: string;
-            qbo_txn_id: string;
-            txn_date: string;
-            vendor_name: string | null;
-            memo: string | null;
-            split_account: string | null;
-            /** @enum {string} */
-            category: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
-            amount: string;
-            client_note: string;
-            appended_text: string | null;
-            qbo_account_id: string | null;
-            completed: boolean;
-            /** Format: date-time */
-            responded_at: string;
-            /** Format: date-time */
-            synced_to_qbo_at: string | null;
-        };
-        FollowupDto: {
-            /** Format: uuid */
-            client_id: string;
-            period: string;
-            /** @enum {string} */
-            status: "pending" | "ready_to_send" | "sent" | "awaiting_reply" | "partial_reply" | "complete" | "review_needed";
-            /** Format: date-time */
-            sent_at: string | null;
-            /** Format: date-time */
-            last_reply_at: string | null;
-            /** Format: uuid */
-            sent_by_user_id: string | null;
-            internal_notes: string | null;
-        };
-        /** @description Campos a actualizar del followup */
-        UpdateFollowupDto: {
-            /** @enum {string} */
-            status?: "pending" | "ready_to_send" | "sent" | "awaiting_reply" | "partial_reply" | "complete" | "review_needed";
-            /** Format: date-time */
-            sentAt?: string | null;
-            /** Format: date-time */
-            lastReplyAt?: string | null;
-            /** Format: uuid */
-            sentByUserId?: string | null;
-            internalNotes?: string | null;
-        };
-        /** @description Crear (o reutilizar) un link público para un cliente */
-        CreatePublicLinkDto: {
-            /** @enum {string} */
-            purpose: "uncats";
-            /** Format: date-time */
-            expiresAt?: string | null;
-            maxUses?: number | null;
-            metadata?: {
-                [key: string]: unknown;
-            } | null;
-            force?: boolean;
-        };
-        PublicLinkDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            client_id: string;
-            token: string;
-            /** @enum {string} */
-            purpose: "uncats";
-            /** Format: date-time */
-            expires_at: string | null;
-            /** Format: date-time */
-            revoked_at: string | null;
-            max_uses: number | null;
-            use_count: number;
-            /** Format: date-time */
-            last_used_at: string | null;
-            metadata: {
-                [key: string]: unknown;
-            } | null;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: uuid */
-            created_by_user_id: string | null;
-        };
-        PublicLinksListDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                client_id: string;
-                token: string;
-                /** @enum {string} */
-                purpose: "uncats";
-                /** Format: date-time */
-                expires_at: string | null;
-                /** Format: date-time */
-                revoked_at: string | null;
-                max_uses: number | null;
-                use_count: number;
-                /** Format: date-time */
-                last_used_at: string | null;
-                metadata: {
-                    [key: string]: unknown;
-                } | null;
-                /** Format: date-time */
-                created_at: string;
-                /** Format: uuid */
-                created_by_user_id: string | null;
-            }[];
-        };
-        /** @description PATCH parcial de un link público. Solo se aplican los campos presentes. Para anular revocación, mandar `revokedAt: null` (validará que no haya otro activo del mismo purpose, si lo hay → 409). */
-        UpdatePublicLinkDto: {
-            /** Format: date-time */
-            expiresAt?: string | null;
-            maxUses?: number | null;
-            metadata?: {
-                [key: string]: unknown;
-            } | null;
-            /**
-             * @description Único valor permitido: null. Anula la revocación. Para revocar usar POST /:linkId/revoke.
-             * @enum {null}
-             */
-            revokedAt?: null;
-        };
-        PublicTransactionsResponseDto: {
-            client: {
-                /** Format: uuid */
-                id: string;
-                legal_name: string;
-                /** @enum {string} */
-                transactions_filter: "all" | "income" | "expense";
-            };
-            items: {
-                /** Format: uuid */
-                id: string;
-                qbo_txn_type: string;
-                txn_date: string;
-                docnum: string | null;
-                vendor_name: string | null;
-                memo: string | null;
-                split_account: string | null;
-                /** @enum {string} */
-                category: "uncategorized_expense" | "uncategorized_income";
-                amount: string;
-                response: {
-                    client_note: string;
-                    completed: boolean;
-                    /** Format: date-time */
-                    responded_at: string;
-                } | null;
-            }[];
-            total: number;
-        };
-        CustomerSupportListResponseDto: {
-            period: {
-                from: string;
-                to: string;
-            };
-            items: {
-                /** Format: uuid */
-                client_id: string;
-                legal_name: string;
-                /** @enum {string} */
-                tier: "silver" | "gold" | "platinum";
-                qbo_realm_id: string | null;
-                followup: {
-                    /** @enum {string} */
-                    status: "pending" | "ready_to_send" | "sent" | "awaiting_reply" | "partial_reply" | "complete" | "review_needed";
-                    /** Format: date-time */
-                    sent_at: string | null;
-                };
-                stats: {
-                    uncats_count: number;
-                    amas_count: number;
-                    responded_count: number;
-                    progress_pct: number;
-                    amount_total: string;
-                    /** Format: date-time */
-                    last_synced_at: string | null;
-                    /** Format: date-time */
-                    last_response_at: string | null;
-                };
-                monthly: {
-                    previous_year_total: {
-                        uncats: number;
-                        amas: number;
-                    };
-                    by_month: {
-                        month: number;
-                        uncats: number;
-                        amas: number;
-                    }[];
-                };
-            }[];
-        };
-        CustomerSupportDetailResponseDto: {
-            period: {
-                from: string;
-                to: string;
-            };
-            client: {
-                /** Format: uuid */
-                id: string;
-                legal_name: string;
-                /** @enum {string} */
-                tier: "silver" | "gold" | "platinum";
-                qbo_realm_id: string | null;
-                primary_contact_name: string | null;
-                primary_contact_email: string | null;
-                /** @enum {string} */
-                transactions_filter: "all" | "income" | "expense";
-                draft_email_enabled: boolean;
-                cc_email: string | null;
-            };
-            followup: {
-                /** @enum {string} */
-                status: "pending" | "ready_to_send" | "sent" | "awaiting_reply" | "partial_reply" | "complete" | "review_needed";
-                /** Format: date-time */
-                sent_at: string | null;
-                /** Format: date-time */
-                last_reply_at: string | null;
-                /** Format: date-time */
-                last_fully_responded_at: string | null;
-                internal_notes: string | null;
-            };
-            stats: {
-                uncats_count: number;
-                amas_count: number;
-                responded_count: number;
-                progress_pct: number;
-                amount_total: string;
-                /** Format: date-time */
-                last_synced_at: string | null;
-                /** Format: date-time */
-                last_response_at: string | null;
-                silent_streak_days: number;
-            };
-            monthly: {
-                previous_year_total: {
-                    uncats: number;
-                    amas: number;
-                };
-                by_month: {
-                    month: number;
-                    uncats: number;
-                    amas: number;
-                }[];
-            };
-            public_link: {
-                /** Format: uuid */
-                id: string;
-                token: string;
-                /** Format: uri */
-                url: string;
-                label: string | null;
-                max_uses: number | null;
-                use_count: number;
-                /** Format: date-time */
-                expires_at: string | null;
-                /** Format: date-time */
-                revoked_at: string | null;
-                /** Format: date-time */
-                created_at: string;
-            } | null;
-        };
-        ClientIntegrationsResponseDto: {
-            client: {
-                /** Format: uuid */
-                id: string;
-                legalName: string;
-            };
-            stats: {
-                connected: number;
-                healthy: number;
-                needsAttention: number;
-                errors: number;
-                providersInUse: number;
-            };
-            connections: {
-                /** Format: uuid */
-                id: string;
-                /** @enum {string} */
-                provider: "clover" | "square";
-                providerLabel: string;
-                label: string | null;
-                externalAccountId: string;
-                /** @enum {string} */
-                authType: "oauth" | "api_key";
-                /** @enum {string} */
-                status: "healthy" | "needs_reauth" | "paused";
-                statusReason: string | null;
-                /** Format: date-time */
-                pausedAt: string | null;
-                pausedReason: string | null;
-                /** Format: date-time */
-                lastSyncAt: string | null;
-                /** Format: date-time */
-                createdAt: string;
-            }[];
-        };
-        /** @description Body para registrar una llamada (clientId va en path, user_id se toma del JWT) */
-        CreateCallLogBodyDto: {
-            /**
-             * @description Resultado de la llamada. Uno de: responded, no_answer, voicemail, refused, other
-             * @enum {string}
-             */
-            outcome: "responded" | "no_answer" | "voicemail" | "refused" | "other";
-            /** @description Notas libres sobre la llamada. Max 2000 caracteres. */
-            notes?: string;
-            /**
-             * Format: date-time
-             * @description Timestamp ISO 8601 de cuándo se hizo la llamada. Default: now()
-             */
-            called_at?: string;
-        };
-        /** @description Body para actualizar un call log. Al menos un campo requerido. */
-        UpdateCallLogBodyDto: {
-            /** @enum {string} */
-            outcome?: "responded" | "no_answer" | "voicemail" | "refused" | "other";
-            notes?: string | null;
-            /** Format: date-time */
-            called_at?: string;
-        };
-        BankPortalListResponseDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                portal_url: string | null;
-                created_at: string;
-                updated_at: string;
-            }[];
-        };
-        BankPortalResponseDto: {
-            /** Format: uuid */
-            id: string;
-            name: string;
-            portal_url: string | null;
-            created_at: string;
-            updated_at: string;
-        };
-        CreateBankPortalDto: {
-            /** @description Nombre único del portal bancario. */
-            name: string;
-            /**
-             * Format: uri
-             * @description URL del portal de login del banco. Puede ser null si se desconoce.
-             */
-            portalUrl?: string | null;
-        };
-        UpdateBankPortalDto: {
-            name?: string;
-            /** Format: uri */
-            portalUrl?: string | null;
-        };
-        ClientBankAccountListResponseDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                client_id: string;
-                /** Format: uuid */
-                bank_portal_id: string;
-                /** @enum {string} */
-                status: "active" | "blocked" | "closed";
-                notes: string | null;
-                created_at: string;
-                updated_at: string;
-            }[];
-        };
-        ClientBankAccountResponseDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            client_id: string;
-            /** Format: uuid */
-            bank_portal_id: string;
-            /** @enum {string} */
-            status: "active" | "blocked" | "closed";
-            notes: string | null;
-            created_at: string;
-            updated_at: string;
-        };
-        CreateClientBankAccountDto: {
-            /** Format: uuid */
-            bankPortalId: string;
-            username: string;
-            password: string;
-            securityQa?: string;
-            /** @enum {string} */
-            status?: "active" | "blocked" | "closed";
-            notes?: string;
-        };
-        UpdateClientBankAccountDto: {
-            username?: string;
-            password?: string;
-            securityQa?: string | null;
-            /** @enum {string} */
-            status?: "active" | "blocked" | "closed";
-            notes?: string | null;
-        };
-        BankAccountListResponseDto: {
-            data: {
-                /** Format: uuid */
-                id: string;
-                /** Format: uuid */
-                client_bank_account_id: string;
-                account_mask: string;
-                /** @enum {string} */
-                account_type: "checking" | "savings" | "credit_card" | "loan" | "other";
-                label: string | null;
-                /** @enum {string} */
-                status: "active" | "closed" | "blocked";
-                notes: string | null;
-                created_at: string;
-                updated_at: string;
-            }[];
-        };
-        CreateBankAccountDto: {
-            accountMask: string;
-            /** @enum {string} */
-            accountType: "checking" | "savings" | "credit_card" | "loan" | "other";
-            label?: string;
-            /** @enum {string} */
-            status?: "active" | "closed" | "blocked";
-            notes?: string;
-        };
-        BankAccountResponseDto: {
-            /** Format: uuid */
-            id: string;
-            /** Format: uuid */
-            client_bank_account_id: string;
-            account_mask: string;
-            /** @enum {string} */
-            account_type: "checking" | "savings" | "credit_card" | "loan" | "other";
-            label: string | null;
-            /** @enum {string} */
-            status: "active" | "closed" | "blocked";
-            notes: string | null;
-            created_at: string;
-            updated_at: string;
-        };
-        UpdateBankAccountDto: {
-            accountMask?: string;
-            /** @enum {string} */
-            accountType?: "checking" | "savings" | "credit_card" | "loan" | "other";
-            label?: string | null;
-            /** @enum {string} */
-            status?: "active" | "closed" | "blocked";
-            notes?: string | null;
-        };
-        ChangeBankAccountStatusDto: {
-            /** @enum {string} */
-            status: "active" | "closed" | "blocked";
-            reason?: string;
-        };
-        ListGlobalCredentialsResponseDto: {
-            items: {
-                /** Format: uuid */
-                id: string;
-                client: {
-                    /** Format: uuid */
-                    id: string;
-                    legal_name: string;
-                };
-                portal: {
-                    /** Format: uuid */
-                    id: string;
-                    name: string;
-                    portal_url: string | null;
-                };
-                /** @enum {string} */
-                status: "active" | "blocked" | "closed";
-                notes: string | null;
-                created_at: string;
-                updated_at: string;
-            }[];
-            total: number;
-            limit: number;
-            offset: number;
-        };
-        GlobalCredentialResponseDto: {
-            /** Format: uuid */
-            id: string;
-            client: {
-                /** Format: uuid */
-                id: string;
-                legal_name: string;
-            };
-            portal: {
-                /** Format: uuid */
-                id: string;
-                name: string;
-                portal_url: string | null;
-            };
-            /** @enum {string} */
-            status: "active" | "blocked" | "closed";
-            notes: string | null;
-            created_at: string;
-            updated_at: string;
-        };
-        CreateGlobalCredentialDto: {
-            /** Format: uuid */
-            clientId: string;
-            /** Format: uuid */
-            bankPortalId: string;
-            username: string;
-            password: string;
-            securityQa?: string;
-            /** @enum {string} */
-            status?: "active" | "blocked" | "closed";
-            notes?: string;
-        };
-        /** @description Respuesta del healthcheck principal */
-        HealthResponseDto: {
-            /**
-             * @description Estado agregado del servicio
-             * @enum {string}
-             */
-            status: "up" | "down";
-            /** @description Versión del backend */
-            version: string;
-            /**
-             * @description Entorno de ejecución
-             * @enum {string}
-             */
-            env: "local" | "test" | "production";
-            /** @description Segundos desde el arranque */
-            uptime_s: number;
-            /**
-             * Format: date-time
-             * @description Timestamp ISO de la respuesta
-             */
-            timestamp: string;
-            /** @description Estado de cada dependencia externa */
-            components: {
-                /** @description Estado de un componente individual (DB, Redis, etc.) */
-                db: {
-                    /**
-                     * @description Estado del componente
-                     * @enum {string}
-                     */
-                    status: "up" | "down";
-                    /** @description Latencia de la última comprobación */
-                    latency_ms?: number;
-                    /** @description Mensaje de error si status=down */
-                    error?: string;
-                };
-            };
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+  schemas: {
+    /** @description Credenciales para login */
+    LoginDto: {
+      /**
+       * Format: email
+       * @description Email del usuario registrado
+       */
+      email: string
+      /** @description Contraseña del usuario */
+      password: string
+    }
+    /** @description Respuesta exitosa de login */
+    LoginResponseDto: {
+      /** @description JWT con expiry según JWT_EXPIRES_IN */
+      accessToken: string
+      user: {
+        /**
+         * Format: uuid
+         * @description ID del usuario
+         */
+        id: string
+        /**
+         * Format: email
+         * @description Email del usuario
+         */
+        email: string
+        /** @description Nombre completo */
+        fullName: string
+        /**
+         * @description Estado de la cuenta
+         * @enum {string}
+         */
+        status: 'active' | 'disabled'
+      }
+    }
+    /** @description Respuesta de logout-all */
+    LogoutAllResponseDto: {
+      /** @description Sesiones revocadas */
+      sessionsRevokedCount: number
+    }
+    /** @description Datos del usuario autenticado */
+    MeResponseDto: {
+      /**
+       * Format: uuid
+       * @description ID del usuario
+       */
+      id: string
+      /**
+       * Format: email
+       * @description Email del usuario
+       */
+      email: string
+      /** @description Nombre completo */
+      fullName: string
+      /**
+       * @description Estado de la cuenta
+       * @enum {string}
+       */
+      status: 'active' | 'disabled'
+      /**
+       * Format: date-time
+       * @description Último login exitoso (ISO)
+       */
+      lastLoginAt: string | null
+    }
+    /** @description Permisos efectivos del usuario después de aplicar roles + overrides */
+    EffectivePermissionsResponseDto: {
+      /** @description Roles asignados al usuario */
+      roles: {
+        /**
+         * Format: uuid
+         * @description UUID del rol
+         */
+        id: string
+        /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+        name: string
+        /** @description Descripción libre del rol */
+        description: string | null
+        /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+        is_system: boolean
+        /** Format: date-time */
+        created_at: string
+        /** Format: date-time */
+        updated_at: string
+      }[]
+      /** @description Permission codes EFECTIVOS (expandidos literalmente, ya incluyendo overrides individuales) */
+      permissions: string[]
+    }
+    /** @description Cambio de contraseña self-service */
+    ChangePasswordDto: {
+      /** @description Contraseña actual del usuario */
+      oldPassword: string
+      /** @description Nueva contraseña (mínimo 8 caracteres) */
+      newPassword: string
+    }
+    /** @description Listado paginado de usuarios */
+    UsersListResponseDto: {
+      /** @description Usuarios de la página */
+      items: {
+        /**
+         * Format: uuid
+         * @description ID del usuario
+         */
+        id: string
+        /**
+         * Format: email
+         * @description Email del usuario
+         */
+        email: string
+        /** @description Nombre completo */
+        fullName: string
+        /**
+         * @description Estado de la cuenta
+         * @enum {string}
+         */
+        status: 'active' | 'disabled'
+        /**
+         * Format: date-time
+         * @description Último login (ISO)
+         */
+        lastLoginAt: string | null
+        /**
+         * Format: date-time
+         * @description Fecha de creación (ISO)
+         */
+        createdAt: string
+        /**
+         * Format: date-time
+         * @description Última actualización (ISO)
+         */
+        updatedAt: string
+      }[]
+      /** @description Total de usuarios */
+      total: number
+      /** @description Página actual */
+      page: number
+      /** @description Tamaño de página */
+      pageSize: number
+    }
+    /** @description Crea un usuario nuevo (requiere system.users.manage) */
+    CreateUserDto: {
+      /**
+       * Format: email
+       * @description Email único del nuevo usuario
+       */
+      email: string
+      /** @description Nombre completo */
+      fullName: string
+      /** @description Password inicial. Si se omite, se genera una aleatoria y se devuelve en la response (UNA vez). */
+      initialPassword?: string
+      /** @description IDs de roles RBAC para asignar al user. Si se omite, el user queda sin permisos hasta que un admin se los asigne. */
+      roleIds?: string[]
+    }
+    /** @description Respuesta de creación de usuario */
+    CreateUserResponseDto: {
+      /** @description Datos públicos de un usuario (sin password_hash) */
+      user: {
+        /**
+         * Format: uuid
+         * @description ID del usuario
+         */
+        id: string
+        /**
+         * Format: email
+         * @description Email del usuario
+         */
+        email: string
+        /** @description Nombre completo */
+        fullName: string
+        /**
+         * @description Estado de la cuenta
+         * @enum {string}
+         */
+        status: 'active' | 'disabled'
+        /**
+         * Format: date-time
+         * @description Último login (ISO)
+         */
+        lastLoginAt: string | null
+        /**
+         * Format: date-time
+         * @description Fecha de creación (ISO)
+         */
+        createdAt: string
+        /**
+         * Format: date-time
+         * @description Última actualización (ISO)
+         */
+        updatedAt: string
+      }
+      /** @description Password inicial generada (UNA vez). Pasársela al usuario por canal seguro. */
+      initialPassword: string
+    }
+    /** @description Datos públicos de un usuario (sin password_hash) */
+    UserDto: {
+      /**
+       * Format: uuid
+       * @description ID del usuario
+       */
+      id: string
+      /**
+       * Format: email
+       * @description Email del usuario
+       */
+      email: string
+      /** @description Nombre completo */
+      fullName: string
+      /**
+       * @description Estado de la cuenta
+       * @enum {string}
+       */
+      status: 'active' | 'disabled'
+      /**
+       * Format: date-time
+       * @description Último login (ISO)
+       */
+      lastLoginAt: string | null
+      /**
+       * Format: date-time
+       * @description Fecha de creación (ISO)
+       */
+      createdAt: string
+      /**
+       * Format: date-time
+       * @description Última actualización (ISO)
+       */
+      updatedAt: string
+    }
+    /** @description Edita un usuario (no incluye password — usar /reset-password) */
+    UpdateUserDto: {
+      /** @description Nombre completo */
+      fullName?: string
+      /**
+       * @description Estado: 'active' o 'disabled'
+       * @enum {string}
+       */
+      status?: 'active' | 'disabled'
+    }
+    /** @description Respuesta de reset password admin */
+    ResetPasswordResponseDto: {
+      /** @description Password temporal (UNA vez). El user debe cambiarla en su primer login. */
+      temporaryPassword: string
+    }
+    /** @description Listado de sesiones de un usuario */
+    SessionsListResponseDto: {
+      /** @description Sesiones del usuario */
+      items: {
+        /**
+         * Format: uuid
+         * @description ID de la sesión
+         */
+        id: string
+        /**
+         * Format: uuid
+         * @description ID del usuario dueño
+         */
+        userId: string
+        /** @description User agent del cliente */
+        userAgent: string | null
+        /** @description IP del login */
+        ip: string | null
+        /**
+         * Format: date-time
+         * @description Cuándo se creó
+         */
+        createdAt: string
+        /**
+         * Format: date-time
+         * @description Última actividad
+         */
+        lastSeenAt: string
+        /**
+         * Format: date-time
+         * @description Cuándo se revocó
+         */
+        revokedAt: string | null
+        /**
+         * Format: date-time
+         * @description Cuándo expira
+         */
+        expiresAt: string
+      }[]
+    }
+    /** @description Respuesta de revoke-all */
+    RevokeAllResponseDto: {
+      /** @description Sesiones revocadas */
+      sessionsRevokedCount: number
+    }
+    PermissionsListResponseDto: {
+      data: {
+        /** Format: uuid */
+        id: string
+        /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
+        code: string
+        description: string
+        /** @description Módulo agrupador (ej. "banking", "system") */
+        module: string
+      }[]
+    }
+    /** @description Catálogo de permisos agrupado por módulo. Útil para UI de gestión. */
+    PermissionsGroupedResponseDto: {
+      modules: {
+        [key: string]: {
+          /** Format: uuid */
+          id: string
+          /** @description Código atómico: `<modulo>.<accion>` (ej. "banking.delete") */
+          code: string
+          description: string
+          /** @description Módulo agrupador (ej. "banking", "system") */
+          module: string
+        }[]
+      }
+    }
+    RolesListResponseDto: {
+      data: {
+        /**
+         * Format: uuid
+         * @description UUID del rol
+         */
+        id: string
+        /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+        name: string
+        /** @description Descripción libre del rol */
+        description: string | null
+        /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+        is_system: boolean
+        /** Format: date-time */
+        created_at: string
+        /** Format: date-time */
+        updated_at: string
+      }[]
+    }
+    /** @description Crear rol RBAC nuevo */
+    CreateRoleDto: {
+      /** @description Nombre único del rol */
+      name: string
+      /** @description Descripción libre opcional */
+      description?: string
+    }
+    RoleDto: {
+      /**
+       * Format: uuid
+       * @description UUID del rol
+       */
+      id: string
+      /** @description Nombre único (ej. "Administrator", "Bookkeeper") */
+      name: string
+      /** @description Descripción libre del rol */
+      description: string | null
+      /** @description true = rol del sistema (Administrator, Viewer) — no se puede editar ni eliminar */
+      is_system: boolean
+      /** Format: date-time */
+      created_at: string
+      /** Format: date-time */
+      updated_at: string
+    }
+    /** @description Edita nombre y/o descripción del rol. No editable en roles del sistema. */
+    UpdateRoleDto: {
+      name?: string
+      description?: string | null
+    }
+    /** @description Otorga uno o más permisos al rol */
+    GrantPermissionsToRoleDto: {
+      /** @description Lista de codes a otorgar al rol. Codes deben existir en el catálogo. */
+      permission_codes: string[]
+    }
+    /** @description Asigna un rol RBAC al usuario */
+    AssignRoleToUserDto: {
+      /**
+       * Format: uuid
+       * @description UUID del rol a asignar
+       */
+      role_id: string
+    }
+    /** @description Crea un override individual de permiso para el usuario */
+    SetUserPermissionOverrideDto: {
+      /** @description Code del permiso (ej. "banking.delete"). Debe existir en el catálogo. */
+      permission_code: string
+      /** @description true = otorga el permiso aunque su rol no lo tenga. false = niega el permiso aunque su rol sí lo tenga. */
+      granted: boolean
+      /** @description Justificación textual del override (para auditoría) */
+      reason?: string
+    }
+    /** @description Respuesta paginada de clientes */
+    ClientsListResponseDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        legal_name: string
+        dba: string | null
+        qbo_realm_id: string | null
+        industry: string | null
+        entity_type: string | null
+        fiscal_year_start: number | null
+        timezone: string | null
+        /** @enum {string} */
+        status: 'active' | 'paused' | 'offboarded'
+        /** @enum {string} */
+        tier: 'silver' | 'gold' | 'platinum'
+        draft_email_enabled: boolean
+        /** @enum {string} */
+        transactions_filter: 'all' | 'income' | 'expense'
+        cc_email: string | null
+        primary_contact_name: string | null
+        primary_contact_email: string | null
+        notes: string | null
+        metadata: {
+          [key: string]: unknown
+        } | null
+        /** Format: date-time */
+        created_at: string
+        /** Format: date-time */
+        updated_at: string
+      }[]
+      total: number
+      page: number
+      pageSize: number
+    }
+    ClientDto: {
+      /** Format: uuid */
+      id: string
+      legal_name: string
+      dba: string | null
+      qbo_realm_id: string | null
+      industry: string | null
+      entity_type: string | null
+      fiscal_year_start: number | null
+      timezone: string | null
+      /** @enum {string} */
+      status: 'active' | 'paused' | 'offboarded'
+      /** @enum {string} */
+      tier: 'silver' | 'gold' | 'platinum'
+      draft_email_enabled: boolean
+      /** @enum {string} */
+      transactions_filter: 'all' | 'income' | 'expense'
+      cc_email: string | null
+      primary_contact_name: string | null
+      primary_contact_email: string | null
+      notes: string | null
+      metadata: {
+        [key: string]: unknown
+      } | null
+      /** Format: date-time */
+      created_at: string
+      /** Format: date-time */
+      updated_at: string
+    }
+    /** @description Campos editables de un cliente. Solo se aplican los presentes en el body. Pasar campos NO editables (status, qbo_realm_id, etc.) devuelve 400. */
+    UpdateClientDto: {
+      legalName?: string
+      dba?: string | null
+      industry?: string | null
+      entityType?: string | null
+      fiscalYearStart?: number | null
+      timezone?: string | null
+      /** @enum {string} */
+      tier?: 'silver' | 'gold' | 'platinum'
+      draftEmailEnabled?: boolean
+      /** @enum {string} */
+      transactionsFilter?: 'all' | 'income' | 'expense'
+      ccEmail?: string | null
+      primaryContactName?: string | null
+      primaryContactEmail?: string | null
+      notes?: string | null
+    }
+    /** @description Cambio de status (active/paused/offboarded) */
+    ChangeStatusDto: {
+      /**
+       * @description Nuevo status del cliente
+       * @enum {string}
+       */
+      status: 'active' | 'paused' | 'offboarded'
+    }
+    /** @description Respuesta con URL de Intuit a la que redirigir */
+    AuthorizeResponseDto: {
+      /**
+       * Format: uri
+       * @description URL a la que redirigir al admin
+       */
+      authorizationUrl: string
+    }
+    /** @description Request al proxy genérico V3 de Intuit */
+    IntuitCallRequestDto: {
+      /**
+       * @description Método HTTP
+       * @enum {string}
+       */
+      method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+      /** @description Path relativo a la base /v3 de Intuit, ej: /company/<realmId>/account/1 */
+      path: string
+      /** @description Body para POST/PUT (JSON arbitrario) */
+      body?: unknown
+    }
+    /** @description Lista de status de tokens Intuit (sin secretos) */
+    TokensListResponseDto: {
+      items: {
+        /** Format: uuid */
+        client_id: string
+        realm_id: string
+        /** Format: date-time */
+        access_token_expires_at: string
+        /** Format: date-time */
+        refresh_token_expires_at: string
+        /** Format: date-time */
+        last_refreshed_at: string | null
+        days_until_refresh_expiry: number
+      }[]
+    }
+    /** @description Lista de conexiones del usuario */
+    ListConnectionsResponseDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        /** @enum {string} */
+        provider: 'intuit' | 'microsoft' | 'google' | 'dropbox' | 'clover' | 'square'
+        externalAccountId: string
+        /**
+         * @description Mecanismo de auth de la conexión
+         * @enum {string}
+         */
+        authType: 'oauth' | 'api_key'
+        /** Format: email */
+        email: string | null
+        label: string | null
+        scopes: string | null
+        /**
+         * @description Rol del user actual sobre esta conexión
+         * @enum {string}
+         */
+        accessRole: 'owner' | 'shared-read' | 'shared-write'
+        /** Format: date-time */
+        accessTokenExpiresAt: string | null
+        /** Format: date-time */
+        createdAt: string
+        /** Format: date-time */
+        updatedAt: string
+      }[]
+    }
+    /** @description Body para actualizar el label de una conexión */
+    UpdateLabelDto: {
+      label: string | null
+    }
+    /** @description Conexión pública (sin tokens) con rol del user actual */
+    ConnectionItemDto: {
+      /** Format: uuid */
+      id: string
+      /** @enum {string} */
+      provider: 'intuit' | 'microsoft' | 'google' | 'dropbox' | 'clover' | 'square'
+      externalAccountId: string
+      /**
+       * @description Mecanismo de auth de la conexión
+       * @enum {string}
+       */
+      authType: 'oauth' | 'api_key'
+      /** Format: email */
+      email: string | null
+      label: string | null
+      scopes: string | null
+      /**
+       * @description Rol del user actual sobre esta conexión
+       * @enum {string}
+       */
+      accessRole: 'owner' | 'shared-read' | 'shared-write'
+      /** Format: date-time */
+      accessTokenExpiresAt: string | null
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      updatedAt: string
+    }
+    /** @description Resultado del test() del provider */
+    TestConnectionResponseDto: {
+      /** @enum {boolean} */
+      ok: true
+      message: string
+    }
+    /** @description Comparte la conexión con otro user */
+    ShareConnectionDto: {
+      /**
+       * Format: uuid
+       * @description UUID del user invitado
+       */
+      user_id: string
+      /**
+       * @description Nivel de acceso compartido
+       * @enum {string}
+       */
+      permission: 'read' | 'write'
+    }
+    ConnectionShareDto: {
+      /** Format: uuid */
+      connection_id: string
+      /** Format: uuid */
+      user_id: string
+      /**
+       * @description Nivel de acceso compartido
+       * @enum {string}
+       */
+      permission: 'read' | 'write'
+      user: {
+        /** Format: uuid */
+        id: string
+        email: string
+        full_name: string
+      }
+      /** Format: date-time */
+      created_at: string
+      /** Format: date-time */
+      updated_at: string
+    }
+    /** @description Cambia el permission de un share existente */
+    UpdateShareDto: {
+      /**
+       * @description Nivel de acceso compartido
+       * @enum {string}
+       */
+      permission: 'read' | 'write'
+    }
+    ListSharesResponseDto: {
+      items: {
+        /** Format: uuid */
+        connection_id: string
+        /** Format: uuid */
+        user_id: string
+        /**
+         * @description Nivel de acceso compartido
+         * @enum {string}
+         */
+        permission: 'read' | 'write'
+        user: {
+          /** Format: uuid */
+          id: string
+          email: string
+          full_name: string
+        }
+        /** Format: date-time */
+        created_at: string
+        /** Format: date-time */
+        updated_at: string
+      }[]
+    }
+    /** @description Body para crear una conexión api_key */
+    CreateApiKeyConnectionDto: {
+      /** @enum {string} */
+      provider: 'intuit' | 'microsoft' | 'google' | 'dropbox' | 'clover' | 'square'
+      /** @description ID propio del provider (merchant_id, etc.) */
+      externalAccountId: string
+      label?: string
+      /**
+       * Format: uuid
+       * @description clients.id de BV CPAs (opcional)
+       */
+      clientId?: string
+      /** @description JSON con shape definida por el provider concreto */
+      credentials: {
+        [key: string]: unknown
+      }
+    }
+    /** @description Body para actualizar credentials de una conexión api_key */
+    UpdateApiKeyConnectionDto: {
+      credentials: {
+        [key: string]: unknown
+      }
+    }
+    /** @description Body opcional al iniciar OAuth Microsoft */
+    MicrosoftConnectDto: {
+      /** @description Etiqueta humana opcional */
+      label?: string
+    }
+    /** @description Respuesta con URL para abrir el consent */
+    MicrosoftAuthorizeResponseDto: {
+      /**
+       * Format: uri
+       * @description URL de consent de Microsoft
+       */
+      authorizationUrl: string
+    }
+    /** @description Body opcional al iniciar OAuth Dropbox */
+    DropboxConnectDto: {
+      /** @description Etiqueta humana opcional */
+      label?: string
+    }
+    /** @description Respuesta con URL para abrir el consent */
+    DropboxAuthorizeResponseDto: {
+      /**
+       * Format: uri
+       * @description URL de consent de Dropbox
+       */
+      authorizationUrl: string
+    }
+    /** @description Listado de carpeta de Dropbox */
+    DropboxListFilesResponseDto: {
+      items: {
+        /** @enum {string} */
+        type: 'file' | 'folder'
+        name: string
+        /** @description Path lower-case canonical de Dropbox */
+        path: string
+        /** @description ID interno de Dropbox (id:xxxxx) */
+        id: string
+        /** @description Bytes (null para folders) */
+        size: number | null
+        /** @description ISO timestamp del último cambio (null para folders) */
+        modified: string | null
+      }[]
+      /** @description Cursor de Dropbox para paginación / sync incremental (null si no hay más) */
+      cursor: string | null
+      has_more: boolean
+    }
+    /** @description Body opcional al iniciar OAuth Google */
+    GoogleConnectDto: {
+      /** @description Etiqueta humana opcional */
+      label?: string
+    }
+    /** @description Respuesta con URL para abrir el consent */
+    GoogleAuthorizeResponseDto: {
+      /**
+       * Format: uri
+       * @description URL de consent de Google
+       */
+      authorizationUrl: string
+    }
+    /** @description Listado de carpeta de Drive */
+    GoogleListFilesResponseDto: {
+      items: {
+        id: string
+        name: string
+        mimeType: string
+        /** @enum {string} */
+        type: 'file' | 'folder'
+        size: number | null
+        modified: string | null
+      }[]
+      nextPageToken: string | null
+    }
+    /** @description Respuesta placeholder del reporte (la lógica real entra en v0.11.1+) */
+    CloverReportResponseDto: {
+      message: string
+      /** Format: uuid */
+      clientId: string
+      merchantId: string
+      date: string
+    }
+    /** @description Body de inicio OAuth Square */
+    SquareConnectDto: {
+      /**
+       * Format: uuid
+       * @description clients.id de BV CPAs al que se asocia el merchant
+       */
+      clientId: string
+      label?: string
+    }
+    /** @description Respuesta con URL para abrir el consent */
+    SquareAuthorizeResponseDto: {
+      /**
+       * Format: uri
+       * @description URL de Square para autorizar
+       */
+      authorizationUrl: string
+    }
+    /** @description Respuesta placeholder del reporte (la lógica real entra en v0.12.1+) */
+    SquareReportResponseDto: {
+      message: string
+      /** Format: uuid */
+      clientId: string
+      locationId: string
+      merchantId: string
+      date: string
+    }
+    PauseBodyDto: {
+      reason?: string
+    }
+    /** @description Body para sync con Intuit (rango de fechas; clientId va en path) */
+    SyncTransactionsBodyDto: {
+      startDate: string
+      endDate: string
+    }
+    SyncResultDto: {
+      /** Format: uuid */
+      client_id: string
+      start_date: string
+      end_date: string
+      deleted_count: number
+      inserted_count: number
+      duration_ms: number
+    }
+    TransactionsListResponseDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        realm_id: string
+        qbo_txn_type: string
+        qbo_txn_id: string
+        /** Format: uuid */
+        client_id: string
+        txn_date: string
+        docnum: string | null
+        vendor_name: string | null
+        memo: string | null
+        split_account: string | null
+        /** @enum {string} */
+        category: 'uncategorized_expense' | 'uncategorized_income' | 'ask_my_accountant'
+        amount: string
+        qbo_account_id: string | null
+        /** Format: date-time */
+        synced_at: string
+        response: {
+          client_note: string
+          appended_text: string | null
+          qbo_account_id: string | null
+          completed: boolean
+          /** Format: date-time */
+          responded_at: string
+          /** Format: date-time */
+          synced_to_qbo_at: string | null
+        } | null
+      }[]
+      total: number
+    }
+    TransactionResponsesListDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        /** Format: uuid */
+        client_id: string
+        realm_id: string
+        qbo_txn_type: string
+        qbo_txn_id: string
+        txn_date: string
+        vendor_name: string | null
+        memo: string | null
+        split_account: string | null
+        /** @enum {string} */
+        category: 'uncategorized_expense' | 'uncategorized_income' | 'ask_my_accountant'
+        amount: string
+        client_note: string
+        appended_text: string | null
+        qbo_account_id: string | null
+        completed: boolean
+        /** Format: date-time */
+        responded_at: string
+        /** Format: date-time */
+        synced_to_qbo_at: string | null
+      }[]
+    }
+    /** @description Cuerpo del PATCH para guardar nota + account del cliente/operador */
+    SaveNoteBodyDto: {
+      note: string
+      /** @description Sufijo opcional que se concatena a `note` al hacer writeback a QBO (no afecta el note guardado en mapi). Ej: "as per client's notes (05-10-2026)". */
+      appended_text?: string | null
+      /** @description AccountRef.value del COA de QBO — guardado temporalmente hasta writeback */
+      qbo_account_id?: string | null
+      /** @description true cuando el operador/cliente considera el llenado correcto */
+      completed?: boolean
+    }
+    TransactionResponseDto: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      client_id: string
+      realm_id: string
+      qbo_txn_type: string
+      qbo_txn_id: string
+      txn_date: string
+      vendor_name: string | null
+      memo: string | null
+      split_account: string | null
+      /** @enum {string} */
+      category: 'uncategorized_expense' | 'uncategorized_income' | 'ask_my_accountant'
+      amount: string
+      client_note: string
+      appended_text: string | null
+      qbo_account_id: string | null
+      completed: boolean
+      /** Format: date-time */
+      responded_at: string
+      /** Format: date-time */
+      synced_to_qbo_at: string | null
+    }
+    FollowupDto: {
+      /** Format: uuid */
+      client_id: string
+      period: string
+      /** @enum {string} */
+      status:
+        | 'pending'
+        | 'ready_to_send'
+        | 'sent'
+        | 'awaiting_reply'
+        | 'partial_reply'
+        | 'complete'
+        | 'review_needed'
+      /** Format: date-time */
+      sent_at: string | null
+      /** Format: date-time */
+      last_reply_at: string | null
+      /** Format: uuid */
+      sent_by_user_id: string | null
+      internal_notes: string | null
+    }
+    /** @description Campos a actualizar del followup */
+    UpdateFollowupDto: {
+      /** @enum {string} */
+      status?:
+        | 'pending'
+        | 'ready_to_send'
+        | 'sent'
+        | 'awaiting_reply'
+        | 'partial_reply'
+        | 'complete'
+        | 'review_needed'
+      /** Format: date-time */
+      sentAt?: string | null
+      /** Format: date-time */
+      lastReplyAt?: string | null
+      /** Format: uuid */
+      sentByUserId?: string | null
+      internalNotes?: string | null
+    }
+    /** @description Crear (o reutilizar) un link público para un cliente */
+    CreatePublicLinkDto: {
+      /** @enum {string} */
+      purpose: 'uncats'
+      /** Format: date-time */
+      expiresAt?: string | null
+      maxUses?: number | null
+      metadata?: {
+        [key: string]: unknown
+      } | null
+      force?: boolean
+    }
+    PublicLinkDto: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      client_id: string
+      token: string
+      /** @enum {string} */
+      purpose: 'uncats'
+      /** Format: date-time */
+      expires_at: string | null
+      /** Format: date-time */
+      revoked_at: string | null
+      max_uses: number | null
+      use_count: number
+      /** Format: date-time */
+      last_used_at: string | null
+      metadata: {
+        [key: string]: unknown
+      } | null
+      /** Format: date-time */
+      created_at: string
+      /** Format: uuid */
+      created_by_user_id: string | null
+    }
+    PublicLinksListDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        /** Format: uuid */
+        client_id: string
+        token: string
+        /** @enum {string} */
+        purpose: 'uncats'
+        /** Format: date-time */
+        expires_at: string | null
+        /** Format: date-time */
+        revoked_at: string | null
+        max_uses: number | null
+        use_count: number
+        /** Format: date-time */
+        last_used_at: string | null
+        metadata: {
+          [key: string]: unknown
+        } | null
+        /** Format: date-time */
+        created_at: string
+        /** Format: uuid */
+        created_by_user_id: string | null
+      }[]
+    }
+    /** @description PATCH parcial de un link público. Solo se aplican los campos presentes. Para anular revocación, mandar `revokedAt: null` (validará que no haya otro activo del mismo purpose, si lo hay → 409). */
+    UpdatePublicLinkDto: {
+      /** Format: date-time */
+      expiresAt?: string | null
+      maxUses?: number | null
+      metadata?: {
+        [key: string]: unknown
+      } | null
+      /**
+       * @description Único valor permitido: null. Anula la revocación. Para revocar usar POST /:linkId/revoke.
+       * @enum {null}
+       */
+      revokedAt?: null
+    }
+    PublicTransactionsResponseDto: {
+      client: {
+        /** Format: uuid */
+        id: string
+        legal_name: string
+        /** @enum {string} */
+        transactions_filter: 'all' | 'income' | 'expense'
+      }
+      items: {
+        /** Format: uuid */
+        id: string
+        qbo_txn_type: string
+        txn_date: string
+        docnum: string | null
+        vendor_name: string | null
+        memo: string | null
+        split_account: string | null
+        /** @enum {string} */
+        category: 'uncategorized_expense' | 'uncategorized_income'
+        amount: string
+        response: {
+          client_note: string
+          completed: boolean
+          /** Format: date-time */
+          responded_at: string
+        } | null
+      }[]
+      total: number
+    }
+    CustomerSupportListResponseDto: {
+      period: {
+        from: string
+        to: string
+      }
+      items: {
+        /** Format: uuid */
+        client_id: string
+        legal_name: string
+        /** @enum {string} */
+        tier: 'silver' | 'gold' | 'platinum'
+        qbo_realm_id: string | null
+        followup: {
+          /** @enum {string} */
+          status:
+            | 'pending'
+            | 'ready_to_send'
+            | 'sent'
+            | 'awaiting_reply'
+            | 'partial_reply'
+            | 'complete'
+            | 'review_needed'
+          /** Format: date-time */
+          sent_at: string | null
+        }
+        stats: {
+          uncats_count: number
+          amas_count: number
+          responded_count: number
+          progress_pct: number
+          amount_total: string
+          /** Format: date-time */
+          last_synced_at: string | null
+          /** Format: date-time */
+          last_response_at: string | null
+        }
+        monthly: {
+          previous_year_total: {
+            uncats: number
+            amas: number
+          }
+          by_month: {
+            month: number
+            uncats: number
+            amas: number
+          }[]
+        }
+      }[]
+    }
+    CustomerSupportDetailResponseDto: {
+      period: {
+        from: string
+        to: string
+      }
+      client: {
+        /** Format: uuid */
+        id: string
+        legal_name: string
+        /** @enum {string} */
+        tier: 'silver' | 'gold' | 'platinum'
+        qbo_realm_id: string | null
+        primary_contact_name: string | null
+        primary_contact_email: string | null
+        /** @enum {string} */
+        transactions_filter: 'all' | 'income' | 'expense'
+        draft_email_enabled: boolean
+        cc_email: string | null
+      }
+      followup: {
+        /** @enum {string} */
+        status:
+          | 'pending'
+          | 'ready_to_send'
+          | 'sent'
+          | 'awaiting_reply'
+          | 'partial_reply'
+          | 'complete'
+          | 'review_needed'
+        /** Format: date-time */
+        sent_at: string | null
+        /** Format: date-time */
+        last_reply_at: string | null
+        /** Format: date-time */
+        last_fully_responded_at: string | null
+        internal_notes: string | null
+      }
+      stats: {
+        uncats_count: number
+        amas_count: number
+        responded_count: number
+        progress_pct: number
+        amount_total: string
+        /** Format: date-time */
+        last_synced_at: string | null
+        /** Format: date-time */
+        last_response_at: string | null
+        silent_streak_days: number
+      }
+      monthly: {
+        previous_year_total: {
+          uncats: number
+          amas: number
+        }
+        by_month: {
+          month: number
+          uncats: number
+          amas: number
+        }[]
+      }
+      public_link: {
+        /** Format: uuid */
+        id: string
+        token: string
+        /** Format: uri */
+        url: string
+        label: string | null
+        max_uses: number | null
+        use_count: number
+        /** Format: date-time */
+        expires_at: string | null
+        /** Format: date-time */
+        revoked_at: string | null
+        /** Format: date-time */
+        created_at: string
+      } | null
+    }
+    ClientIntegrationsResponseDto: {
+      client: {
+        /** Format: uuid */
+        id: string
+        legalName: string
+      }
+      stats: {
+        connected: number
+        healthy: number
+        needsAttention: number
+        errors: number
+        providersInUse: number
+      }
+      connections: {
+        /** Format: uuid */
+        id: string
+        /** @enum {string} */
+        provider: 'clover' | 'square'
+        providerLabel: string
+        label: string | null
+        externalAccountId: string
+        /** @enum {string} */
+        authType: 'oauth' | 'api_key'
+        /** @enum {string} */
+        status: 'healthy' | 'needs_reauth' | 'paused'
+        statusReason: string | null
+        /** Format: date-time */
+        pausedAt: string | null
+        pausedReason: string | null
+        /** Format: date-time */
+        lastSyncAt: string | null
+        /** Format: date-time */
+        createdAt: string
+      }[]
+    }
+    /** @description Body para registrar una llamada (clientId va en path, user_id se toma del JWT) */
+    CreateCallLogBodyDto: {
+      /**
+       * @description Resultado de la llamada. Uno de: responded, no_answer, voicemail, refused, other
+       * @enum {string}
+       */
+      outcome: 'responded' | 'no_answer' | 'voicemail' | 'refused' | 'other'
+      /** @description Notas libres sobre la llamada. Max 2000 caracteres. */
+      notes?: string
+      /**
+       * Format: date-time
+       * @description Timestamp ISO 8601 de cuándo se hizo la llamada. Default: now()
+       */
+      called_at?: string
+    }
+    /** @description Body para actualizar un call log. Al menos un campo requerido. */
+    UpdateCallLogBodyDto: {
+      /** @enum {string} */
+      outcome?: 'responded' | 'no_answer' | 'voicemail' | 'refused' | 'other'
+      notes?: string | null
+      /** Format: date-time */
+      called_at?: string
+    }
+    BankPortalListResponseDto: {
+      data: {
+        /** Format: uuid */
+        id: string
+        name: string
+        portal_url: string | null
+        created_at: string
+        updated_at: string
+      }[]
+    }
+    BankPortalResponseDto: {
+      /** Format: uuid */
+      id: string
+      name: string
+      portal_url: string | null
+      created_at: string
+      updated_at: string
+    }
+    CreateBankPortalDto: {
+      /** @description Nombre único del portal bancario. */
+      name: string
+      /**
+       * Format: uri
+       * @description URL del portal de login del banco. Puede ser null si se desconoce.
+       */
+      portalUrl?: string | null
+    }
+    UpdateBankPortalDto: {
+      name?: string
+      /** Format: uri */
+      portalUrl?: string | null
+    }
+    ClientBankAccountListResponseDto: {
+      data: {
+        /** Format: uuid */
+        id: string
+        /** Format: uuid */
+        client_id: string
+        /** Format: uuid */
+        bank_portal_id: string
+        username: string
+        password: string
+        security_qa: string | null
+        /** @enum {string} */
+        status: 'active' | 'blocked' | 'closed'
+        notes: string | null
+        created_at: string
+        updated_at: string
+      }[]
+    }
+    ClientBankAccountResponseDto: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      client_id: string
+      /** Format: uuid */
+      bank_portal_id: string
+      username: string
+      password: string
+      security_qa: string | null
+      /** @enum {string} */
+      status: 'active' | 'blocked' | 'closed'
+      notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    CreateClientBankAccountDto: {
+      /** Format: uuid */
+      bankPortalId: string
+      username: string
+      password: string
+      securityQa?: string
+      /** @enum {string} */
+      status?: 'active' | 'blocked' | 'closed'
+      notes?: string
+    }
+    UpdateClientBankAccountDto: {
+      username?: string
+      password?: string
+      securityQa?: string | null
+      /** @enum {string} */
+      status?: 'active' | 'blocked' | 'closed'
+      notes?: string | null
+    }
+    BankAccountListResponseDto: {
+      data: {
+        /** Format: uuid */
+        id: string
+        /** Format: uuid */
+        client_bank_account_id: string
+        account_mask: string
+        /** @enum {string} */
+        account_type: 'checking' | 'savings' | 'credit_card' | 'loan' | 'other'
+        label: string | null
+        /** @enum {string} */
+        status: 'active' | 'closed' | 'blocked'
+        notes: string | null
+        created_at: string
+        updated_at: string
+      }[]
+    }
+    CreateBankAccountDto: {
+      accountMask: string
+      /** @enum {string} */
+      accountType: 'checking' | 'savings' | 'credit_card' | 'loan' | 'other'
+      label?: string
+      /** @enum {string} */
+      status?: 'active' | 'closed' | 'blocked'
+      notes?: string
+    }
+    BankAccountResponseDto: {
+      /** Format: uuid */
+      id: string
+      /** Format: uuid */
+      client_bank_account_id: string
+      account_mask: string
+      /** @enum {string} */
+      account_type: 'checking' | 'savings' | 'credit_card' | 'loan' | 'other'
+      label: string | null
+      /** @enum {string} */
+      status: 'active' | 'closed' | 'blocked'
+      notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    UpdateBankAccountDto: {
+      accountMask?: string
+      /** @enum {string} */
+      accountType?: 'checking' | 'savings' | 'credit_card' | 'loan' | 'other'
+      label?: string | null
+      /** @enum {string} */
+      status?: 'active' | 'closed' | 'blocked'
+      notes?: string | null
+    }
+    ChangeBankAccountStatusDto: {
+      /** @enum {string} */
+      status: 'active' | 'closed' | 'blocked'
+      reason?: string
+    }
+    ListGlobalCredentialsResponseDto: {
+      items: {
+        /** Format: uuid */
+        id: string
+        client: {
+          /** Format: uuid */
+          id: string
+          legal_name: string
+        }
+        portal: {
+          /** Format: uuid */
+          id: string
+          name: string
+          portal_url: string | null
+        }
+        username: string
+        password: string
+        security_qa: string | null
+        /** @enum {string} */
+        status: 'active' | 'blocked' | 'closed'
+        notes: string | null
+        created_at: string
+        updated_at: string
+      }[]
+      total: number
+      limit: number
+      offset: number
+    }
+    GlobalCredentialResponseDto: {
+      /** Format: uuid */
+      id: string
+      client: {
+        /** Format: uuid */
+        id: string
+        legal_name: string
+      }
+      portal: {
+        /** Format: uuid */
+        id: string
+        name: string
+        portal_url: string | null
+      }
+      username: string
+      password: string
+      security_qa: string | null
+      /** @enum {string} */
+      status: 'active' | 'blocked' | 'closed'
+      notes: string | null
+      created_at: string
+      updated_at: string
+    }
+    CreateGlobalCredentialDto: {
+      /** Format: uuid */
+      clientId: string
+      /** Format: uuid */
+      bankPortalId: string
+      username: string
+      password: string
+      securityQa?: string
+      /** @enum {string} */
+      status?: 'active' | 'blocked' | 'closed'
+      notes?: string
+    }
+    /** @description Respuesta del healthcheck principal */
+    HealthResponseDto: {
+      /**
+       * @description Estado agregado del servicio
+       * @enum {string}
+       */
+      status: 'up' | 'down'
+      /** @description Versión del backend */
+      version: string
+      /**
+       * @description Entorno de ejecución
+       * @enum {string}
+       */
+      env: 'local' | 'test' | 'production'
+      /** @description Segundos desde el arranque */
+      uptime_s: number
+      /**
+       * Format: date-time
+       * @description Timestamp ISO de la respuesta
+       */
+      timestamp: string
+      /** @description Estado de cada dependencia externa */
+      components: {
+        /** @description Estado de un componente individual (DB, Redis, etc.) */
+        db: {
+          /**
+           * @description Estado del componente
+           * @enum {string}
+           */
+          status: 'up' | 'down'
+          /** @description Latencia de la última comprobación */
+          latency_ms?: number
+          /** @description Mensaje de error si status=down */
+          error?: string
+        }
+      }
+    }
+  }
+  responses: never
+  parameters: never
+  requestBodies: never
+  headers: never
+  pathItems: never
 }
-export type $defs = Record<string, never>;
+export type $defs = Record<string, never>
 export interface operations {
-    AuthController_login: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoginDto"];
-            };
-        };
-        responses: {
-            /** @description Login exitoso */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoginResponseDto"];
-                };
-            };
-            /** @description Credenciales inválidas o usuario deshabilitado */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rate limit excedido */
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logout: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión revocada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_logoutAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesiones revocadas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LogoutAllResponseDto"];
-                };
-            };
-        };
-    };
-    AuthController_me: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Datos del usuario */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MeResponseDto"];
-                };
-            };
-        };
-    };
-    AuthController_myPermissions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EffectivePermissionsResponseDto"];
-                };
-            };
-        };
-    };
-    AuthController_changePassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePasswordDto"];
-            };
-        };
-        responses: {
-            /** @description Contraseña cambiada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description old_password incorrecto o new_password débil */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersController_list: {
-        parameters: {
-            query: {
-                page: string;
-                pageSize: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista paginada */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UsersListResponseDto"];
-                };
-            };
-            /** @description Permisos insuficientes */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateUserDto"];
-            };
-        };
-        responses: {
-            /** @description Usuario creado */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CreateUserResponseDto"];
-                };
-            };
-            /** @description Password débil */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Email ya registrado */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersController_getOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Usuario encontrado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDto"];
-                };
-            };
-            /** @description Usuario no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserDto"];
-            };
-        };
-        responses: {
-            /** @description Usuario editado */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDto"];
-                };
-            };
-            /** @description Usuario no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersController_resetPassword: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Password reseteada */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResetPasswordResponseDto"];
-                };
-            };
-            /** @description Usuario no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersSessionsController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista de sesiones */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionsListResponseDto"];
-                };
-            };
-            /** @description Usuario no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersSessionsController_revokeAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesiones revocadas */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RevokeAllResponseDto"];
-                };
-            };
-            /** @description Usuario no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AdminUsersSessionsController_revokeOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-                sessionId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Sesión revocada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Sesión no encontrada */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PermissionsCatalogController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionsListResponseDto"];
-                };
-            };
-        };
-    };
-    PermissionsCatalogController_grouped: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionsGroupedResponseDto"];
-                };
-            };
-        };
-    };
-    RolesController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RolesListResponseDto"];
-                };
-            };
-        };
-    };
-    RolesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateRoleDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleDto"];
-                };
-            };
-            /** @description Ya existe un rol con ese nombre */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolesController_getOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleDto"];
-                };
-            };
-            /** @description Rol no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolesController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Rol eliminado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No eliminable (rol del sistema) */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateRoleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RoleDto"];
-                };
-            };
-            /** @description No editable (rol del sistema) */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description El nuevo nombre choca con otro rol existente */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolePermissionsController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PermissionsListResponseDto"];
-                };
-            };
-            /** @description Rol no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolePermissionsController_grant: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GrantPermissionsToRoleDto"];
-            };
-        };
-        responses: {
-            /** @description Permisos otorgados */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol del sistema no editable */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol o algún permission_code no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    RolePermissionsController_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                roleId: string;
-                permissionCode: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Permiso revocado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol del sistema no editable */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol o permission_code no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserRolesController_assign: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AssignRoleToUserDto"];
-            };
-        };
-        responses: {
-            /** @description Rol asignado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Rol no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description El usuario ya tiene ese rol */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserRolesController_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-                roleId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Rol revocado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No se puede revocar el último rol del usuario */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserPermissionsController_set: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SetUserPermissionOverrideDto"];
-            };
-        };
-        responses: {
-            /** @description Override creado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Permission code no existe en el catálogo */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Ya existe un override para este (user, permission) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserPermissionsController_unset: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-                permissionCode: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Override eliminado (o no existía) */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Permission code no existe en el catálogo */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    EffectivePermissionsController_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["EffectivePermissionsResponseDto"];
-                };
-            };
-        };
-    };
-    ClientsController_list: {
-        parameters: {
-            query?: {
-                /** @description Página (>=1) */
-                page?: number;
-                /** @description Tamaño de página (max 200) */
-                pageSize?: number;
-                /** @description Filtra por status */
-                status?: "active" | "paused" | "offboarded";
-                /** @description Filtra por tier (silver/gold/platinum) */
-                tier?: "silver" | "gold" | "platinum";
-                /** @description Búsqueda parcial en legal_name (case-insensitive) */
-                search?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientsListResponseDto"];
-                };
-            };
-        };
-    };
-    ClientsController_getOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientDto"];
-                };
-            };
-            /** @description Cliente no encontrado o sin acceso */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateClientDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientDto"];
-                };
-            };
-            /** @description Cliente no encontrado o sin acceso */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientsController_changeStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangeStatusDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientDto"];
-                };
-            };
-            /** @description Cliente no encontrado o sin acceso */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntuitOauthController_connectNew: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizeResponseDto"];
-                };
-            };
-        };
-    };
-    IntuitOauthController_callback: {
-        parameters: {
-            query: {
-                /** @description Código OAuth devuelto por Intuit */
-                code: string;
-                /** @description Realm ID del cliente QBO */
-                realmId: string;
-                /** @description State opaco que generó el backend */
-                state: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTML de confirmación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntuitAdminController_call: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                realmId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["IntuitCallRequestDto"];
-            };
-        };
-        responses: {
-            /** @description Respuesta cruda de Intuit */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Refresh token expirado, requiere re-autorización */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Realm sin conexión registrada */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntuitAdminController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TokensListResponseDto"];
-                };
-            };
-        };
-    };
-    ClientIntuitController_reconnect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthorizeResponseDto"];
-                };
-            };
-            /** @description Cliente no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientIntuitController_disconnect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Conexiones borradas */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConnectionsController_list: {
-        parameters: {
-            query?: {
-                /** @description Filtrar por provider */
-                provider?: "intuit" | "microsoft" | "google" | "dropbox" | "clover" | "square";
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListConnectionsResponseDto"];
-                };
-            };
-        };
-    };
-    ConnectionsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConnectionsController_updateLabel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateLabelDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectionItemDto"];
-                };
-            };
-        };
-    };
-    ConnectionsController_test: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TestConnectionResponseDto"];
-                };
-            };
-        };
-    };
-    ConnectionShareController_share: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ShareConnectionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectionShareDto"];
-                };
-            };
-        };
-    };
-    ConnectionShareController_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Share removido */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConnectionShareController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                userId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateShareDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectionShareDto"];
-                };
-            };
-        };
-    };
-    ConnectionShareListController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListSharesResponseDto"];
-                };
-            };
-        };
-    };
-    ConnectionsApiKeyController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateApiKeyConnectionDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectionItemDto"];
-                };
-            };
-        };
-    };
-    ConnectionsApiKeyController_updateCredentials: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateApiKeyConnectionDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ConnectionItemDto"];
-                };
-            };
-        };
-    };
-    MicrosoftConnectionController_connect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["MicrosoftConnectDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MicrosoftAuthorizeResponseDto"];
-                };
-            };
-        };
-    };
-    MicrosoftConnectionController_callback: {
-        parameters: {
-            query: {
-                /** @description Authorization code devuelto por Microsoft */
-                code: string;
-                /** @description State opaco que generó el backend */
-                state: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTML de confirmación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DropboxConnectionController_connect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DropboxConnectDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DropboxAuthorizeResponseDto"];
-                };
-            };
-        };
-    };
-    DropboxConnectionController_callback: {
-        parameters: {
-            query: {
-                /** @description Authorization code devuelto por Dropbox */
-                code: string;
-                /** @description State opaco que generó el backend */
-                state: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTML de confirmación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DropboxFilesController_list: {
-        parameters: {
-            query?: {
-                /** @description Path del Dropbox del owner. Vacío = raíz. Ej: "/Recibos/2026" */
-                path?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DropboxListFilesResponseDto"];
-                };
-            };
-            /** @description Conexión no encontrada o no pertenece al user */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GoogleConnectionController_connect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["GoogleConnectDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleAuthorizeResponseDto"];
-                };
-            };
-        };
-    };
-    GoogleConnectionController_callback: {
-        parameters: {
-            query: {
-                /** @description Authorization code devuelto por Google */
-                code: string;
-                /** @description State opaco que generó el backend */
-                state: string;
-                /** @description Scopes que el user efectivamente concedió */
-                scope?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTML de confirmación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    GoogleFilesController_list: {
-        parameters: {
-            query?: {
-                /** @description ID de la carpeta a listar. "root" = My Drive raíz */
-                folderId?: string;
-                pageSize?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GoogleListFilesResponseDto"];
-                };
-            };
-            /** @description Conexión no encontrada o no pertenece al user */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CloverReportController_report: {
-        parameters: {
-            query: {
-                /** @description Fecha del reporte (un solo día) */
-                date: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-                merchantId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CloverReportResponseDto"];
-                };
-            };
-            /** @description Cliente o conexión Clover no encontrada */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SquareConnectionController_connect: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SquareConnectDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SquareAuthorizeResponseDto"];
-                };
-            };
-        };
-    };
-    SquareConnectionController_callback: {
-        parameters: {
-            query: {
-                /** @description Authorization code (sólo en éxito) */
-                code?: string;
-                /** @description State opaco que generó el backend */
-                state: string;
-                response_type?: string;
-                /** @description Código de error si el user rechazó */
-                error?: string;
-                error_description?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description HTML de confirmación */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SquareReportController_report: {
-        parameters: {
-            query: {
-                /** @description Fecha del reporte (un solo día) */
-                date: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-                locationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SquareReportResponseDto"];
-                };
-            };
-            /** @description Cliente o conexión Square no encontrada */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConnectionPauseController_pause: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PauseBodyDto"];
-            };
-        };
-        responses: {
-            /** @description Conexión pausada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conexión no encontrada o sin acceso write */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conexión ya estaba pausada */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ConnectionPauseController_resume: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Conexión reanudada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conexión no encontrada o sin acceso write */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Conexión no estaba pausada */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientTransactionsController_sync: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SyncTransactionsBodyDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SyncResultDto"];
-                };
-            };
-            /** @description Cliente sin QBO conectado */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientTransactionsController_list: {
-        parameters: {
-            query?: {
-                category?: "uncategorized_expense" | "uncategorized_income" | "ask_my_accountant";
-                filter?: "all" | "income" | "expense";
-                startDate?: string;
-                endDate?: string;
-                /** @description Buscar por qbo_txn_id exacto */
-                qboTxnId?: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionsListResponseDto"];
-                };
-            };
-        };
-    };
-    ClientTransactionsController_deleteOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                txId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Transacción borrada */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Transacción no encontrada */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientTransactionResponsesController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponsesListDto"];
-                };
-            };
-        };
-    };
-    ClientTransactionResponsesController_softDelete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                txnId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response borrado o ya estaba borrado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Transacción no encontrada en el snapshot */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientTransactionResponsesController_saveNote: {
-        parameters: {
-            query?: {
-                /** @description true para sincronizar también a QBO al guardar. */
-                qbo_sync?: boolean;
-            };
-            header?: never;
-            path: {
-                id: string;
-                txnId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveNoteBodyDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-            /** @description qbo_account_id requerido o tipo no soportado */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Transacción no encontrada en el snapshot */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description SyncToken stale: la transacción cambió en QBO */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Error de Intuit API durante el writeback */
-            502: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientPeriodFollowupsController_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                period: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FollowupDto"];
-                };
-            };
-        };
-    };
-    ClientPeriodFollowupsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                period: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateFollowupDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FollowupDto"];
-                };
-            };
-        };
-    };
-    ClientPublicLinksController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicLinksListDto"];
-                };
-            };
-        };
-    };
-    ClientPublicLinksController_createOrGet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePublicLinkDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicLinkDto"];
-                };
-            };
-        };
-    };
-    ClientPublicLinksController_revoke: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                linkId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Link revocado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientPublicLinksController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                linkId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePublicLinkDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicLinkDto"];
-                };
-            };
-            /** @description Link no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Ya existe otro link activo con el mismo purpose para el cliente */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PublicTransactionsController_getTransactions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PublicTransactionsResponseDto"];
-                };
-            };
-            /** @description Token inválido */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Token revocado o expirado */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PublicTransactionsController_deleteNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-                txnId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Response borrado o ya estaba borrado */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Transacción no existe en snapshot actual */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Token revocado o expirado */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PublicTransactionsController_saveNote: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                token: string;
-                txnId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SaveNoteBodyDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TransactionResponseDto"];
-                };
-            };
-            /** @description Transacción no existe en snapshot actual */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Token revocado o expirado */
-            410: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UncatsViewController_list: {
-        parameters: {
-            query: {
-                from: string;
-                to: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerSupportListResponseDto"];
-                };
-            };
-        };
-    };
-    ClientUncatsController_detail: {
-        parameters: {
-            query: {
-                from: string;
-                to: string;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CustomerSupportDetailResponseDto"];
-                };
-            };
-            /** @description Cliente no encontrado */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientIntegrationsController_getIntegrations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientIntegrationsResponseDto"];
-                };
-            };
-            /** @description Cliente no encontrado o sin acceso */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallLogsController_list: {
-        parameters: {
-            query?: {
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista de call logs. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallLogsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCallLogBodyDto"];
-            };
-        };
-        responses: {
-            /** @description Call log creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Body inválido (outcome fuera de enum o notes >2000). */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Cliente no existe o el usuario no tiene acceso. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallLogsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                logId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Call log eliminado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Call log no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CallLogsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                logId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCallLogBodyDto"];
-            };
-        };
-        responses: {
-            /** @description Call log actualizado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Body inválido o sin campos. */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Call log no existe o ya fue eliminado. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankPortalsController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista de portales. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankPortalListResponseDto"];
-                };
-            };
-        };
-    };
-    BankPortalsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBankPortalDto"];
-            };
-        };
-        responses: {
-            /** @description Portal creado. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankPortalResponseDto"];
-                };
-            };
-            /** @description Nombre duplicado. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankPortalsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                portalId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Portal. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankPortalResponseDto"];
-                };
-            };
-            /** @description Portal no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankPortalsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                portalId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Portal borrado. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Portal no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Portal tiene credenciales asociadas. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankPortalsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                portalId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBankPortalDto"];
-            };
-        };
-        responses: {
-            /** @description Portal actualizado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankPortalResponseDto"];
-                };
-            };
-            /** @description Portal no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Nombre duplicado. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientBankAccountsController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Credenciales (sin valores encriptados). */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientBankAccountListResponseDto"];
-                };
-            };
-        };
-    };
-    ClientBankAccountsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateClientBankAccountDto"];
-            };
-        };
-        responses: {
-            /** @description Credencial creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
-                };
-            };
-            /** @description Portal no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Cliente ya tiene credencial en ese portal. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientBankAccountsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Credencial. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
-                };
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientBankAccountsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrada. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ClientBankAccountsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateClientBankAccountDto"];
-            };
-        };
-        responses: {
-            /** @description Actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ClientBankAccountResponseDto"];
-                };
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankAccountsController_list: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista de cuentas. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankAccountListResponseDto"];
-                };
-            };
-        };
-    };
-    BankAccountsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateBankAccountDto"];
-            };
-        };
-        responses: {
-            /** @description Cuenta creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankAccountResponseDto"];
-                };
-            };
-            /** @description Mask duplicado en ese login. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankAccountsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrada. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankAccountsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateBankAccountDto"];
-            };
-        };
-        responses: {
-            /** @description Actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankAccountResponseDto"];
-                };
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankAccountsController_changeStatus: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                accountId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangeBankAccountStatusDto"];
-            };
-        };
-        responses: {
-            /** @description Status cambiado. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BankAccountResponseDto"];
-                };
-            };
-        };
-    };
-    BankCredentialsGlobalController_list: {
-        parameters: {
-            query?: {
-                clientId?: string;
-                portalId?: string;
-                status?: "active" | "blocked" | "closed";
-                search?: string;
-                limit?: number;
-                offset?: number;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Lista global de credenciales. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ListGlobalCredentialsResponseDto"];
-                };
-            };
-        };
-    };
-    BankCredentialsGlobalController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateGlobalCredentialDto"];
-            };
-        };
-        responses: {
-            /** @description Credencial creada. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
-                };
-            };
-            /** @description Portal no existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Ya hay credencial para ese cliente en ese portal. */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankCredentialsGlobalController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Credencial con joins de cliente y portal. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
-                };
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankCredentialsGlobalController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Borrada. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankCredentialsGlobalController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateClientBankAccountDto"];
-            };
-        };
-        responses: {
-            /** @description Actualizada. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GlobalCredentialResponseDto"];
-                };
-            };
-            /** @description No existe. */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    HealthController_check: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Servicio up. Todos los componentes responden. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponseDto"];
-                };
-            };
-            /** @description Servicio degradado. Al menos un componente está down. */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HealthResponseDto"];
-                };
-            };
-        };
-    };
+  AuthController_login: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginDto']
+      }
+    }
+    responses: {
+      /** @description Login exitoso */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LoginResponseDto']
+        }
+      }
+      /** @description Credenciales inválidas o usuario deshabilitado */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rate limit excedido */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AuthController_logout: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Sesión revocada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AuthController_logoutAll: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Sesiones revocadas */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['LogoutAllResponseDto']
+        }
+      }
+    }
+  }
+  AuthController_me: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Datos del usuario */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MeResponseDto']
+        }
+      }
+    }
+  }
+  AuthController_myPermissions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EffectivePermissionsResponseDto']
+        }
+      }
+    }
+  }
+  AuthController_changePassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangePasswordDto']
+      }
+    }
+    responses: {
+      /** @description Contraseña cambiada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description old_password incorrecto o new_password débil */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersController_list: {
+    parameters: {
+      query: {
+        page: string
+        pageSize: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista paginada */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UsersListResponseDto']
+        }
+      }
+      /** @description Permisos insuficientes */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateUserDto']
+      }
+    }
+    responses: {
+      /** @description Usuario creado */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CreateUserResponseDto']
+        }
+      }
+      /** @description Password débil */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Email ya registrado */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersController_getOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Usuario encontrado */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserDto']
+        }
+      }
+      /** @description Usuario no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateUserDto']
+      }
+    }
+    responses: {
+      /** @description Usuario editado */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['UserDto']
+        }
+      }
+      /** @description Usuario no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersController_resetPassword: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Password reseteada */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ResetPasswordResponseDto']
+        }
+      }
+      /** @description Usuario no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersSessionsController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista de sesiones */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SessionsListResponseDto']
+        }
+      }
+      /** @description Usuario no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersSessionsController_revokeAll: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Sesiones revocadas */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RevokeAllResponseDto']
+        }
+      }
+      /** @description Usuario no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  AdminUsersSessionsController_revokeOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+        sessionId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Sesión revocada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Sesión no encontrada */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  PermissionsCatalogController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PermissionsListResponseDto']
+        }
+      }
+    }
+  }
+  PermissionsCatalogController_grouped: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PermissionsGroupedResponseDto']
+        }
+      }
+    }
+  }
+  RolesController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RolesListResponseDto']
+        }
+      }
+    }
+  }
+  RolesController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateRoleDto']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleDto']
+        }
+      }
+      /** @description Ya existe un rol con ese nombre */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolesController_getOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleDto']
+        }
+      }
+      /** @description Rol no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolesController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Rol eliminado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No eliminable (rol del sistema) */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolesController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateRoleDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['RoleDto']
+        }
+      }
+      /** @description No editable (rol del sistema) */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description El nuevo nombre choca con otro rol existente */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolePermissionsController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PermissionsListResponseDto']
+        }
+      }
+      /** @description Rol no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolePermissionsController_grant: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrantPermissionsToRoleDto']
+      }
+    }
+    responses: {
+      /** @description Permisos otorgados */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol del sistema no editable */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol o algún permission_code no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  RolePermissionsController_revoke: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        roleId: string
+        permissionCode: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Permiso revocado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol del sistema no editable */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol o permission_code no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UserRolesController_assign: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssignRoleToUserDto']
+      }
+    }
+    responses: {
+      /** @description Rol asignado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Rol no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description El usuario ya tiene ese rol */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UserRolesController_revoke: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+        roleId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Rol revocado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No se puede revocar el último rol del usuario */
+      422: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UserPermissionsController_set: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetUserPermissionOverrideDto']
+      }
+    }
+    responses: {
+      /** @description Override creado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Permission code no existe en el catálogo */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Ya existe un override para este (user, permission) */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UserPermissionsController_unset: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+        permissionCode: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Override eliminado (o no existía) */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Permission code no existe en el catálogo */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  EffectivePermissionsController_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['EffectivePermissionsResponseDto']
+        }
+      }
+    }
+  }
+  ClientsController_list: {
+    parameters: {
+      query?: {
+        /** @description Página (>=1) */
+        page?: number
+        /** @description Tamaño de página (max 200) */
+        pageSize?: number
+        /** @description Filtra por status */
+        status?: 'active' | 'paused' | 'offboarded'
+        /** @description Filtra por tier (silver/gold/platinum) */
+        tier?: 'silver' | 'gold' | 'platinum'
+        /** @description Búsqueda parcial en legal_name (case-insensitive) */
+        search?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientsListResponseDto']
+        }
+      }
+    }
+  }
+  ClientsController_getOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientDto']
+        }
+      }
+      /** @description Cliente no encontrado o sin acceso */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateClientDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientDto']
+        }
+      }
+      /** @description Cliente no encontrado o sin acceso */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientsController_changeStatus: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangeStatusDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientDto']
+        }
+      }
+      /** @description Cliente no encontrado o sin acceso */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  IntuitOauthController_connectNew: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthorizeResponseDto']
+        }
+      }
+    }
+  }
+  IntuitOauthController_callback: {
+    parameters: {
+      query: {
+        /** @description Código OAuth devuelto por Intuit */
+        code: string
+        /** @description Realm ID del cliente QBO */
+        realmId: string
+        /** @description State opaco que generó el backend */
+        state: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description HTML de confirmación */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  IntuitAdminController_call: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        realmId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IntuitCallRequestDto']
+      }
+    }
+    responses: {
+      /** @description Respuesta cruda de Intuit */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Refresh token expirado, requiere re-autorización */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Realm sin conexión registrada */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  IntuitAdminController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TokensListResponseDto']
+        }
+      }
+    }
+  }
+  ClientIntuitController_reconnect: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['AuthorizeResponseDto']
+        }
+      }
+      /** @description Cliente no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientIntuitController_disconnect: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Conexiones borradas */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConnectionsController_list: {
+    parameters: {
+      query?: {
+        /** @description Filtrar por provider */
+        provider?: 'intuit' | 'microsoft' | 'google' | 'dropbox' | 'clover' | 'square'
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ListConnectionsResponseDto']
+        }
+      }
+    }
+  }
+  ConnectionsController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Borrada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConnectionsController_updateLabel: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateLabelDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConnectionItemDto']
+        }
+      }
+    }
+  }
+  ConnectionsController_test: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TestConnectionResponseDto']
+        }
+      }
+    }
+  }
+  ConnectionShareController_share: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ShareConnectionDto']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConnectionShareDto']
+        }
+      }
+    }
+  }
+  ConnectionShareController_revoke: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Share removido */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConnectionShareController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        userId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateShareDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConnectionShareDto']
+        }
+      }
+    }
+  }
+  ConnectionShareListController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ListSharesResponseDto']
+        }
+      }
+    }
+  }
+  ConnectionsApiKeyController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateApiKeyConnectionDto']
+      }
+    }
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConnectionItemDto']
+        }
+      }
+    }
+  }
+  ConnectionsApiKeyController_updateCredentials: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateApiKeyConnectionDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ConnectionItemDto']
+        }
+      }
+    }
+  }
+  MicrosoftConnectionController_connect: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MicrosoftConnectDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['MicrosoftAuthorizeResponseDto']
+        }
+      }
+    }
+  }
+  MicrosoftConnectionController_callback: {
+    parameters: {
+      query: {
+        /** @description Authorization code devuelto por Microsoft */
+        code: string
+        /** @description State opaco que generó el backend */
+        state: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description HTML de confirmación */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  DropboxConnectionController_connect: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DropboxConnectDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DropboxAuthorizeResponseDto']
+        }
+      }
+    }
+  }
+  DropboxConnectionController_callback: {
+    parameters: {
+      query: {
+        /** @description Authorization code devuelto por Dropbox */
+        code: string
+        /** @description State opaco que generó el backend */
+        state: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description HTML de confirmación */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  DropboxFilesController_list: {
+    parameters: {
+      query?: {
+        /** @description Path del Dropbox del owner. Vacío = raíz. Ej: "/Recibos/2026" */
+        path?: string
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['DropboxListFilesResponseDto']
+        }
+      }
+      /** @description Conexión no encontrada o no pertenece al user */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  GoogleConnectionController_connect: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoogleConnectDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoogleAuthorizeResponseDto']
+        }
+      }
+    }
+  }
+  GoogleConnectionController_callback: {
+    parameters: {
+      query: {
+        /** @description Authorization code devuelto por Google */
+        code: string
+        /** @description State opaco que generó el backend */
+        state: string
+        /** @description Scopes que el user efectivamente concedió */
+        scope?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description HTML de confirmación */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  GoogleFilesController_list: {
+    parameters: {
+      query?: {
+        /** @description ID de la carpeta a listar. "root" = My Drive raíz */
+        folderId?: string
+        pageSize?: number
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GoogleListFilesResponseDto']
+        }
+      }
+      /** @description Conexión no encontrada o no pertenece al user */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CloverReportController_report: {
+    parameters: {
+      query: {
+        /** @description Fecha del reporte (un solo día) */
+        date: string
+      }
+      header?: never
+      path: {
+        id: string
+        merchantId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CloverReportResponseDto']
+        }
+      }
+      /** @description Cliente o conexión Clover no encontrada */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  SquareConnectionController_connect: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SquareConnectDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SquareAuthorizeResponseDto']
+        }
+      }
+    }
+  }
+  SquareConnectionController_callback: {
+    parameters: {
+      query: {
+        /** @description Authorization code (sólo en éxito) */
+        code?: string
+        /** @description State opaco que generó el backend */
+        state: string
+        response_type?: string
+        /** @description Código de error si el user rechazó */
+        error?: string
+        error_description?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description HTML de confirmación */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  SquareReportController_report: {
+    parameters: {
+      query: {
+        /** @description Fecha del reporte (un solo día) */
+        date: string
+      }
+      header?: never
+      path: {
+        id: string
+        locationId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SquareReportResponseDto']
+        }
+      }
+      /** @description Cliente o conexión Square no encontrada */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConnectionPauseController_pause: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PauseBodyDto']
+      }
+    }
+    responses: {
+      /** @description Conexión pausada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conexión no encontrada o sin acceso write */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conexión ya estaba pausada */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ConnectionPauseController_resume: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Conexión reanudada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conexión no encontrada o sin acceso write */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conexión no estaba pausada */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientTransactionsController_sync: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SyncTransactionsBodyDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['SyncResultDto']
+        }
+      }
+      /** @description Cliente sin QBO conectado */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientTransactionsController_list: {
+    parameters: {
+      query?: {
+        category?: 'uncategorized_expense' | 'uncategorized_income' | 'ask_my_accountant'
+        filter?: 'all' | 'income' | 'expense'
+        startDate?: string
+        endDate?: string
+        /** @description Buscar por qbo_txn_id exacto */
+        qboTxnId?: string
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransactionsListResponseDto']
+        }
+      }
+    }
+  }
+  ClientTransactionsController_deleteOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        txId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Transacción borrada */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Transacción no encontrada */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientTransactionResponsesController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransactionResponsesListDto']
+        }
+      }
+    }
+  }
+  ClientTransactionResponsesController_softDelete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        txnId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Response borrado o ya estaba borrado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Transacción no encontrada en el snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientTransactionResponsesController_saveNote: {
+    parameters: {
+      query?: {
+        /** @description true para sincronizar también a QBO al guardar. */
+        qbo_sync?: boolean
+      }
+      header?: never
+      path: {
+        id: string
+        txnId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveNoteBodyDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto']
+        }
+      }
+      /** @description qbo_account_id requerido o tipo no soportado */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Transacción no encontrada en el snapshot */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description SyncToken stale: la transacción cambió en QBO */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Error de Intuit API durante el writeback */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientPeriodFollowupsController_get: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        period: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FollowupDto']
+        }
+      }
+    }
+  }
+  ClientPeriodFollowupsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        period: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateFollowupDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['FollowupDto']
+        }
+      }
+    }
+  }
+  ClientPublicLinksController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PublicLinksListDto']
+        }
+      }
+    }
+  }
+  ClientPublicLinksController_createOrGet: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePublicLinkDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PublicLinkDto']
+        }
+      }
+    }
+  }
+  ClientPublicLinksController_revoke: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        linkId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Link revocado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientPublicLinksController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        linkId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePublicLinkDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PublicLinkDto']
+        }
+      }
+      /** @description Link no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Ya existe otro link activo con el mismo purpose para el cliente */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  PublicTransactionsController_getTransactions: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        token: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['PublicTransactionsResponseDto']
+        }
+      }
+      /** @description Token inválido */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Token revocado o expirado */
+      410: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  PublicTransactionsController_deleteNote: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        token: string
+        txnId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Response borrado o ya estaba borrado */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Transacción no existe en snapshot actual */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Token revocado o expirado */
+      410: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  PublicTransactionsController_saveNote: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        token: string
+        txnId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveNoteBodyDto']
+      }
+    }
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['TransactionResponseDto']
+        }
+      }
+      /** @description Transacción no existe en snapshot actual */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Token revocado o expirado */
+      410: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  UncatsViewController_list: {
+    parameters: {
+      query: {
+        from: string
+        to: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CustomerSupportListResponseDto']
+        }
+      }
+    }
+  }
+  ClientUncatsController_detail: {
+    parameters: {
+      query: {
+        from: string
+        to: string
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['CustomerSupportDetailResponseDto']
+        }
+      }
+      /** @description Cliente no encontrado */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientIntegrationsController_getIntegrations: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientIntegrationsResponseDto']
+        }
+      }
+      /** @description Cliente no encontrado o sin acceso */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CallLogsController_list: {
+    parameters: {
+      query?: {
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista de call logs. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CallLogsController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCallLogBodyDto']
+      }
+    }
+    responses: {
+      /** @description Call log creado. */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Body inválido (outcome fuera de enum o notes >2000). */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Cliente no existe o el usuario no tiene acceso. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CallLogsController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        logId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Call log eliminado. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Call log no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  CallLogsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        logId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCallLogBodyDto']
+      }
+    }
+    responses: {
+      /** @description Call log actualizado. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Body inválido o sin campos. */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Call log no existe o ya fue eliminado. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankPortalsController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista de portales. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankPortalListResponseDto']
+        }
+      }
+    }
+  }
+  BankPortalsController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBankPortalDto']
+      }
+    }
+    responses: {
+      /** @description Portal creado. */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankPortalResponseDto']
+        }
+      }
+      /** @description Nombre duplicado. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankPortalsController_findOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        portalId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Portal. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankPortalResponseDto']
+        }
+      }
+      /** @description Portal no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankPortalsController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        portalId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Portal borrado. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Portal no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Portal tiene credenciales asociadas. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankPortalsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        portalId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateBankPortalDto']
+      }
+    }
+    responses: {
+      /** @description Portal actualizado. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankPortalResponseDto']
+        }
+      }
+      /** @description Portal no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Nombre duplicado. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientBankAccountsController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Credenciales (sin valores encriptados). */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientBankAccountListResponseDto']
+        }
+      }
+    }
+  }
+  ClientBankAccountsController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateClientBankAccountDto']
+      }
+    }
+    responses: {
+      /** @description Credencial creada. */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientBankAccountResponseDto']
+        }
+      }
+      /** @description Portal no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Cliente ya tiene credencial en ese portal. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientBankAccountsController_findOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Credencial. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientBankAccountResponseDto']
+        }
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientBankAccountsController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Borrada. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  ClientBankAccountsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateClientBankAccountDto']
+      }
+    }
+    responses: {
+      /** @description Actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ClientBankAccountResponseDto']
+        }
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankAccountsController_list: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista de cuentas. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankAccountListResponseDto']
+        }
+      }
+    }
+  }
+  BankAccountsController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBankAccountDto']
+      }
+    }
+    responses: {
+      /** @description Cuenta creada. */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankAccountResponseDto']
+        }
+      }
+      /** @description Mask duplicado en ese login. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankAccountsController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        accountId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Borrada. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankAccountsController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        accountId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateBankAccountDto']
+      }
+    }
+    responses: {
+      /** @description Actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankAccountResponseDto']
+        }
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankAccountsController_changeStatus: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        accountId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangeBankAccountStatusDto']
+      }
+    }
+    responses: {
+      /** @description Status cambiado. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BankAccountResponseDto']
+        }
+      }
+    }
+  }
+  BankCredentialsGlobalController_list: {
+    parameters: {
+      query?: {
+        clientId?: string
+        portalId?: string
+        status?: 'active' | 'blocked' | 'closed'
+        search?: string
+        limit?: number
+        offset?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Lista global de credenciales. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['ListGlobalCredentialsResponseDto']
+        }
+      }
+    }
+  }
+  BankCredentialsGlobalController_create: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateGlobalCredentialDto']
+      }
+    }
+    responses: {
+      /** @description Credencial creada. */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GlobalCredentialResponseDto']
+        }
+      }
+      /** @description Portal no existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Ya hay credencial para ese cliente en ese portal. */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankCredentialsGlobalController_findOne: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Credencial con joins de cliente y portal. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GlobalCredentialResponseDto']
+        }
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankCredentialsGlobalController_delete: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Borrada. */
+      204: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  BankCredentialsGlobalController_update: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        credentialId: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateClientBankAccountDto']
+      }
+    }
+    responses: {
+      /** @description Actualizada. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['GlobalCredentialResponseDto']
+        }
+      }
+      /** @description No existe. */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  HealthController_check: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description Servicio up. Todos los componentes responden. */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HealthResponseDto']
+        }
+      }
+      /** @description Servicio degradado. Al menos un componente está down. */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['HealthResponseDto']
+        }
+      }
+    }
+  }
 }

@@ -20,11 +20,7 @@ export interface DeleteBankLoginDialogProps {
   login: BankLogin | null
 }
 
-export function DeleteBankLoginDialog({
-  open,
-  onOpenChange,
-  login,
-}: DeleteBankLoginDialogProps) {
+export function DeleteBankLoginDialog({ open, onOpenChange, login }: DeleteBankLoginDialogProps) {
   const deleteMutation = useDeleteBankLogin()
 
   const handleConfirm = () => {
@@ -47,9 +43,7 @@ export function DeleteBankLoginDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={deleteMutation.isPending}>
-            Cancel
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={deleteMutation.isPending}

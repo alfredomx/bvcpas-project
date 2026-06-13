@@ -2,10 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import {
-  listBankPortals,
-  type BankPortalsListResponse,
-} from '../api/bank-accounts.api'
+import { listBankPortals, type BankPortalsListResponse } from '../api/bank-accounts.api'
 
 export const BANK_PORTALS_QUERY_KEY = 'bank-portals'
 

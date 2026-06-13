@@ -36,7 +36,7 @@ falta.
 - `16-public-uncats` ✅ (v0.8.0 — pantalla pública `/p/uncats/[token]` sin login para el cliente final).
 - `17-client-home` ✅ (v0.9.0 — Client Home; su roadmap vive en `15-app-shell/v0.9.0`).
 - `18-integrations` ✅ (v0.10.0 — pantalla de integraciones del cliente conectada al backend real: pause/resume/check status).
-- `19-bank-accounts` ✅ (v0.11.0 — vista global cross-cliente de credenciales bancarias).
+- `19-bank-accounts` ✅ (v0.11.0 vista global + v0.12.0 vista por cliente con credenciales descifradas).
 
 **Política de testing** (desde v0.3.0): TDD-first. Tests antes que
 código. Ver [CONVENTIONS.md §12](CONVENTIONS.md#12-testing).
@@ -293,38 +293,39 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 16-public-uncats    | ✅     | (sin README; TDD en v0.8.0)                | [v0.8.0](16-public-uncats/v0.8.0.md) → app v0.8.0                                                                                  |
 | 17-client-home      | ✅     | (sin carpeta; TDD en 15-app-shell/v0.9.0)  | (entregado en app v0.9.0)                                                                                                          |
 | 18-integrations     | ✅     | (sin README; TDD en v0.1.0)                | [v0.1.0](18-integrations/v0.1.0.md) → app v0.10.0                                                                                  |
-| 19-bank-accounts    | ✅     | (sin README; TDD en v0.1.0)                | [v0.1.0](19-bank-accounts/v0.1.0.md) → app v0.11.0                                                                                 |
+| 19-bank-accounts    | ✅     | (sin README; TDD en v0.1.0/v0.12.0)        | [v0.1.0](19-bank-accounts/v0.1.0.md) (app v0.11.0) + [v0.12.0](19-bank-accounts/v0.12.0.md) (app v0.12.0)                          |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo              | Estado | Tema                                                                                                               | Tag           | Archivo                                                        |
-| ------- | ------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ | ------------- | -------------------------------------------------------------- |
-| 0.1.0   | 00-foundation       | ✅     | Scaffold base (Tailwind v4, shadcn, alias `@/*`)                                                                   | bvcpas-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
-| 0.2.0   | 10-core-auth        | ✅     | Login real contra mapi + sesión + guard                                                                            | bvcpas-v0.2.0 | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
-| 0.2.1   | 10-core-auth        | ✅     | Tests retroactivos (Vitest + Testing Library)                                                                      | bvcpas-v0.2.1 | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)               |
-| 0.3.0   | 15-app-shell        | ✅     | AppShell visual + sidebar + tabs + 8 placeholders + diseño 1:1 con prototipo                                       | bvcpas-v0.3.0 | [15-app-shell/v0.3.0.md](15-app-shell/v0.3.0.md)               |
-| 0.3.1   | 15-app-shell        | ✅     | Strip de diseño cosmético (D-bvcpas-022)                                                                           | bvcpas-v0.3.1 | [15-app-shell/v0.3.1.md](15-app-shell/v0.3.1.md)               |
-| 0.3.2   | 00-foundation       | ✅     | SDK tipado desde OpenAPI (`openapi-typescript` + `openapi-fetch`)                                                  | bvcpas-v0.3.2 | [00-foundation/v0.3.2.md](00-foundation/v0.3.2.md)             |
-| 0.4.0   | 11-clients          | ✅     | Sidebar consume `/v1/clients` directo + módulo 11-clients real (D-026/027/028)                                     | bvcpas-v0.4.0 | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
-| 0.4.1   | 11-clients          | ✅     | Fix sidebar paginación: `pageSize=200` (D-bvcpas-029)                                                              | bvcpas-v0.4.1 | [11-clients/v0.4.1.md](11-clients/v0.4.1.md)                   |
-| 0.5.0   | 12-customer-support | ✅     | Tab Customer Support (parte 1: header + stats + timeline) — D-030/031/032                                          | bvcpas-v0.5.0 | [12-customer-support/v0.5.0.md](12-customer-support/v0.5.0.md) |
-| 0.5.1   | 14-transactions     | ✅     | Tabla Uncategorized/AMA's + Sync + rename "Customer Support" → "Uncat. Transactions" — D-033/034/035               | bvcpas-v0.5.1 | [14-transactions/v0.5.1.md](14-transactions/v0.5.1.md)         |
-| 0.5.2   | 12-customer-support | ✅     | `<CsConfigSheet>` (botón Configure → Sheet con 5 settings de envío) — D-036/037/038                                | bvcpas-v0.5.2 | [12-customer-support/v0.5.2.md](12-customer-support/v0.5.2.md) |
-| 0.5.3   | 12-customer-support | ✅     | CSV emails (D-039/040) + fix toast transparente + activity timeline reactivo (D-041)                               | bvcpas-v0.5.3 | [12-customer-support/v0.5.3.md](12-customer-support/v0.5.3.md) |
-| 0.5.4   | 12-customer-support | ✅     | Reorden de layout: tabs + Sync alineados; timeline 2/3 + suggested action 1/3                                      | bvcpas-v0.5.4 | [12-customer-support/v0.5.4.md](12-customer-support/v0.5.4.md) |
-| 0.5.5   | 12-customer-support | ✅     | Modal de detalle de transacción + QBO accounts dropdown + nota con sufijo localStorage — D-042/043/044/045         | bvcpas-v0.5.5 | [12-customer-support/v0.5.5.md](12-customer-support/v0.5.5.md) |
-| 0.5.6   | 12-customer-support | ✅     | Modal funcional (PATCH responses), combobox search, completed en frontend, layout ajustado — D-046/047/048/049/050 | bvcpas-v0.5.6 | [12-customer-support/v0.5.6.md](12-customer-support/v0.5.6.md) |
-| 0.5.7   | 12-customer-support | ✅     | Writeback a QBO (?qbo_sync=true) + appended_text + mapeo de errores específicos — D-051/052/053/054                | bvcpas-v0.5.7 | [12-customer-support/v0.5.7.md](12-customer-support/v0.5.7.md) |
-| 0.5.8   | 12-customer-support | ✅     | Delete response (soft-delete) + AlertDialog + formatAmount preciso — D-055/056/057/058                             | bvcpas-v0.5.8 | [12-customer-support/v0.5.8.md](12-customer-support/v0.5.8.md) |
-| 0.5.9   | 12-customer-support | ✅     | Public link management en `<CsConfigSheet>` (enable/disable/regenerate) — D-059…067                                | bvcpas-v0.5.9 | [12-customer-support/v0.5.9.md](12-customer-support/v0.5.9.md) |
-| 0.6.0   | 12-customer-support | ✅     | Suggested Next Action funcional + `<DraftFollowupDialog>` (+ fixes status D-074…078) — D-068…073                   | bvcpas-v0.6.0 | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
-| 0.7.0   | 12-customer-support | ✅     | Call log — `<CallLogDialog>` (registrar/listar/editar llamadas)                                                    | ⚠️ sin tag    | [12-customer-support/v0.7.0.md](12-customer-support/v0.7.0.md) |
-| 0.8.0   | 16-public-uncats    | ✅     | Pantalla pública de uncats (`/p/uncats/[token]`) sin login                                                         | ⚠️ sin tag    | [16-public-uncats/v0.8.0.md](16-public-uncats/v0.8.0.md)       |
-| 0.9.0   | 15-app-shell        | ✅     | Shell rediseñado: icon rail + Client Home + Integrations (mock)                                                    | ⚠️ sin tag    | [15-app-shell/v0.9.0.md](15-app-shell/v0.9.0.md)               |
-| 0.10.0  | 18-integrations     | ✅     | Integrations conectado al backend real (pause/resume/check status)                                                 | ⚠️ sin tag    | [18-integrations/v0.1.0.md](18-integrations/v0.1.0.md)         |
-| 0.11.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista global cross-cliente de credenciales bancarias                                               | ⚠️ sin tag    | [19-bank-accounts/v0.1.0.md](19-bank-accounts/v0.1.0.md)       |
+| Versión | Módulo              | Estado | Tema                                                                                                               | Tag            | Archivo                                                        |
+| ------- | ------------------- | ------ | ------------------------------------------------------------------------------------------------------------------ | -------------- | -------------------------------------------------------------- |
+| 0.1.0   | 00-foundation       | ✅     | Scaffold base (Tailwind v4, shadcn, alias `@/*`)                                                                   | bvcpas-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)             |
+| 0.2.0   | 10-core-auth        | ✅     | Login real contra mapi + sesión + guard                                                                            | bvcpas-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)               |
+| 0.2.1   | 10-core-auth        | ✅     | Tests retroactivos (Vitest + Testing Library)                                                                      | bvcpas-v0.2.1  | [10-core-auth/v0.2.1.md](10-core-auth/v0.2.1.md)               |
+| 0.3.0   | 15-app-shell        | ✅     | AppShell visual + sidebar + tabs + 8 placeholders + diseño 1:1 con prototipo                                       | bvcpas-v0.3.0  | [15-app-shell/v0.3.0.md](15-app-shell/v0.3.0.md)               |
+| 0.3.1   | 15-app-shell        | ✅     | Strip de diseño cosmético (D-bvcpas-022)                                                                           | bvcpas-v0.3.1  | [15-app-shell/v0.3.1.md](15-app-shell/v0.3.1.md)               |
+| 0.3.2   | 00-foundation       | ✅     | SDK tipado desde OpenAPI (`openapi-typescript` + `openapi-fetch`)                                                  | bvcpas-v0.3.2  | [00-foundation/v0.3.2.md](00-foundation/v0.3.2.md)             |
+| 0.4.0   | 11-clients          | ✅     | Sidebar consume `/v1/clients` directo + módulo 11-clients real (D-026/027/028)                                     | bvcpas-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                   |
+| 0.4.1   | 11-clients          | ✅     | Fix sidebar paginación: `pageSize=200` (D-bvcpas-029)                                                              | bvcpas-v0.4.1  | [11-clients/v0.4.1.md](11-clients/v0.4.1.md)                   |
+| 0.5.0   | 12-customer-support | ✅     | Tab Customer Support (parte 1: header + stats + timeline) — D-030/031/032                                          | bvcpas-v0.5.0  | [12-customer-support/v0.5.0.md](12-customer-support/v0.5.0.md) |
+| 0.5.1   | 14-transactions     | ✅     | Tabla Uncategorized/AMA's + Sync + rename "Customer Support" → "Uncat. Transactions" — D-033/034/035               | bvcpas-v0.5.1  | [14-transactions/v0.5.1.md](14-transactions/v0.5.1.md)         |
+| 0.5.2   | 12-customer-support | ✅     | `<CsConfigSheet>` (botón Configure → Sheet con 5 settings de envío) — D-036/037/038                                | bvcpas-v0.5.2  | [12-customer-support/v0.5.2.md](12-customer-support/v0.5.2.md) |
+| 0.5.3   | 12-customer-support | ✅     | CSV emails (D-039/040) + fix toast transparente + activity timeline reactivo (D-041)                               | bvcpas-v0.5.3  | [12-customer-support/v0.5.3.md](12-customer-support/v0.5.3.md) |
+| 0.5.4   | 12-customer-support | ✅     | Reorden de layout: tabs + Sync alineados; timeline 2/3 + suggested action 1/3                                      | bvcpas-v0.5.4  | [12-customer-support/v0.5.4.md](12-customer-support/v0.5.4.md) |
+| 0.5.5   | 12-customer-support | ✅     | Modal de detalle de transacción + QBO accounts dropdown + nota con sufijo localStorage — D-042/043/044/045         | bvcpas-v0.5.5  | [12-customer-support/v0.5.5.md](12-customer-support/v0.5.5.md) |
+| 0.5.6   | 12-customer-support | ✅     | Modal funcional (PATCH responses), combobox search, completed en frontend, layout ajustado — D-046/047/048/049/050 | bvcpas-v0.5.6  | [12-customer-support/v0.5.6.md](12-customer-support/v0.5.6.md) |
+| 0.5.7   | 12-customer-support | ✅     | Writeback a QBO (?qbo_sync=true) + appended_text + mapeo de errores específicos — D-051/052/053/054                | bvcpas-v0.5.7  | [12-customer-support/v0.5.7.md](12-customer-support/v0.5.7.md) |
+| 0.5.8   | 12-customer-support | ✅     | Delete response (soft-delete) + AlertDialog + formatAmount preciso — D-055/056/057/058                             | bvcpas-v0.5.8  | [12-customer-support/v0.5.8.md](12-customer-support/v0.5.8.md) |
+| 0.5.9   | 12-customer-support | ✅     | Public link management en `<CsConfigSheet>` (enable/disable/regenerate) — D-059…067                                | bvcpas-v0.5.9  | [12-customer-support/v0.5.9.md](12-customer-support/v0.5.9.md) |
+| 0.6.0   | 12-customer-support | ✅     | Suggested Next Action funcional + `<DraftFollowupDialog>` (+ fixes status D-074…078) — D-068…073                   | bvcpas-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md) |
+| 0.7.0   | 12-customer-support | ✅     | Call log — `<CallLogDialog>` (registrar/listar/editar llamadas)                                                    | ⚠️ sin tag     | [12-customer-support/v0.7.0.md](12-customer-support/v0.7.0.md) |
+| 0.8.0   | 16-public-uncats    | ✅     | Pantalla pública de uncats (`/p/uncats/[token]`) sin login                                                         | ⚠️ sin tag     | [16-public-uncats/v0.8.0.md](16-public-uncats/v0.8.0.md)       |
+| 0.9.0   | 15-app-shell        | ✅     | Shell rediseñado: icon rail + Client Home + Integrations (mock)                                                    | ⚠️ sin tag     | [15-app-shell/v0.9.0.md](15-app-shell/v0.9.0.md)               |
+| 0.10.0  | 18-integrations     | ✅     | Integrations conectado al backend real (pause/resume/check status)                                                 | ⚠️ sin tag     | [18-integrations/v0.1.0.md](18-integrations/v0.1.0.md)         |
+| 0.11.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista global cross-cliente de credenciales bancarias                                               | ⚠️ sin tag     | [19-bank-accounts/v0.1.0.md](19-bank-accounts/v0.1.0.md)       |
+| 0.12.0  | 19-bank-accounts    | ✅     | Bank Accounts — vista por cliente + credenciales descifradas (bank-worker v0.16.3)                                 | bvcpas-v0.12.0 | [19-bank-accounts/v0.12.0.md](19-bank-accounts/v0.12.0.md)     |
 
 ---
 

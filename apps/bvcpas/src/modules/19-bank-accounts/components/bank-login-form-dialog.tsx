@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -37,10 +37,7 @@ import { Textarea } from '@/components/ui/textarea'
 
 import { useClients } from '@/modules/11-clients/hooks/use-clients'
 
-import type {
-  BankLogin,
-  CreateBankLoginBody,
-} from '../api/bank-accounts.api'
+import type { BankLogin, CreateBankLoginBody } from '../api/bank-accounts.api'
 import { useBankPortals } from '../hooks/use-bank-portals'
 import { useCreateBankLogin } from '../hooks/use-create-bank-login'
 import { useUpdateBankLogin } from '../hooks/use-update-bank-login'
@@ -71,29 +68,44 @@ export interface BankLoginFormDialogProps {
   onOpenChange: (open: boolean) => void
   // null = create mode; object = edit mode
   login: BankLogin | null
+  // En create-mode, fija el cliente (la pantalla ya seleccionó uno) y
+  // oculta el picker. Ignorado en edit-mode.
+  lockedClientId?: string
+  lockedClientName?: string
 }
 
 export function BankLoginFormDialog({
   open,
   onOpenChange,
   login,
+  lockedClientId,
+  lockedClientName,
 }: BankLoginFormDialogProps) {
   const isEdit = login !== null
 
   if (isEdit) {
-    return (
-      <EditDialog open={open} onOpenChange={onOpenChange} login={login!} />
-    )
+    return <EditDialog open={open} onOpenChange={onOpenChange} login={login!} />
   }
-  return <CreateDialog open={open} onOpenChange={onOpenChange} />
+  return (
+    <CreateDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      lockedClientId={lockedClientId}
+      lockedClientName={lockedClientName}
+    />
+  )
 }
 
 function CreateDialog({
   open,
   onOpenChange,
+  lockedClientId,
+  lockedClientName,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  lockedClientId?: string
+  lockedClientName?: string
 }) {
   const createMutation = useCreateBankLogin()
   const { items: clients } = useClients()
@@ -105,7 +117,7 @@ function CreateDialog({
   const form = useForm<CreateFormValues>({
     resolver: zodResolver(createSchema),
     defaultValues: {
-      clientId: '',
+      clientId: lockedClientId ?? '',
       bankPortalId: '',
       username: '',
       password: '',
@@ -116,9 +128,19 @@ function CreateDialog({
   })
 
   useEffect(() => {
-    if (open) form.reset()
+    if (open) {
+      form.reset({
+        clientId: lockedClientId ?? '',
+        bankPortalId: '',
+        username: '',
+        password: '',
+        securityQa: '',
+        status: 'active',
+        notes: '',
+      })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open])
+  }, [open, lockedClientId])
 
   const onSubmit = (values: CreateFormValues) => {
     const body: CreateBankLoginBody = {
@@ -144,62 +166,66 @@ function CreateDialog({
         <DialogHeader>
           <DialogTitle>Add bank login</DialogTitle>
           <DialogDescription>
-            Store the portal credentials for a client. The password is encrypted
-            and never shown again after saving.
+            Store the portal credentials for a client. The password is encrypted and never shown
+            again after saving.
           </DialogDescription>
         </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-3"
+          autoComplete="off"
         >
-          <div className="flex flex-col gap-1.5">
-            <Label>Client</Label>
-            <Popover open={clientOpen} onOpenChange={setClientOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="justify-between"
-                >
-                  {selectedClient?.legal_name ?? 'Select a client…'}
-                  <ChevronsUpDown className="size-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
-                <Command>
-                  <CommandInput placeholder="Search client…" />
-                  <CommandList>
-                    <CommandEmpty>No clients found.</CommandEmpty>
-                    <CommandGroup>
-                      {clients.map((c) => (
-                        <CommandItem
-                          key={c.id}
-                          value={c.legal_name}
-                          onSelect={() => {
-                            form.setValue('clientId', c.id, {
-                              shouldValidate: true,
-                            })
-                            setClientOpen(false)
-                          }}
-                        >
-                          <Check
-                            className={`mr-2 size-4 ${form.watch('clientId') === c.id ? 'opacity-100' : 'opacity-0'}`}
-                          />
-                          {c.legal_name}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            {form.formState.errors.clientId && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.clientId.message}
-              </p>
-            )}
-          </div>
+          {lockedClientId ? (
+            <div className="flex flex-col gap-1.5">
+              <Label>Client</Label>
+              <div className="rounded-md border bg-muted/30 px-3 py-2 text-sm">
+                {lockedClientName ?? selectedClient?.legal_name ?? '—'}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <Label>Client</Label>
+              <Popover open={clientOpen} onOpenChange={setClientOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="outline" className="justify-between">
+                    {selectedClient?.legal_name ?? 'Select a client…'}
+                    <ChevronsUpDown className="size-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                  <Command>
+                    <CommandInput placeholder="Search client…" />
+                    <CommandList>
+                      <CommandEmpty>No clients found.</CommandEmpty>
+                      <CommandGroup>
+                        {clients.map((c) => (
+                          <CommandItem
+                            key={c.id}
+                            value={c.legal_name}
+                            onSelect={() => {
+                              form.setValue('clientId', c.id, {
+                                shouldValidate: true,
+                              })
+                              setClientOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={`mr-2 size-4 ${form.watch('clientId') === c.id ? 'opacity-100' : 'opacity-0'}`}
+                            />
+                            {c.legal_name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              {form.formState.errors.clientId && (
+                <p className="text-xs text-red-600">{form.formState.errors.clientId.message}</p>
+              )}
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label>Portal</Label>
@@ -212,9 +238,7 @@ function CreateDialog({
                   disabled={portalsQuery.isLoading}
                 >
                   {selectedPortal?.name ??
-                    (portalsQuery.isLoading
-                      ? 'Loading portals…'
-                      : 'Select a portal…')}
+                    (portalsQuery.isLoading ? 'Loading portals…' : 'Select a portal…')}
                   <ChevronsUpDown className="size-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -247,20 +271,22 @@ function CreateDialog({
               </PopoverContent>
             </Popover>
             {form.formState.errors.bankPortalId && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.bankPortalId.message}
-              </p>
+              <p className="text-xs text-red-600">{form.formState.errors.bankPortalId.message}</p>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" {...form.register('username')} />
+              <Input
+                id="username"
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
+                {...form.register('username')}
+              />
               {form.formState.errors.username && (
-                <p className="text-xs text-red-600">
-                  {form.formState.errors.username.message}
-                </p>
+                <p className="text-xs text-red-600">{form.formState.errors.username.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
@@ -268,23 +294,20 @@ function CreateDialog({
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
+                data-1p-ignore
+                data-lpignore="true"
                 {...form.register('password')}
               />
               {form.formState.errors.password && (
-                <p className="text-xs text-red-600">
-                  {form.formState.errors.password.message}
-                </p>
+                <p className="text-xs text-red-600">{form.formState.errors.password.message}</p>
               )}
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="securityQa">Security Q&amp;A (optional)</Label>
-            <Textarea
-              id="securityQa"
-              rows={2}
-              {...form.register('securityQa')}
-            />
+            <Textarea id="securityQa" rows={2} {...form.register('securityQa')} />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -292,9 +315,7 @@ function CreateDialog({
               <Label>Status</Label>
               <Select
                 value={form.watch('status')}
-                onValueChange={(v) =>
-                  form.setValue('status', v as CreateFormValues['status'])
-                }
+                onValueChange={(v) => form.setValue('status', v as CreateFormValues['status'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -306,10 +327,11 @@ function CreateDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="notes">Notes</Label>
-              <Input id="notes" {...form.register('notes')} />
-            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea id="notes" rows={2} {...form.register('notes')} />
           </div>
 
           <DialogFooter>
@@ -395,14 +417,15 @@ function EditDialog({
         <DialogHeader>
           <DialogTitle>Edit bank login</DialogTitle>
           <DialogDescription>
-            {login.client.legal_name} · {login.portal.name}. Leave a field empty
-            to keep the current value. Password is never shown.
+            {login.client.legal_name} · {login.portal.name}. Leave a field empty to keep the current
+            value. Password is never shown.
           </DialogDescription>
         </DialogHeader>
 
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-3"
+          autoComplete="off"
         >
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
@@ -410,6 +433,9 @@ function EditDialog({
               <Input
                 id="username"
                 placeholder="(keep current)"
+                autoComplete="off"
+                data-1p-ignore
+                data-lpignore="true"
                 {...form.register('username')}
               />
             </div>
@@ -419,6 +445,9 @@ function EditDialog({
                 id="password"
                 type="password"
                 placeholder="(keep current)"
+                autoComplete="new-password"
+                data-1p-ignore
+                data-lpignore="true"
                 {...form.register('password')}
               />
             </div>
@@ -439,9 +468,7 @@ function EditDialog({
               <Label>Status</Label>
               <Select
                 value={form.watch('status') ?? login.status}
-                onValueChange={(v) =>
-                  form.setValue('status', v as EditFormValues['status'])
-                }
+                onValueChange={(v) => form.setValue('status', v as EditFormValues['status'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -453,10 +480,11 @@ function EditDialog({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="notes">Notes</Label>
-              <Input id="notes" {...form.register('notes')} />
-            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea id="notes" rows={2} {...form.register('notes')} />
           </div>
 
           <DialogFooter>

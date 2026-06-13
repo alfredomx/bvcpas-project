@@ -19,8 +19,7 @@ export function useChangeBankAccountStatus() {
   const queryClient = useQueryClient()
 
   return useMutation<BankAccountDetail, Error, ChangeBankAccountStatusVars>({
-    mutationFn: ({ accountId, body }) =>
-      changeBankAccountStatus(accountId, body),
+    mutationFn: ({ accountId, body }) => changeBankAccountStatus(accountId, body),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [BANK_LOGIN_ACCOUNTS_QUERY_KEY],

@@ -34,16 +34,8 @@ import { useCreateBankAccount } from '../hooks/use-create-bank-account'
 import { useUpdateBankAccount } from '../hooks/use-update-bank-account'
 
 const schema = z.object({
-  accountMask: z
-    .string()
-    .regex(/^\d{4}$/, 'Must be exactly 4 digits'),
-  accountType: z.enum([
-    'checking',
-    'savings',
-    'credit_card',
-    'loan',
-    'other',
-  ]),
+  accountMask: z.string().regex(/^\d{4}$/, 'Must be exactly 4 digits'),
+  accountType: z.enum(['checking', 'savings', 'credit_card', 'loan', 'other']),
   label: z.string().max(200).optional(),
   status: z.enum(['active', 'blocked', 'closed']).default('active'),
   notes: z.string().max(2000).optional(),
@@ -117,10 +109,7 @@ export function BankAccountFormDialog({
         status: values.status,
         notes: values.notes || undefined,
       }
-      createMutation.mutate(
-        { credentialId, body },
-        { onSuccess: () => onOpenChange(false) },
-      )
+      createMutation.mutate({ credentialId, body }, { onSuccess: () => onOpenChange(false) })
     }
   }
 
@@ -128,9 +117,7 @@ export function BankAccountFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {isEdit ? 'Edit account' : 'Add account'}
-          </DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit account' : 'Add account'}</DialogTitle>
           <DialogDescription>
             {isEdit
               ? 'Update the details of this bank account.'
@@ -138,10 +125,7 @@ export function BankAccountFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-3"
-        >
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="accountMask">Mask (last 4)</Label>
@@ -152,18 +136,14 @@ export function BankAccountFormDialog({
                 {...form.register('accountMask')}
               />
               {form.formState.errors.accountMask && (
-                <p className="text-xs text-red-600">
-                  {form.formState.errors.accountMask.message}
-                </p>
+                <p className="text-xs text-red-600">{form.formState.errors.accountMask.message}</p>
               )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label>Type</Label>
               <Select
                 value={form.watch('accountType')}
-                onValueChange={(v) =>
-                  form.setValue('accountType', v as FormValues['accountType'])
-                }
+                onValueChange={(v) => form.setValue('accountType', v as FormValues['accountType'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -181,11 +161,7 @@ export function BankAccountFormDialog({
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="label">Label (optional)</Label>
-            <Input
-              id="label"
-              placeholder="e.g. Primary checking"
-              {...form.register('label')}
-            />
+            <Input id="label" placeholder="e.g. Primary checking" {...form.register('label')} />
           </div>
 
           <div className="grid grid-cols-2 gap-2">
@@ -193,9 +169,7 @@ export function BankAccountFormDialog({
               <Label>Status</Label>
               <Select
                 value={form.watch('status')}
-                onValueChange={(v) =>
-                  form.setValue('status', v as FormValues['status'])
-                }
+                onValueChange={(v) => form.setValue('status', v as FormValues['status'])}
               >
                 <SelectTrigger>
                   <SelectValue />

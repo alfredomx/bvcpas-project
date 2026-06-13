@@ -2,10 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 
-import {
-  getBankLogin,
-  type BankLoginDetail,
-} from '../api/bank-accounts.api'
+import { getBankLogin, type BankLoginDetail } from '../api/bank-accounts.api'
 
 export const BANK_LOGIN_QUERY_KEY = 'bank-login'
 
