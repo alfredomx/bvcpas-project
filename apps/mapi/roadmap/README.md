@@ -15,21 +15,24 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
+**Versión actual de `package.json`: `0.16.4`.**
+
 **Módulos activos:**
 
-- `21-connections` ✅ (v0.8.0 a v0.12.0 — OAuth providers + sharing + auth_type=api_key + Clover api_token + Square OAuth).
-- `14-call-logs` ✅ (v0.13.0 — bitácora de llamadas a clientes; CRUD básico con hard delete).
-- `13-views` ✅ (renombrado desde 13-dashboards en v0.8.0; alberga vistas globales `/v1/views/*`).
-- `12-customer-support` ✅ (v0.6.0 cerrada — snapshot uncats + responses + followups + public links; URLs Forma C en v0.8.0).
-- `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — agrega user_client_access + ClientAccessGuard).
-- `20-intuit-oauth` ✅ cerrado con v0.3.0 + v0.3.1 + v0.3.2; en v0.8.0 sus tokens migran a `user_connections`. La carpeta se mueve a `21-connections/providers/intuit/` en v0.8.1.
+- `22-bank-worker` ✅ (v0.16.0 a v0.16.4 — portales + credenciales/logins + cuentas + DTOs tipados + credenciales descifradas + multi-credencial por cliente/portal). Vault de credenciales bancarias.
+- `21-connections` ✅ (v0.7.0 a v0.12.0 — OAuth providers Microsoft/Google/Dropbox + sharing + auth_type=api_key + Clover api_token + Square OAuth).
+- `15-permissions` ✅ (v0.15.0 — RBAC dinámico: roles + overrides por usuario; reemplaza `users.role`).
+- `14-call-logs` ✅ (v0.13.0 — bitácora de llamadas a clientes; CRUD con hard delete).
+- `13-views` ✅ (v0.6.1 a v0.14.0 — vistas globales `/v1/views/*`: dashboard customer-support, silent streak, integraciones por cliente).
+- `12-customer-support` ✅ (v0.6.0 + v0.13.1 + v0.13.2 — snapshot uncats + responses + followups + public links; shape público alineado).
+- `11-clients` ✅ (v0.4.0 + v0.5.0 + v0.8.0 — CRUD + tier + user_client_access + ClientAccessGuard).
+- `20-intuit-oauth` ✅ (v0.3.0 a v0.3.2; en v0.8.0 sus tokens migran a `user_connections`).
 
-**Próximas versiones planeadas:**
+**Próximas versiones / candidatos** (sin priorizar):
 
-- v0.8.1 — Drop `intuit_tokens_deprecated` + mover Intuit controllers a `21-connections/providers/intuit/` + reescribir migrate-from-v0x.
-- v0.7.1 / v0.7.2 — Providers Google y Dropbox.
-- v0.6.3 — Writeback de respuestas a QBO.
-- v0.6.4 — Integración del envío de followups (módulo 12) usando conexiones del módulo 21.
+- Worker de descarga de bank-worker (adapters que usan las credenciales para bajar estados de cuenta vía plugin) — ver [`22-bank-worker/README.md`](22-bank-worker/README.md) y BACKLOG.
+- Módulos Mx (features que reemplazan los Google Sheets) — ver `50-features/`.
+- Writeback de respuestas a QBO (módulo 12) + envío de followups usando conexiones del módulo 21.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -248,26 +251,27 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                       |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------------------------------------- |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                               |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                                |
-| 11-clients                      | 🚧     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                                 |
-| 12-customer-support             | 🚧     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0                                                          |
-| 13-dashboards                   | 🚧     | M1+     | [README.md](13-dashboards/README.md)                   | v0.6.1                                                          |
-| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                                        |
-| 21-connections                  | ✅     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 + v0.8.0 (Microsoft + Intuit; Google/Dropbox pendientes) |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                               |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                               |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                               |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                               |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                               |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                               |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                               |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                               |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                               |
-| 15-permissions                  | ✅     | base    | [README.md](15-permissions/README.md)                  | v0.15.0 — RBAC dinámico + overrides por usuario                 |
-| 22-bank-worker                  | ⏸️     | —       | [README.md](22-bank-worker/README.md)                  | v0.15.0 (avance pausado en branch `mapi/22-bank-worker`)        |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                     |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                             |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                              |
+| 11-clients                      | ✅     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                               |
+| 12-customer-support             | ✅     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0 + v0.13.1 + v0.13.2                                    |
+| 13-views                        | ✅     | M1+     | [README.md](13-views/README.md)                        | v0.6.1 + v0.12.1 + v0.13.0 + v0.14.0                          |
+| 14-call-logs                    | ✅     | —       | [README.md](14-call-logs/README.md)                    | v0.13.0                                                       |
+| 15-permissions                  | ✅     | base    | [README.md](15-permissions/README.md)                  | v0.15.0 — RBAC dinámico + overrides por usuario               |
+| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                                      |
+| 21-connections                  | ✅     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 → v0.12.0 (Microsoft/Google/Dropbox + Clover + Square) |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                             |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                             |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                             |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                             |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                             |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                             |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                             |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                             |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                             |
+| 22-bank-worker                  | ✅     | —       | [README.md](22-bank-worker/README.md)                  | v0.16.0 + v0.16.2 + v0.16.3 + v0.16.4 (vault credenciales)    |
 
 ---
 
@@ -291,77 +295,86 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)         | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)           |
 | 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar           | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)           |
 | 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location              | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)           |
+| 0.12.1  | 13-views            | ✅     | Dashboard customer-support: public_link extendido + fix `responded_count`      | —            | [13-views/v0.12.1.md](13-views/v0.12.1.md)                       |
 | 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                         | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
+| 0.13.0  | 13-views            | ✅     | Silent streak operativo (por mes activo) + `last_response_at` ⚠️ colisión nº   | —            | [13-views/v0.13.0.md](13-views/v0.13.0.md)                       |
 | 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total` | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
 | 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                     | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
+| 0.14.0  | 13-views            | ✅     | Vista de integraciones por cliente + pause/resume                              | mapi-v0.14.0 | [13-views/v0.14.0.md](13-views/v0.14.0.md)                       |
+| 0.15.0  | 15-permissions      | ✅     | RBAC backend completo + migración de roles fijos a permisos dinámicos          | mapi-v0.15.0 | [15-permissions/v0.15.0.md](15-permissions/v0.15.0.md)           |
+| 0.16.0  | 22-bank-worker      | ✅     | bank-worker módulo 22: portales + credenciales/logins + cuentas + CRUD         | mapi-v0.16.0 | [22-bank-worker/v0.16.0.md](22-bank-worker/v0.16.0.md)           |
+| 0.16.1  | 22-bank-worker      | ✅     | Endpoints globales de bank-credentials + nulos en credenciales (sin archivo)   | mapi-v0.16.1 | —                                                                |
+| 0.16.2  | 22-bank-worker      | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)            | mapi-v0.16.2 | [22-bank-worker/v0.16.2.md](22-bank-worker/v0.16.2.md)           |
+| 0.16.3  | 22-bank-worker      | ✅     | Credenciales descifradas en respuestas de lectura (vault copiar/pegar)         | mapi-v0.16.3 | [22-bank-worker/v0.16.3.md](22-bank-worker/v0.16.3.md)           |
+| 0.16.4  | 22-bank-worker      | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)            | mapi-v0.16.4 | [22-bank-worker/v0.16.4.md](22-bank-worker/v0.16.4.md)           |
 
 ---
 
 ## Decisiones acumuladas (`D-mapi-NNN`)
 
-| ID         | Decisión                                                                                                     | Versión | Diverge TDD  |
-| ---------- | ------------------------------------------------------------------------------------------------------------ | ------- | ------------ |
-| D-mapi-001 | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                                    | 0.1.0   | No           |
-| D-mapi-002 | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                          | 0.1.0   | No           |
-| D-mapi-003 | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                     | 0.1.0   | No           |
-| D-mapi-004 | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                                 | 0.1.0   | No           |
-| D-mapi-005 | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)            | 0.1.0   | No           |
-| D-mapi-006 | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s          | 0.1.0   | No           |
-| D-mapi-007 | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición)      | 0.1.0   | No           |
-| D-mapi-008 | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)           | —       | No           |
-| D-mapi-009 | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)                 | 0.2.0   | No           |
-| D-mapi-010 | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.       | 0.2.0   | No           |
-| D-mapi-011 | SCOPES Microsoft reducidos a `Mail.Send User.Read offline_access` (tenant bv-cpas.com bloquea ReadWrite)     | 0.6.2   | No           |
-| D-mapi-012 | Solo `User.Read` declarado en Azure API permissions; resto via runtime scopes (dynamic consent)              | 0.6.2   | No           |
-| D-mapi-013 | Tabla genérica `user_connections` con `provider` text en vez de tablas separadas por provider                | 0.7.0   | Sí (nuevo)   |
-| D-mapi-014 | Plugin pattern `IProvider` para providers (Microsoft / Google / Dropbox) en lugar de módulos hermanos        | 0.7.0   | No           |
-| D-mapi-015 | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)              | 0.7.0   | No           |
-| D-mapi-016 | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa         | 0.7.0   | No           |
-| D-mapi-017 | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main)   | 0.7.0   | Sí (proceso) |
-| D-mapi-018 | `<provider>/oauth/*` para todos los providers (Microsoft + Intuit + futuros)                                 | 0.8.0   | Sí (URLs)    |
-| D-mapi-019 | Forma C de URLs: sub-recursos del cliente bajo `/v1/clients/:id/*`, vistas globales bajo `/v1/views/*`       | 0.8.0   | Sí (URLs)    |
-| D-mapi-020 | `realms/:realmId/call` con prefijo explícito (no `:realmId/call` plano)                                      | 0.8.0   | No           |
-| D-mapi-021 | `client_id` nullable en `user_connections` (solo Intuit lo usa)                                              | 0.8.0   | Sí (schema)  |
-| D-mapi-022 | UNIQUE compuesto `(user_id, provider, external_account_id)` en user_connections (multi-user mismo realm)     | 0.8.0   | Sí (schema)  |
-| D-mapi-023 | Sin endpoint admin para `user_client_access` (manual SQL hasta UI admin)                                     | 0.8.0   | No           |
-| D-mapi-024 | `ClientAccessGuard` devuelve 404 (no 403) — no leak de existencia                                            | 0.8.0   | No           |
-| D-mapi-025 | Error `INTUIT_PERSONAL_CONNECTION_REQUIRED` (HTTP 403) cuando write no encuentra personal full               | 0.8.0   | No           |
-| D-mapi-026 | 77 conexiones Intuit migradas como `scope_type='full'` (no `'readonly'` aún)                                 | 0.8.0   | No           |
-| D-mapi-027 | `intuit_tokens` se renombra a `intuit_tokens_deprecated`, drop en v0.8.1 (reversibilidad)                    | 0.8.0   | No           |
-| D-mapi-028 | Listing on-demand con controllers separados por provider (`DropboxFilesController`, `GoogleFilesController`) | 0.9.0   | No           |
-| D-mapi-029 | Google Drive scope `drive.readonly` (no `drive.file` ni `drive.metadata.readonly`)                           | 0.9.0   | No           |
-| D-mapi-030 | Dropbox: pedimos subset de scopes (`account_info.read files.metadata.read files.content.read sharing.read`)  | 0.9.0   | No           |
-| D-mapi-031 | Dropbox `account_id` como `external_account_id` (no email; estable a cambios de email)                       | 0.9.0   | No           |
-| D-mapi-032 | `test()` de Dropbox/Google = `getProfile()` (read-only providers, no acción de escritura barata)             | 0.9.0   | No           |
-| D-mapi-033 | Dropbox `get_current_account`: POST sin body ni Content-Type (responde 400 si los mandas)                    | 0.9.0   | No           |
-| D-mapi-034 | `connection_access` tabla separada (no flag `is_shared`); granularidad por user                              | 0.10.0  | No           |
-| D-mapi-035 | El dueño NO aparece en `connection_access`; ownership viene de `user_connections.user_id`                    | 0.10.0  | No           |
-| D-mapi-036 | `permission` enum `'read'\|'write'` (sin `'admin'`)                                                          | 0.10.0  | No           |
-| D-mapi-037 | `POST /v1/connections/:id/test` acepta cualquier shared (read alcanza para verificar)                        | 0.10.0  | No           |
-| D-mapi-038 | `accessRole` derivado por user (no columna persistida) en `PublicConnection`                                 | 0.10.0  | No           |
-| D-mapi-039 | Validar `userExists` antes de insert share para evitar 500 por FK violation                                  | 0.10.0  | No           |
-| D-mapi-040 | Re-scope v0.11.0: de Clover OAuth a Clover api_key (cuenta dev rejected, app DRAFT no instalable a externos) | 0.11.0  | Sí (alcance) |
-| D-mapi-041 | `auth_type` y `credentials_encrypted` viven en `user_connections` (no tabla nueva) con CHECK constraint      | 0.11.0  | No           |
-| D-mapi-042 | `DecryptedUserConnection` (OAuth) y `DecryptedApiKeyConnection` (api_key) son TIPOS SEPARADOS, no union      | 0.11.0  | No           |
-| D-mapi-043 | `credentials` JSON libre por provider; cada provider valida shape (Clover: `{api_token, merchant_id}`)       | 0.11.0  | No           |
-| D-mapi-044 | Path `/v1/clients/:id/merchants/<provider>/...` con segmento `merchants` para grupo Scalar coherente         | 0.11.0  | No           |
-| D-mapi-045 | Sharing api_key reusa `connection_access` de v0.10.0 sin cambios                                             | 0.11.0  | No           |
-| D-mapi-046 | Square endpoints production NA hardcoded (sandbox `connect.squareupsandbox.com` queda para futuro)           | 0.12.0  | No           |
-| D-mapi-047 | Square token exchange con JSON body (no form-encoded) — distinto de Microsoft/Google                         | 0.12.0  | No           |
-| D-mapi-048 | Square `expires_at` viene como ISO datetime string, no Unix timestamp                                        | 0.12.0  | No           |
-| D-mapi-049 | Square refresh_token siempre se persiste (defensivo single-use por ambigüedad doc)                           | 0.12.0  | No           |
-| D-mapi-050 | `external_account_id` Square = `merchant_id` (no `location_id`); 1 conexión cubre N locations                | 0.12.0  | No           |
-| D-mapi-051 | Square requiere `redirect_uri` en body del exchange aunque ya esté en authorize URL                          | 0.12.0  | No           |
-| D-mapi-PRM-001 | RBAC Nivel 3: roles + overrides por usuario (5 tablas)                                                   | 0.15.0  | Sí (módulo nuevo) |
-| D-mapi-PRM-002 | Módulo separado `15-permissions` (no extiende `10-core-auth`)                                            | 0.15.0  | No           |
-| D-mapi-PRM-003 | Migración total: eliminar `users.role`, migrar 18 endpoints a `@RequirePermission`                       | 0.15.0  | Sí (schema)  |
-| D-mapi-PRM-004 | Sintaxis permisos `<modulo>.<accion>` con puntos                                                         | 0.15.0  | No           |
-| D-mapi-PRM-005 | UI en bvcpas v0.15.1 (backend first); admin gestiona via Scalar mientras tanto                           | 0.15.0  | No           |
-| D-mapi-PRM-006 | Cache Redis `user:permissions:{userId}` TTL 15min; invalidación al cambiar roles/permisos               | 0.15.0  | No           |
-| D-mapi-PRM-007 | Permisos consolidados por módulo (sin granularidad por sub-recurso); excepción banking por casos reales | 0.15.0  | No           |
-| D-mapi-PRM-008 | Migration atómica (drizzle envuelve cada archivo en transaction; sin BEGIN/COMMIT manuales)             | 0.15.0  | No           |
-| D-mapi-PRM-009 | `GET /v1/auth/me/permissions` con wildcards EXPANDIDOS literalmente                                      | 0.15.0  | No           |
-| D-mapi-PRM-010 | Frontend decide visibilidad de secciones; backend solo controla acceso a endpoints                       | 0.15.0  | No           |
+| ID             | Decisión                                                                                                     | Versión | Diverge TDD       |
+| -------------- | ------------------------------------------------------------------------------------------------------------ | ------- | ----------------- |
+| D-mapi-001     | `tsc + tsc-alias` directo, sin `nest build` (heredado de mapi v0.x D-071)                                    | 0.1.0   | No                |
+| D-mapi-002     | Prefijo `/v1` con exclude `metrics` (Prometheus convención mundial)                                          | 0.1.0   | No                |
+| D-mapi-003     | `cleanupOpenApiDoc` de nestjs-zod (en lugar de `patchNestjsSwagger` que no existe en v5)                     | 0.1.0   | No                |
+| D-mapi-004     | Scalar `layout: 'modern'` + `hideModels: true` para evitar Models en sidebar                                 | 0.1.0   | No                |
+| D-mapi-005     | Schema env vars con `emptyToUndefined` preprocess (vars vacías en `.env` no rompen `.optional()`)            | 0.1.0   | No                |
+| D-mapi-006     | DbModule `@Global()` con tokens `DB` (drizzle) y `DB_CLIENT` (postgres-js raw); shutdown timeout 5s          | 0.1.0   | No                |
+| D-mapi-007     | Subdominio prod = `mapi.kodapp.com.mx` (legacy mapi v0.x sigue en `mapi.alfredo.mx` durante transición)      | 0.1.0   | No                |
+| D-mapi-008     | Numeración 1:1 entre `src/modules/NN-nombre/` y `roadmap/NN-nombre/` (heredado de mapi v0.x D-027)           | —       | No                |
+| D-mapi-009     | Scripts CLI (migrate.ts, seed-admin.ts) NO se compilan al `dist/` (solo se corren con `tsx`)                 | 0.2.0   | No                |
+| D-mapi-010     | `src/modules/auth/` → `src/modules/10-core-auth/`, `event-log/` → `95-event-log/`. health sin prefijo.       | 0.2.0   | No                |
+| D-mapi-011     | SCOPES Microsoft reducidos a `Mail.Send User.Read offline_access` (tenant bv-cpas.com bloquea ReadWrite)     | 0.6.2   | No                |
+| D-mapi-012     | Solo `User.Read` declarado en Azure API permissions; resto via runtime scopes (dynamic consent)              | 0.6.2   | No                |
+| D-mapi-013     | Tabla genérica `user_connections` con `provider` text en vez de tablas separadas por provider                | 0.7.0   | Sí (nuevo)        |
+| D-mapi-014     | Plugin pattern `IProvider` para providers (Microsoft / Google / Dropbox) en lugar de módulos hermanos        | 0.7.0   | No                |
+| D-mapi-015     | Drop + create de `user_microsoft_tokens` en lugar de migrar datos (1 row local, no se preserva)              | 0.7.0   | No                |
+| D-mapi-016     | Pre-declarar enum `PROVIDERS = ['microsoft','google','dropbox']` aunque solo Microsoft se implementa         | 0.7.0   | No                |
+| D-mapi-017     | Branch por módulo `<app>/<NN-modulo>` desde main, merge `--no-ff`, tag `<app>-vX.Y.Z` (vs trabajo en main)   | 0.7.0   | Sí (proceso)      |
+| D-mapi-018     | `<provider>/oauth/*` para todos los providers (Microsoft + Intuit + futuros)                                 | 0.8.0   | Sí (URLs)         |
+| D-mapi-019     | Forma C de URLs: sub-recursos del cliente bajo `/v1/clients/:id/*`, vistas globales bajo `/v1/views/*`       | 0.8.0   | Sí (URLs)         |
+| D-mapi-020     | `realms/:realmId/call` con prefijo explícito (no `:realmId/call` plano)                                      | 0.8.0   | No                |
+| D-mapi-021     | `client_id` nullable en `user_connections` (solo Intuit lo usa)                                              | 0.8.0   | Sí (schema)       |
+| D-mapi-022     | UNIQUE compuesto `(user_id, provider, external_account_id)` en user_connections (multi-user mismo realm)     | 0.8.0   | Sí (schema)       |
+| D-mapi-023     | Sin endpoint admin para `user_client_access` (manual SQL hasta UI admin)                                     | 0.8.0   | No                |
+| D-mapi-024     | `ClientAccessGuard` devuelve 404 (no 403) — no leak de existencia                                            | 0.8.0   | No                |
+| D-mapi-025     | Error `INTUIT_PERSONAL_CONNECTION_REQUIRED` (HTTP 403) cuando write no encuentra personal full               | 0.8.0   | No                |
+| D-mapi-026     | 77 conexiones Intuit migradas como `scope_type='full'` (no `'readonly'` aún)                                 | 0.8.0   | No                |
+| D-mapi-027     | `intuit_tokens` se renombra a `intuit_tokens_deprecated`, drop en v0.8.1 (reversibilidad)                    | 0.8.0   | No                |
+| D-mapi-028     | Listing on-demand con controllers separados por provider (`DropboxFilesController`, `GoogleFilesController`) | 0.9.0   | No                |
+| D-mapi-029     | Google Drive scope `drive.readonly` (no `drive.file` ni `drive.metadata.readonly`)                           | 0.9.0   | No                |
+| D-mapi-030     | Dropbox: pedimos subset de scopes (`account_info.read files.metadata.read files.content.read sharing.read`)  | 0.9.0   | No                |
+| D-mapi-031     | Dropbox `account_id` como `external_account_id` (no email; estable a cambios de email)                       | 0.9.0   | No                |
+| D-mapi-032     | `test()` de Dropbox/Google = `getProfile()` (read-only providers, no acción de escritura barata)             | 0.9.0   | No                |
+| D-mapi-033     | Dropbox `get_current_account`: POST sin body ni Content-Type (responde 400 si los mandas)                    | 0.9.0   | No                |
+| D-mapi-034     | `connection_access` tabla separada (no flag `is_shared`); granularidad por user                              | 0.10.0  | No                |
+| D-mapi-035     | El dueño NO aparece en `connection_access`; ownership viene de `user_connections.user_id`                    | 0.10.0  | No                |
+| D-mapi-036     | `permission` enum `'read'\|'write'` (sin `'admin'`)                                                          | 0.10.0  | No                |
+| D-mapi-037     | `POST /v1/connections/:id/test` acepta cualquier shared (read alcanza para verificar)                        | 0.10.0  | No                |
+| D-mapi-038     | `accessRole` derivado por user (no columna persistida) en `PublicConnection`                                 | 0.10.0  | No                |
+| D-mapi-039     | Validar `userExists` antes de insert share para evitar 500 por FK violation                                  | 0.10.0  | No                |
+| D-mapi-040     | Re-scope v0.11.0: de Clover OAuth a Clover api_key (cuenta dev rejected, app DRAFT no instalable a externos) | 0.11.0  | Sí (alcance)      |
+| D-mapi-041     | `auth_type` y `credentials_encrypted` viven en `user_connections` (no tabla nueva) con CHECK constraint      | 0.11.0  | No                |
+| D-mapi-042     | `DecryptedUserConnection` (OAuth) y `DecryptedApiKeyConnection` (api_key) son TIPOS SEPARADOS, no union      | 0.11.0  | No                |
+| D-mapi-043     | `credentials` JSON libre por provider; cada provider valida shape (Clover: `{api_token, merchant_id}`)       | 0.11.0  | No                |
+| D-mapi-044     | Path `/v1/clients/:id/merchants/<provider>/...` con segmento `merchants` para grupo Scalar coherente         | 0.11.0  | No                |
+| D-mapi-045     | Sharing api_key reusa `connection_access` de v0.10.0 sin cambios                                             | 0.11.0  | No                |
+| D-mapi-046     | Square endpoints production NA hardcoded (sandbox `connect.squareupsandbox.com` queda para futuro)           | 0.12.0  | No                |
+| D-mapi-047     | Square token exchange con JSON body (no form-encoded) — distinto de Microsoft/Google                         | 0.12.0  | No                |
+| D-mapi-048     | Square `expires_at` viene como ISO datetime string, no Unix timestamp                                        | 0.12.0  | No                |
+| D-mapi-049     | Square refresh_token siempre se persiste (defensivo single-use por ambigüedad doc)                           | 0.12.0  | No                |
+| D-mapi-050     | `external_account_id` Square = `merchant_id` (no `location_id`); 1 conexión cubre N locations                | 0.12.0  | No                |
+| D-mapi-051     | Square requiere `redirect_uri` en body del exchange aunque ya esté en authorize URL                          | 0.12.0  | No                |
+| D-mapi-PRM-001 | RBAC Nivel 3: roles + overrides por usuario (5 tablas)                                                       | 0.15.0  | Sí (módulo nuevo) |
+| D-mapi-PRM-002 | Módulo separado `15-permissions` (no extiende `10-core-auth`)                                                | 0.15.0  | No                |
+| D-mapi-PRM-003 | Migración total: eliminar `users.role`, migrar 18 endpoints a `@RequirePermission`                           | 0.15.0  | Sí (schema)       |
+| D-mapi-PRM-004 | Sintaxis permisos `<modulo>.<accion>` con puntos                                                             | 0.15.0  | No                |
+| D-mapi-PRM-005 | UI en bvcpas v0.15.1 (backend first); admin gestiona via Scalar mientras tanto                               | 0.15.0  | No                |
+| D-mapi-PRM-006 | Cache Redis `user:permissions:{userId}` TTL 15min; invalidación al cambiar roles/permisos                    | 0.15.0  | No                |
+| D-mapi-PRM-007 | Permisos consolidados por módulo (sin granularidad por sub-recurso); excepción banking por casos reales      | 0.15.0  | No                |
+| D-mapi-PRM-008 | Migration atómica (drizzle envuelve cada archivo en transaction; sin BEGIN/COMMIT manuales)                  | 0.15.0  | No                |
+| D-mapi-PRM-009 | `GET /v1/auth/me/permissions` con wildcards EXPANDIDOS literalmente                                          | 0.15.0  | No                |
+| D-mapi-PRM-010 | Frontend decide visibilidad de secciones; backend solo controla acceso a endpoints                           | 0.15.0  | No                |
 
 ---
 
