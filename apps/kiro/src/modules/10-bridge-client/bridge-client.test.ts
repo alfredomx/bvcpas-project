@@ -375,6 +375,47 @@ describe('parseIncomingCommand', () => {
     ).toBeNull()
   })
 
+  it('parsea execute_dom válido', () => {
+    const cmd = parseIncomingCommand({
+      type: 'execute_dom',
+      correlationId: 'd1',
+      payload: {
+        tabId: 7,
+        steps: [
+          { op: 'fill', selector: '#u', value: 'x' },
+          { op: 'click', selector: '#b' },
+        ],
+      },
+    })
+    expect(cmd).toEqual({
+      type: 'execute_dom',
+      correlationId: 'd1',
+      payload: {
+        tabId: 7,
+        steps: [
+          { op: 'fill', selector: '#u', value: 'x' },
+          { op: 'click', selector: '#b' },
+        ],
+      },
+    })
+  })
+
+  it('rechaza execute_dom sin tabId numérico o sin steps array', () => {
+    expect(
+      parseIncomingCommand({ type: 'execute_dom', correlationId: 'd2', payload: { steps: [] } }),
+    ).toBeNull()
+    expect(
+      parseIncomingCommand({
+        type: 'execute_dom',
+        correlationId: 'd3',
+        payload: { tabId: '7', steps: [] },
+      }),
+    ).toBeNull()
+    expect(
+      parseIncomingCommand({ type: 'execute_dom', correlationId: 'd4', payload: { tabId: 7 } }),
+    ).toBeNull()
+  })
+
   it('rechaza tipo desconocido', () => {
     expect(parseIncomingCommand({ type: 'foo', correlationId: 'a', payload: {} })).toBeNull()
   })

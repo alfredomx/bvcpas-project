@@ -17,6 +17,7 @@
 
 import { dispatchCommand } from './dispatcher'
 import { writeBridgeStatus } from './config'
+import type { DomStep } from '../22-dom-executor/types'
 import type {
   BridgeClientConfig,
   ClientInfo,
@@ -242,6 +243,18 @@ export function parseIncomingCommand(raw: unknown): IncomingCommandMessage | nul
         headers: payload.headers as Record<string, string> | undefined,
         body: typeof payload.body === 'string' ? payload.body : undefined,
       },
+    }
+  }
+
+  if (msg.type === 'execute_dom') {
+    const payload = msg.payload as Record<string, unknown> | undefined
+    if (!payload || typeof payload.tabId !== 'number' || !Array.isArray(payload.steps)) {
+      return null
+    }
+    return {
+      type: 'execute_dom',
+      correlationId,
+      payload: { tabId: payload.tabId, steps: payload.steps as DomStep[] },
     }
   }
 

@@ -17,6 +17,7 @@
 // `correlationId` (transporte) === `requestId` del executor. Mismo concepto.
 
 import type { BridgeCommandResult } from '../21-fetch-executor/types'
+import type { DomResult, DomStep } from '../22-dom-executor/types'
 
 /** Info que el plugin se anuncia a mapi al conectar. */
 export interface ClientInfo {
@@ -66,11 +67,28 @@ export interface ListTabsCommandMessage {
   correlationId: string
 }
 
+/**
+ * Payload de un `execute_dom`: la pestaña objetivo (`tabId`, sacado de
+ * `list_tabs`) y la receta de pasos DOM. Los selectores/valores los dicta mapi.
+ */
+export interface ExecuteDomPayload {
+  tabId: number
+  steps: DomStep[]
+}
+
+/** Comando entrante mapi→plugin: ejecutar una receta DOM en una pestaña. */
+export interface ExecuteDomCommandMessage {
+  type: 'execute_dom'
+  correlationId: string
+  payload: ExecuteDomPayload
+}
+
 /** Unión de comandos entrantes que el plugin sabe despachar. */
 export type IncomingCommandMessage =
   | ExecuteFetchCommandMessage
   | CheckSessionCommandMessage
   | ListTabsCommandMessage
+  | ExecuteDomCommandMessage
 
 /** Una pestaña abierta (lo que `list_tabs` devuelve; mapi decide cuál usar). */
 export interface TabInfo {
@@ -90,7 +108,7 @@ export interface ListTabsResult {
 export interface ResultMessage {
   type: 'result'
   correlationId: string
-  payload: BridgeCommandResult | ListTabsResult | BridgeErrorPayload
+  payload: BridgeCommandResult | ListTabsResult | DomResult | BridgeErrorPayload
 }
 
 /** Payload de error cuando un comando falla o es desconocido. */
@@ -115,4 +133,15 @@ export interface RoutedFetchMessage {
   kind: 'kiro:execute_fetch'
   correlationId: string
   payload: ExecuteFetchPayload
+}
+
+/**
+ * Mensaje interno SW→content-script para rutear un `execute_dom` a la pestaña
+ * objetivo. Viaja por `chrome.tabs.sendMessage`, no por el WebSocket. El content
+ * script ejecuta la receta y responde con un `DomResult`.
+ */
+export interface RoutedDomMessage {
+  kind: 'kiro:execute_dom'
+  correlationId: string
+  payload: ExecuteDomPayload
 }
