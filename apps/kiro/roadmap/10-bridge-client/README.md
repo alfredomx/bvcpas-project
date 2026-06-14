@@ -1,9 +1,9 @@
 # 10-bridge-client — WebSocket client + auth con mapi
 
 **App:** kiro
-**Status:** ✅ v0.2.0 (WS client + execute_fetch) y v0.3.0 (login JWT en popup + list_tabs) cerradas y verificadas en vivo.
+**Status:** ✅ v0.2.0 (WS client + execute_fetch), v0.3.0 (login JWT en popup + list_tabs) y v0.3.1 (fix race keepalive/result) cerradas y verificadas en vivo.
 **Backend asociado:** [`apps/mapi/roadmap/23-plugin-bridge`](../../../mapi/roadmap/23-plugin-bridge/README.md)
-**Última revisión:** 2026-06-13
+**Última revisión:** 2026-06-14
 
 > Corrige la referencia vieja (`20-intuit/02-bridge`): el backend es `23-plugin-bridge`, genérico.
 
@@ -60,6 +60,8 @@ bancos vive en mapi (Design B); kiro solo transporta y ejecuta.
 | D-kiro-B07 | Content script se compila aparte como IIFE auto-contenido (`vite.content.config.ts`); SW/popup quedan en el build ESM principal                              |
 | D-kiro-B08 | Comando desconocido/JSON inválido → `console.warn`, sin cerrar el socket ni responder                                                                        |
 | D-kiro-B09 | Mensaje interno SW→content `{ kind:'kiro:execute_fetch', correlationId, payload }`; content responde `FetchResult` por `sendResponse` (async, `return true`) |
+| D-kiro-B10 | `connect()` no-op si ya hay socket vivo (`CONNECTING`/`OPEN`); el keepalive de 30s no recicla conexiones sanas (v0.3.1)                                      |
+| D-kiro-B11 | El `result` se responde por el socket que recibió el comando (no `this.ws`), robusto ante reconexión durante el dispatch (v0.3.1)                            |
 
 ## Nota MV3 (riesgo conocido)
 
@@ -76,7 +78,8 @@ flujo real el usuario está presente (dispara desde Claude) → SW despierto. Do
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                                                          |
-| ------- | ------ | ------------------------------------------------------------------------------------------------------------- |
-| 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0 |
-| 0.3.0   | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + `list_tabs` stateless — espejo de mapi v0.19.0        |
+| Versión | Estado | Tema                                                                                                                                               |
+| ------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0                                      |
+| 0.3.0   | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + `list_tabs` stateless — espejo de mapi v0.19.0                                             |
+| 0.3.1   | ✅     | Fix race keepalive/result (504 en mapi): reply en socket de origen + `connect()` no recicla socket sano — verificado con ChaseAdapter mapi v0.18.0 |

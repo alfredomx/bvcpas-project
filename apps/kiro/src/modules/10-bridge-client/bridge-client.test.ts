@@ -10,6 +10,8 @@ class FakeWebSocket implements WebSocketLike {
   static instances: FakeWebSocket[] = []
   sent: string[] = []
   closed = false
+  // 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED (igual que el WebSocket real).
+  readyState = 0
 
   onopen: ((this: unknown, ev: unknown) => unknown) | null = null
   onclose: ((this: unknown, ev: unknown) => unknown) | null = null
@@ -26,13 +28,16 @@ class FakeWebSocket implements WebSocketLike {
 
   close(): void {
     this.closed = true
+    this.readyState = 3
   }
 
   // Helpers para simular eventos del servidor.
   fireOpen(): void {
+    this.readyState = 1
     this.onopen?.call(this, {})
   }
   fireClose(): void {
+    this.readyState = 3
     this.onclose?.call(this, {})
   }
   fireError(): void {
@@ -250,6 +255,84 @@ describe('BridgeClient — dispatch y correlación', () => {
     await Promise.resolve()
     expect(dispatch).not.toHaveBeenCalled()
     expect(ws.closed).toBe(false)
+  })
+})
+
+describe('BridgeClient — keepalive no rompe conexión en vuelo (v0.3.1)', () => {
+  it('connect() no recicla un socket OPEN (keepalive de 30s no tumba la conexión sana)', () => {
+    const { client } = makeClient()
+    client.connect()
+    const ws0 = FakeWebSocket.instances[0]
+    ws0.fireOpen() // readyState = OPEN
+
+    // Simula el alarm de keepalive (o un wake) llamando connect() de nuevo.
+    client.connect()
+
+    // No abrió un segundo socket ni cerró el sano.
+    expect(FakeWebSocket.instances).toHaveLength(1)
+    expect(ws0.closed).toBe(false)
+  })
+
+  it('connect() tampoco recicla un socket CONNECTING (aún sin abrir)', () => {
+    const { client } = makeClient()
+    client.connect()
+    const ws0 = FakeWebSocket.instances[0] // readyState = CONNECTING (0)
+
+    client.connect() // keepalive durante el handshake
+
+    expect(FakeWebSocket.instances).toHaveLength(1)
+    expect(ws0.closed).toBe(false)
+  })
+
+  it('responde el result sobre el socket que recibió el comando aunque this.ws haya cambiado', async () => {
+    let resolveDispatch!: (v: unknown) => void
+    const dispatch = vi.fn(
+      () =>
+        new Promise((res) => {
+          resolveDispatch = res
+        }),
+    )
+    // scheduleReconnect ejecuta el reconnect de inmediato (encadena la reconexión).
+    const scheduleReconnect = vi.fn((fn: () => void, _ms: number) => fn())
+    const { client } = makeClient({ dispatch: dispatch as never, scheduleReconnect })
+
+    client.connect()
+    const ws0 = FakeWebSocket.instances[0]
+    ws0.fireOpen()
+    ws0.sent.length = 0
+
+    // El comando llega por ws0; el dispatch (fetch al banco) queda pendiente.
+    ws0.fireMessage(
+      JSON.stringify({
+        type: 'execute_fetch',
+        correlationId: 'c1',
+        payload: { method: 'GET', url: 'https://bank.example/api' },
+      }),
+    )
+
+    // ws0 se cae a mitad del dispatch → onclose limpia this.ws → reconnect abre ws1.
+    ws0.fireClose()
+    const ws1 = FakeWebSocket.instances[1]
+    ws1.fireOpen()
+    ws1.sent.length = 0
+
+    // Ahora resuelve el dispatch: el result debe salir por ws0 (origen), no por ws1.
+    resolveDispatch({
+      requestId: 'c1',
+      ok: true,
+      status: 200,
+      headers: {},
+      body: '{"ok":1}',
+      bodyEncoding: 'text',
+    })
+
+    await vi.waitFor(() => expect(ws0.sent.length + ws1.sent.length).toBeGreaterThan(0))
+
+    const onWs0 = ws0.sent.map((s) => JSON.parse(s)).find((m) => m.correlationId === 'c1')
+    const onWs1 = ws1.sent.map((s) => JSON.parse(s)).find((m) => m.correlationId === 'c1')
+    expect(onWs0).toBeTruthy()
+    expect(onWs0.type).toBe('result')
+    expect(onWs1).toBeFalsy()
   })
 })
 

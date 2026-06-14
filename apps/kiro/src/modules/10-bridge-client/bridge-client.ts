@@ -27,6 +27,8 @@ import type {
 
 /** Subconjunto de la API de WebSocket que usamos (para poder inyectar un fake). */
 export interface WebSocketLike {
+  /** 0=CONNECTING, 1=OPEN, 2=CLOSING, 3=CLOSED (igual que el WebSocket real). */
+  readonly readyState: number
   send(data: string): void
   close(): void
   onopen: ((this: unknown, ev: unknown) => unknown) | null
@@ -61,6 +63,10 @@ export const KEEPALIVE_PERIOD_MIN = 0.5
 const BACKOFF_BASE_MS = 1000
 const BACKOFF_MAX_MS = 30_000
 
+/** readyState del WebSocket (no dependemos del global en tests). */
+const WS_CONNECTING = 0
+const WS_OPEN = 1
+
 export class BridgeClient {
   private ws: WebSocketLike | null = null
   private reconnectAttempts = 0
@@ -90,11 +96,24 @@ export class BridgeClient {
     return Math.min(ms, BACKOFF_MAX_MS)
   }
 
-  /** Abre la conexión y cablea los handlers. Idempotente-ish: cierra el anterior. */
+  /**
+   * Abre la conexión y cablea los handlers.
+   *
+   * Idempotente respecto a un socket vivo (D-kiro-B10): si ya hay un socket
+   * `CONNECTING` u `OPEN`, NO hace nada. Esto es clave porque el keepalive MV3
+   * (`chrome.alarms`, cada 30s) llama `connect()` periódicamente; sin este guard
+   * reciclaría la conexión sana y mataría comandos en vuelo (el `result` saldría
+   * por un socket nuevo aún en CONNECTING → mapi hace 504). Solo cierra y reabre
+   * sockets ya muertos (CLOSING/CLOSED).
+   */
   connect(): void {
     this.closedByUs = false
     if (this.ws) {
-      // Evita sockets duplicados si se llama dos veces.
+      const rs = this.ws.readyState
+      if (rs === WS_CONNECTING || rs === WS_OPEN) {
+        return // ya hay conexión sana en curso: no la recicles.
+      }
+      // Socket muerto (CLOSING/CLOSED): ciérralo defensivamente y reabre.
       try {
         this.ws.close()
       } catch {
@@ -118,7 +137,9 @@ export class BridgeClient {
     }
 
     ws.onmessage = (ev) => {
-      void this.handleMessage(ev.data)
+      // Pasa el socket que recibió el mensaje: el `result` debe regresar por ESE
+      // socket aunque `this.ws` cambie durante el dispatch (D-kiro-B11).
+      void this.handleMessage(ev.data, ws)
     }
 
     ws.onerror = () => {
@@ -160,7 +181,7 @@ export class BridgeClient {
    * `result`. Mensajes desconocidos / inválidos se ignoran (loguean) SIN romper
    * el socket.
    */
-  private async handleMessage(raw: unknown): Promise<void> {
+  private async handleMessage(raw: unknown, sourceWs: WebSocketLike): Promise<void> {
     const command = parseIncomingCommand(raw)
     if (!command) {
       // Comando desconocido o JSON inválido: no rompe el socket.
@@ -176,7 +197,14 @@ export class BridgeClient {
       correlationId: command.correlationId,
       payload,
     }
-    if (this.ws) this.ws.send(JSON.stringify(result))
+    // Responde por el socket de ORIGEN (no `this.ws`): mapi espera la respuesta en
+    // el socket por el que mandó el comando. Si ese socket murió a mitad del
+    // dispatch, el send lanza → lo tragamos (mapi hará timeout, no rompemos el SW).
+    try {
+      sourceWs.send(JSON.stringify(result))
+    } catch {
+      /* socket de origen cerrado durante el dispatch: comando perdido. */
+    }
   }
 }
 
