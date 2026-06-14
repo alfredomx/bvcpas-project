@@ -8,22 +8,51 @@
         font-family: system-ui, sans-serif;
         margin: 0;
         padding: 1rem;
-        min-width: 240px;
+        min-width: 280px;
       }
       h1 {
         font-size: 1rem;
-        margin: 0 0 0.5rem 0;
+        margin: 0 0 0.75rem 0;
       }
-      p {
-        font-size: 0.85rem;
+      label {
+        display: block;
+        font-size: 0.75rem;
         color: #555;
-        margin: 0;
+        margin: 0.5rem 0 0.15rem 0;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 0.8rem;
+        padding: 0.35rem;
+      }
+      button {
+        margin-top: 0.75rem;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+        cursor: pointer;
+      }
+      #status {
+        margin-top: 0.6rem;
+        font-size: 0.75rem;
+      }
+      .ok {
+        color: #137333;
+      }
+      .off {
+        color: #a50e0e;
       }
     </style>
   </head>
   <body>
-    <h1>Hello</h1>
-    <p>kiro 0.1.0 — scaffold inicial</p>
+    <h1>kiro — bridge</h1>
+    <label for="url">BRIDGE_URL</label>
+    <input id="url" type="text" placeholder="ws://localhost:4000/bridge" />
+    <label for="secret">Bridge secret</label>
+    <input id="secret" type="password" placeholder="shared secret" />
+    <button id="save">Guardar</button>
+    <button id="reconnect">Reconectar</button>
+    <div id="status"></div>
     <script type="module" src="./src/popup/popup.ts"></script>
   </body>
 </html>

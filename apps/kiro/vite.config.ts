@@ -15,6 +15,10 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
+      // El content script NO va aquí: se compila aparte (vite.content.config.ts)
+      // como IIFE auto-contenido, porque un content script classic no admite
+      // `import`. El SW (`type:module`) y el popup (`type:module`) sí admiten
+      // chunks ESM, así que se quedan en este build multi-entry.
       input: {
         popup: resolve(__dirname, 'popup.html'),
         background: resolve(__dirname, 'src/background.ts'),

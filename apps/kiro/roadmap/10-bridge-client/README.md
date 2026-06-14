@@ -1,62 +1,81 @@
 # 10-bridge-client — WebSocket client + auth con mapi
 
 **App:** kiro
-**Status:** 📅 Pendiente (P2)
-**Versiones que lo construyen:** —
-**Backend asociado:** [`apps/mapi/roadmap/20-intuit/02-bridge/`](../../../mapi/roadmap/20-intuit/02-bridge/README.md)
-**Última revisión:** 2026-05-03
+**Status:** ✅ Cerrado (v0.2.0 — verificado en vivo con mapi v0.17.0; round-trip execute_fetch real OK)
+**Backend asociado:** [`apps/mapi/roadmap/23-plugin-bridge`](../../../mapi/roadmap/23-plugin-bridge/README.md)
+**Última revisión:** 2026-06-13
 
----
+> Corrige la referencia vieja (`20-intuit/02-bridge`): el backend es `23-plugin-bridge`, genérico.
 
 ## Por qué existe este bloque
 
-El plugin `kiro` necesita un canal estable y autenticado con el backend `mapi` para:
+El plugin `kiro` es el **comunicador** Chrome↔backend. Este bloque construye el lado cliente del
+canal: se conecta por WebSocket a mapi, se autentica, recibe comandos y los **despacha al ejecutor**
+(`21-fetch-executor`, ya construido), y devuelve la respuesta correlacionada. Toda la lógica de
+bancos vive en mapi (Design B); kiro solo transporta y ejecuta.
 
-1. Recibir comandos del operador (ej. "ejecuta esta query en QBO").
-2. Enviar resultados de queries internas QBO.
-3. Notificar status (cliente conectado, último sync, errores).
+## Alcance (v0.2.0)
 
-Este bloque construye el lado del cliente WebSocket: conexión inicial, auth con BridgeSecretGuard, reconnect con backoff, manejo de mensajes.
+### Sí entra
 
-Es la contraparte cliente del backend `apps/mapi/roadmap/20-intuit/02-bridge/`.
+- **WebSocket client en el service worker** (`background.ts`). Conecta a `BRIDGE_URL`
+  (`ws://localhost:4000/bridge` local · `wss://mapi.kodapp.com.mx/bridge` prod).
+- **Auth shared secret**: al conectar manda `{ type:'hello', secret, clientInfo }`; `secret` viene
+  de `chrome.storage.local` (configurable desde el popup). Mismo valor que `BRIDGE_SECRET` en mapi.
+- **Reconnect con backoff exponencial** + **keepalive MV3** (`chrome.alarms` para revivir el SW y
+  reconectar; mantener el SW vivo mientras hay comando en vuelo).
+- **Dispatch**: al recibir `{ type:'execute_fetch'|'check_session', correlationId, payload }`:
+  1. parsea/valida a `BridgeCommand` (tipos de `21-fetch-executor`),
+  2. rutea `execute_fetch` al content script de la pestaña correcta vía `chrome.tabs.sendMessage`
+     (el `fetch` debe correr same-origin en la pestaña del banco); `check_session` corre en el SW,
+  3. `await handleBridgeCommand(command)`,
+  4. responde `{ type:'result', correlationId, payload }` por el mismo socket.
+- Estado de sesión en `chrome.storage.local` (último ping, conectado sí/no).
 
----
+### NO entra
 
-## Alcance preliminar (TBD al abrir versión)
+- Lógica de bancos (vive en mapi). UI compleja (popup minimal). Migración a JWT (diferida, BACKLOG).
 
-### Sí entra (preliminar)
+## Permisos Chrome
 
-- WebSocket client en service worker (`chrome.runtime`).
-- Auth con shared secret en `chrome.storage.local` (configurable desde popup).
-- Reconnect automático con exponential backoff.
-- Mensajes tipados (RPC-style: `{ type, payload, correlation_id }`).
-- Storage de sesión activa: qué cliente QBO está abierto, último ping al backend.
+- `storage` (secret + estado), `alarms` (keepalive), `tabs` (rutear al content script), `scripting`.
+- `host_permissions`: mapi (`wss`) + **`<all_urls>`** (decidido: el plugin opera donde mapi diga; la
+  config de servicios vive en mapi, no aquí). Distribución privada/demo → `<all_urls>` required.
 
-### NO entra (preliminar)
+## Pre-requisitos
 
-- Content scripts QBO — viven en `20-qbo-scripts/`.
-- UI compleja — popup sigue minimal hasta que un Mx lo necesite.
-- Migración a JWT — diferida con trigger en BACKLOG.
+- ✅ P0 (scaffold). ✅ `21-fetch-executor` (executor + tests, hecho).
+- ⏳ Backend `23-plugin-bridge` (gateway) — acoplado, se prueba junto (mapi v0.17.0).
 
----
+## Decisiones (D-kiro-NNN)
 
-## Permisos Chrome necesarios (preliminar)
+| ID         | Decisión                                                                                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| D-kiro-B01 | Transporte WS, kiro es cliente; auth shared secret (JWT diferido)                                                                                            |
+| D-kiro-B02 | `<all_urls>` required; sin config de servicios en el plugin (mapi dueño)                                                                                     |
+| D-kiro-B03 | `execute_fetch` se rutea al content script (same-origin/cookies); `check_session` en el SW                                                                   |
+| D-kiro-B04 | Keepalive MV3 con `chrome.alarms` + reconnect backoff                                                                                                        |
+| D-kiro-B05 | `correlationId` (transporte) → `requestId` (`FetchInstruction`); kiro lo inyecta porque el payload de mapi no lo trae                                        |
+| D-kiro-B06 | `execute_fetch` se rutea por **origin** de la URL; sin pestaña same-origin → `result` con `{ error }` (no rompe socket)                                      |
+| D-kiro-B07 | Content script se compila aparte como IIFE auto-contenido (`vite.content.config.ts`); SW/popup quedan en el build ESM principal                              |
+| D-kiro-B08 | Comando desconocido/JSON inválido → `console.warn`, sin cerrar el socket ni responder                                                                        |
+| D-kiro-B09 | Mensaje interno SW→content `{ kind:'kiro:execute_fetch', correlationId, payload }`; content responde `FetchResult` por `sendResponse` (async, `return true`) |
 
-- `storage` (guardar shared secret + estado de sesión).
-- `host_permissions: ["https://mapi.kodapp.com.mx/*"]` (para WebSocket cross-origin).
+## Nota MV3 (riesgo conocido)
 
-Cada permiso requiere prompt al usuario en cada reload — solo se piden los que se usan.
+El SW se duerme ~30s en idle → el WS se cae estando inactivo. Mitigación: `chrome.alarms`
+(mín ~30s) revive el SW y reconecta; mientras procesa un comando el SW se mantiene vivo. En el
+flujo real el usuario está presente (dispara desde Claude) → SW despierto. Documentar limitación.
 
----
+## Tests (Tipo A, Vitest + mocks de chrome/WebSocket)
 
-## Pre-requisitos para arrancar
+- Al conectar manda `hello` con el secret de storage.
+- Reconnect con backoff tras caída.
+- Dispatch: `execute_fetch` rutea a `chrome.tabs.sendMessage`; `result` se envía correlacionado por `correlationId`.
+- Comando desconocido → no rompe el socket (loguea / responde error).
 
-- ✅ P0 cerrado.
-- ⏳ Backend `20-intuit/02-bridge/` con WebSocket gateway listo.
+## Versiones
 
----
-
-## Notas
-
-- Heredado parcial de mapi v0.x: el plugin actual ya usa BridgeSecretGuard. Reusamos la lógica con renames si la convención cambia.
-- Cuando JWT entre, este bloque tiene un trigger de migración (BACKLOG mapi v0.x).
+| Versión | Estado | Tema                                                                                                          |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------- |
+| 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0 |
