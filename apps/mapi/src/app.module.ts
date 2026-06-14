@@ -22,6 +22,7 @@ import { DashboardsModule } from './modules/13-views/dashboards.module'
 import { CallLogsModule } from './modules/14-call-logs/call-logs.module'
 import { ConnectionsModule } from './modules/21-connections/connections.module'
 import { BankWorkerModule } from './modules/22-bank-worker/bank-worker.module'
+import { PluginBridgeModule } from './modules/23-plugin-bridge/plugin-bridge.module'
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { BankWorkerModule } from './modules/22-bank-worker/bank-worker.module'
     CallLogsModule,
     ConnectionsModule,
     BankWorkerModule,
+    PluginBridgeModule,
     HealthModule,
   ],
   providers: [

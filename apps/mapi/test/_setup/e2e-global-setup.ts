@@ -47,6 +47,10 @@ export default async function globalSetup(): Promise<void> {
     await db.execute(sql`DROP TABLE IF EXISTS connection_access CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_client_access CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_connections CASCADE`)
+    // 22-bank-worker (v0.16.0). Dependientes primero (CASCADE de todas formas).
+    await db.execute(sql`DROP TABLE IF EXISTS bank_accounts CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS client_bank_accounts CASCADE`)
+    await db.execute(sql`DROP TABLE IF EXISTS bank_portals CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS clients CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS user_sessions CASCADE`)
     await db.execute(sql`DROP TABLE IF EXISTS event_log CASCADE`)

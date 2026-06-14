@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { NestFactory } from '@nestjs/core'
+import { WsAdapter } from '@nestjs/platform-ws'
 import type { INestApplication } from '@nestjs/common'
 import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
@@ -237,6 +238,10 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
   app.useLogger(app.get(PinoNestLogger))
+
+  // 23-plugin-bridge (v0.17.0): el gateway WS usa `ws` (no socket.io).
+  // El WsAdapter sirve el WebSocket en el mismo servidor HTTP (ruta /bridge).
+  app.useWebSocketAdapter(new WsAdapter(app))
 
   app.setGlobalPrefix('v1', { exclude: ['metrics'] })
   app.enableCors()

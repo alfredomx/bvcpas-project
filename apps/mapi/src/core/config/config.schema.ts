@@ -68,6 +68,12 @@ export const configSchema = z.object({
   SQUARE_CLIENT_ID: z.string().min(1, 'SQUARE_CLIENT_ID requerido'),
   SQUARE_CLIENT_SECRET: z.string().min(1, 'SQUARE_CLIENT_SECRET requerido'),
   SQUARE_REDIRECT_URI: z.string().url('SQUARE_REDIRECT_URI debe ser URL válida'),
+
+  // 23-plugin-bridge (v0.17.0): canal WS mapi↔plugin (kiro)
+  // Mismo valor en `.env` de mapi y en `chrome.storage.local` de kiro.
+  // Solo no-vacío (el operador elige el valor; en prod usar uno fuerte).
+  BRIDGE_SECRET: z.string().min(1, 'BRIDGE_SECRET requerido'),
+  BRIDGE_COMMAND_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

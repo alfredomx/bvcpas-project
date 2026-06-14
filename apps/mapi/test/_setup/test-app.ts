@@ -1,6 +1,7 @@
 import { Test } from '@nestjs/testing'
 import type { INestApplication } from '@nestjs/common'
 import { ValidationPipe } from '@nestjs/common'
+import { WsAdapter } from '@nestjs/platform-ws'
 import { config as dotenvConfig } from 'dotenv'
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -33,6 +34,9 @@ export async function setupTestApp(): Promise<INestApplication> {
   }).compile()
 
   const app = moduleRef.createNestApplication()
+  // 23-plugin-bridge: AppModule monta el PluginBridgeGateway (ws). Sin este
+  // adapter, app.init() intentaría usar socket.io (no instalado) y fallaría.
+  app.useWebSocketAdapter(new WsAdapter(app))
   app.setGlobalPrefix('v1', { exclude: ['metrics'] })
   // Sin pipes de validación adicionales — los DTOs Zod ya validan en el
   // controller. Si necesitas pipe custom para algún test, agregar aquí.
