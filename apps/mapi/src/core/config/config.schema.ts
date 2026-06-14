@@ -69,10 +69,9 @@ export const configSchema = z.object({
   SQUARE_CLIENT_SECRET: z.string().min(1, 'SQUARE_CLIENT_SECRET requerido'),
   SQUARE_REDIRECT_URI: z.string().url('SQUARE_REDIRECT_URI debe ser URL válida'),
 
-  // 23-plugin-bridge (v0.17.0): canal WS mapi↔plugin (kiro)
-  // Mismo valor en `.env` de mapi y en `chrome.storage.local` de kiro.
-  // Solo no-vacío (el operador elige el valor; en prod usar uno fuerte).
-  BRIDGE_SECRET: z.string().min(1, 'BRIDGE_SECRET requerido'),
+  // 23-plugin-bridge: canal WS mapi↔plugin (kiro).
+  // v0.19.0: el bridge se autentica con JWT del operador (no shared secret) —
+  // BRIDGE_SECRET retirado. Solo queda el timeout de comandos.
   BRIDGE_COMMAND_TIMEOUT_MS: z.coerce.number().int().positive().default(30000),
 })
 

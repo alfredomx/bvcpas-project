@@ -5,7 +5,8 @@ import {
   type OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import type { RawData, WebSocket } from 'ws'
-import { AppConfigService } from '../../core/config/config.service'
+import { JwtService } from '../../core/auth/jwt.service'
+import { SessionsService } from '../../core/auth/sessions.service'
 import { BridgeCommandService } from './bridge-command.service'
 import type { BridgeTransport } from './bridge.types'
 
@@ -13,15 +14,17 @@ import type { BridgeTransport } from './bridge.types'
  * Gateway WebSocket del bridge (ruta `/bridge`, vía `@nestjs/platform-ws`).
  *
  * Protocolo (ver README del módulo):
- *  - plugin→mapi `{ type:'hello', secret, clientInfo }`  → valida secret; si OK registra presencia.
+ *  - plugin→mapi `{ type:'hello', token, clientInfo }`  → valida JWT + sesión; si OK registra presencia.
  *  - plugin→mapi `{ type:'result', correlationId, payload }` → enruta a BridgeCommandService.
- *  - mapi→plugin `{ type:'execute_fetch'|'check_session', correlationId, payload }` → lo manda el service.
+ *  - mapi→plugin `{ type:'execute_fetch'|'check_session'|'list_tabs', correlationId, payload? }` → lo manda el service.
  *
  * No usa `@SubscribeMessage` porque el protocolo enruta por `type` (no por el
  * `{event,data}` de platform-ws): se escucha el socket crudo en `handleConnection`.
  *
- * Auth: hasta que no llega un `hello` con el `BRIDGE_SECRET` correcto, el socket
- * NO se registra como presencia y cualquier otro mensaje cierra la conexión.
+ * Auth (v0.19.0): el `hello` trae un JWT del operador (mismo del login HTTP). El
+ * gateway lo verifica con `JwtService` + `SessionsService` (igual que el
+ * `JwtAuthGuard`, pero en el handler WS). Hasta que no llega un `hello` válido el
+ * socket NO se registra como presencia y cualquier otro mensaje lo cierra.
  */
 @WebSocketGateway({ path: '/bridge' })
 export class PluginBridgeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -31,7 +34,8 @@ export class PluginBridgeGateway implements OnGatewayConnection, OnGatewayDiscon
 
   constructor(
     private readonly commands: BridgeCommandService,
-    private readonly config: AppConfigService,
+    private readonly jwt: JwtService,
+    private readonly sessions: SessionsService,
   ) {}
 
   handleConnection(client: WebSocket): void {
@@ -46,14 +50,16 @@ export class PluginBridgeGateway implements OnGatewayConnection, OnGatewayDiscon
       if (!msg) return
 
       if (msg.type === 'hello') {
-        if (msg.secret !== this.config.bridgeSecret) {
-          this.logger.warn('hello con secret inválido — cerrando socket')
-          client.close(4001, 'invalid secret')
-          return
-        }
-        authenticated = true
-        this.commands.setConnection(transport)
-        this.logger.log('plugin conectado y autenticado')
+        void this.authenticate(msg.token).then((ok) => {
+          if (!ok) {
+            this.logger.warn('hello con JWT inválido — cerrando socket')
+            client.close(4001, 'invalid token')
+            return
+          }
+          authenticated = true
+          this.commands.setConnection(transport)
+          this.logger.log('plugin conectado y autenticado')
+        })
         return
       }
 
@@ -80,22 +86,33 @@ export class PluginBridgeGateway implements OnGatewayConnection, OnGatewayDiscon
       this.transports.delete(client)
     }
   }
+
+  /** Verifica el JWT y su sesión (igual que JwtAuthGuard). true si válido. */
+  private async authenticate(token: string): Promise<boolean> {
+    try {
+      const payload = this.jwt.verify(token)
+      await this.sessions.verify(payload.jti)
+      return true
+    } catch {
+      return false
+    }
+  }
 }
 
 type IncomingMessage =
-  | { type: 'hello'; secret: string }
+  | { type: 'hello'; token: string }
   | { type: 'result'; correlationId: string; payload: unknown }
 
-/**
- * Parsea un frame crudo del WebSocket a un mensaje conocido. Devuelve null si
- * es inválido o de un tipo no manejado (se ignora sin romper el socket).
- */
 function rawToString(raw: RawData): string {
   if (Array.isArray(raw)) return Buffer.concat(raw).toString('utf8')
   if (Buffer.isBuffer(raw)) return raw.toString('utf8')
   return Buffer.from(raw).toString('utf8')
 }
 
+/**
+ * Parsea un frame crudo del WebSocket a un mensaje conocido. Devuelve null si
+ * es inválido o de un tipo no manejado (se ignora sin romper el socket).
+ */
 function parseIncoming(raw: RawData): IncomingMessage | null {
   let obj: unknown
   try {
@@ -106,8 +123,8 @@ function parseIncoming(raw: RawData): IncomingMessage | null {
   if (!obj || typeof obj !== 'object') return null
 
   const msg = obj as Record<string, unknown>
-  if (msg.type === 'hello' && typeof msg.secret === 'string') {
-    return { type: 'hello', secret: msg.secret }
+  if (msg.type === 'hello' && typeof msg.token === 'string') {
+    return { type: 'hello', token: msg.token }
   }
   if (msg.type === 'result' && typeof msg.correlationId === 'string') {
     return { type: 'result', correlationId: msg.correlationId, payload: msg.payload }

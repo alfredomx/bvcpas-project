@@ -1,6 +1,6 @@
 # 23-plugin-bridge — WebSocket gateway hacia el plugin (kiro)
 
-**Estado del módulo**: ✅ Cerrado (v0.17.0 — verificado en vivo con kiro v0.2.0; round-trip execute_fetch real OK).
+**Estado del módulo**: ✅ v0.17.0 (bridge + execute_fetch) y v0.19.0 (auth JWT + list_tabs, Fase 1 de browser-automation) cerradas y verificadas en vivo.
 **Contraparte cliente**: [`apps/kiro/roadmap/10-bridge-client`](../../../kiro/roadmap/10-bridge-client/README.md).
 
 > Reemplaza las referencias viejas a `20-intuit/02-bridge` / `21-intuit-bridge` (planeadas,
@@ -87,3 +87,4 @@ El keepalive/reconnect vive del lado kiro (`10-bridge-client`).
 | Versión | Estado | Tema                                                                                                                                  |
 | ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | 0.17.0  | ✅     | Gateway WS + auth shared secret + presencia + BridgeCommandService (execute_fetch/check_session) — verificado en vivo con kiro v0.2.0 |
+| 0.19.0  | ✅     | Fase 1 browser-automation: auth JWT (retira BRIDGE_SECRET) + `list_tabs` (plugin stateless) — verificado en vivo con kiro v0.3.0      |

@@ -153,4 +153,23 @@ describe('BridgeCommandService', () => {
     // Avanzar el reloj más allá del timeout no debe producir efectos.
     expect(() => jest.advanceTimersByTime(TIMEOUT_MS * 2)).not.toThrow()
   })
+
+  it('CR-bridge-009: send(list_tabs) manda el comando sin payload y resuelve con la lista', async () => {
+    const svc = buildService()
+    const transport = makeTransport()
+    svc.setConnection(transport)
+
+    const promise = svc.send({ type: 'list_tabs' })
+    const sent = JSON.parse(transport.send.mock.calls[0][0]) as {
+      type: string
+      correlationId: string
+      payload?: unknown
+    }
+    expect(sent.type).toBe('list_tabs')
+    expect(sent.correlationId).toBe('corr-1')
+    expect(sent.payload).toBeUndefined()
+
+    svc.resolveResult('corr-1', { tabs: [{ tabId: 7, active: true, windowId: 1 }] })
+    await expect(promise).resolves.toEqual({ tabs: [{ tabId: 7, active: true, windowId: 1 }] })
+  })
 })

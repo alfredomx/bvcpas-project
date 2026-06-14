@@ -133,10 +133,6 @@ export class AppConfigService {
     return this.cfg.SQUARE_REDIRECT_URI
   }
 
-  get bridgeSecret(): string {
-    return this.cfg.BRIDGE_SECRET
-  }
-
   get bridgeCommandTimeoutMs(): number {
     return this.cfg.BRIDGE_COMMAND_TIMEOUT_MS
   }
