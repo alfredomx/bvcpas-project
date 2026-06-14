@@ -41,3 +41,32 @@ export class BankAccountMaskConflictError extends DomainError {
     super(`Ya existe una cuenta con mask "${mask}" dentro de ese login`)
   }
 }
+
+// ── Adapters / Design B (v0.18.0) ──────────────────────────────────────────
+
+/**
+ * El plugin no pudo ejecutar el fetch contra el banco (error de red, o el
+ * banco respondió no-2xx). HTTP 502 (el upstream —el banco vía plugin— falló).
+ */
+export class BankFetchError extends DomainError {
+  readonly code = 'BANK_FETCH_ERROR'
+  constructor(message: string) {
+    super(`Fetch al banco falló: ${message}`)
+  }
+}
+
+/** No se encontró una cuenta con esa mask en la sesión del banco. HTTP 404. */
+export class ChaseAccountNotFoundError extends DomainError {
+  readonly code = 'CHASE_ACCOUNT_NOT_FOUND'
+  constructor(mask: string) {
+    super(`No se encontró ninguna cuenta de Chase con terminación ${mask}`)
+  }
+}
+
+/** Fallo genérico del adapter bancario (respuesta inesperada). HTTP 502. */
+export class BankAdapterError extends DomainError {
+  readonly code = 'BANK_ADAPTER_ERROR'
+  constructor(message: string) {
+    super(`Adapter bancario: ${message}`)
+  }
+}

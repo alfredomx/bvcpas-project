@@ -1,7 +1,15 @@
 # 22-bank-worker — Worker de descarga bancaria (Chase, Wells Fargo, RBFCU, Broadway Bank, Frost)
 
-**Estado del módulo**: 🔬 En discusión (TDD vivo).
+**Estado del módulo**: ✅ Vault (v0.16.x) + adapter Chase Design B (v0.18.0) cerrados.
 **Apertura**: 2026-06-12.
+
+> **⚠️ PIVOTE Design B (2026-06-13) — lo de abajo sobre Playwright/CDP está OBSOLETO.**
+> Las secciones "Norte", "adapters via Playwright", `connectOverCDP` y `apps/bank-worker/` aparte
+> describen el plan VIEJO. El proyecto pivoteó a **Design B**: la lógica del banco vive en mapi y
+> **kiro ejecuta los `fetch` en la sesión viva del banco** vía el bridge WS (`23-plugin-bridge`,
+> construido en v0.17.0). NO se usa Playwright. El "worker" = módulo 22 (mapi) + plugin kiro, no un
+> app separado. Ver [`v0.18.0.md`](v0.18.0.md) (ChaseAdapter portado a Design B) — D-mapi-BW-007.
+> Las decisiones del VAULT (D-mapi-BW-001..006, las 3 tablas) **siguen vigentes**.
 
 ## Norte del módulo
 
@@ -74,42 +82,31 @@ El operador exporta su Excel como 2 CSVs (`bank-portals.csv` y `bank-credentials
 
 `Account` en el Excel es texto libre del operador describiendo qué tipos de cuentas existen dentro del login (ej. "Checking, Savings, CC"). Las cuentas reales viven en la tabla `bank_accounts` con `account_mask` + `account_type` específicos. El texto libre no se puede convertir directamente. Se ignora en el seed; las filas de `bank_accounts` se crean después manualmente por la web.
 
-## Sub-versiones planeadas
+## Progresión real (Design B)
 
-- **v0.15.0** — Scaffold del worker (`apps/bank-worker/`) + 3 tablas + CRUD admin completo + seed CSV. Sin adapters todavía.
-- **v0.16.0** — Adapter Chase migrado (+ endpoint de descarga + integración Dropbox).
-- **v0.17.0** — Adapter Wells Fargo.
-- **v0.18.0** — Adapter RBFCU (sin estados de cuenta, documentado).
-- **v0.19.0** — Adapter Broadway Bank.
-- **v0.20.0** — Adapter Frost.
-- **v0.2X.0** — MCP server con tool `bank_download` (orden depende de prioridad operativa).
+- **v0.16.x** — Vault: 3 tablas (`bank_portals`, `client_bank_accounts`, `bank_accounts`) + CRUD admin + seed CSV + multi-credencial + credenciales descifradas en lectura. (D-mapi-BW-001..006, vigentes.)
+- **v0.17.0** — `23-plugin-bridge`: bridge WS mapi↔plugin (gateway + `BridgeCommandService`). Base de Design B.
+- **v0.18.0** — **Adapter Chase** portado a Design B (los 6 métodos). El adapter (lógica del banco) vive en mapi; kiro ejecuta los `fetch` en la sesión viva. Validado en vivo contra Chase real. (D-mapi-BW-007..010, ver [`v0.18.0.md`](v0.18.0.md).)
+- **Siguientes** — más adapters (Wells Fargo, RBFCU, Broadway, Frost), mismo patrón (port a Design B). Después: MCP `bank_download`, OTP inbound, destino Dropbox. Orden según necesidad real.
 
-El orden de v0.17.0 → v0.20.0 puede reordenarse según necesidad real (cliente con más urgencia, demo, etc.).
+## Estructura física (Design B)
 
-## Estructura física propuesta en el monorepo
+NO hay `apps/bank-worker/` aparte ni Playwright/CDP. El "worker" = módulo 22 en mapi + plugin kiro:
 
 ```
-apps/bank-worker/                          ← worker nuevo (proyecto B del operador)
-├── package.json
-├── tsconfig.json
-├── eslint.config.mjs
-├── jest.config.cjs
-├── src/
-│   ├── core/
-│   │   └── IBankAdapter.ts                ← portado del proyecto original
-│   ├── adapters/
-│   │   ├── chase/                         ← se agrega en v0.16.0
-│   │   ├── wells-fargo/                   ← v0.17.0
-│   │   ├── rbfcu/                         ← v0.18.0
-│   │   ├── broadway/                      ← v0.19.0
-│   │   └── frost/                         ← v0.20.0
-│   ├── chrome/
-│   │   └── cdp.ts                         ← connectOverCDP helper
-│   └── index.ts                           ← entrypoint (HTTP/CLI según se defina)
-└── test/
+apps/mapi/src/modules/22-bank-worker/
+├── (vault) bank-portals / client-bank-accounts / bank-accounts (controllers, services, repos)
+├── adapters/
+│   ├── bank-fetch.types.ts         ← BankFetchExecutor + FetchResult (transporte agnóstico)
+│   ├── bridge-fetch-executor.ts    ← impl sobre BridgeCommandService (reemplaza page.request.fetch)
+│   ├── bank-adapter.base.ts        ← contrato base (ex-IBankAdapter)
+│   └── chase.adapter.ts            ← lógica de Chase (el moat) — v0.18.0
+└── chase.controller.ts             ← /v1/clients/:id/banking/chase/*
+
+apps/kiro/  ← plugin: ejecuta los fetch en la sesión viva del banco (21-fetch-executor + 10-bridge-client)
 ```
 
-En `apps/mapi/src/modules/22-bank-worker/` viven las tablas, repositorios, CRUD admin y el seed. El worker propiamente dicho vive en `apps/bank-worker/` y se comunica con `mapi` por HTTP cuando llegue v0.16.0+.
+El moat (endpoints, CSRF, paginación) vive en mapi; el plugin nunca ve esa lógica.
 
 ## Fuera de alcance del módulo (BACKLOG)
 
@@ -121,10 +118,11 @@ En `apps/mapi/src/modules/22-bank-worker/` viven las tablas, repositorios, CRUD 
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                | Archivo                  |
-| ------- | ------ | ------------------------------------------------------------------- | ------------------------ |
-| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)      | [v0.15.0.md](v0.15.0.md) |
-| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)             | [v0.16.0.md](v0.16.0.md) |
-| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`) | [v0.16.2.md](v0.16.2.md) |
-| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)       | [v0.16.3.md](v0.16.3.md) |
-| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas) | [v0.16.4.md](v0.16.4.md) |
+| Versión | Estado | Tema                                                                        | Archivo                  |
+| ------- | ------ | --------------------------------------------------------------------------- | ------------------------ |
+| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)              | [v0.15.0.md](v0.15.0.md) |
+| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)                     | [v0.16.0.md](v0.16.0.md) |
+| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)         | [v0.16.2.md](v0.16.2.md) |
+| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)               | [v0.16.3.md](v0.16.3.md) |
+| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)         | [v0.16.4.md](v0.16.4.md) |
+| 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo | [v0.18.0.md](v0.18.0.md) |

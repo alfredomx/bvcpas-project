@@ -15,7 +15,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Versión actual de `package.json`: `0.17.0`.**
+**Versión actual de `package.json`: `0.18.0`.**
 
 **Módulos activos:**
 
@@ -271,7 +271,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                             |
 | 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                             |
 | 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                             |
-| 22-bank-worker                  | ✅     | —       | [README.md](22-bank-worker/README.md)                  | v0.16.0 + v0.16.2 + v0.16.3 + v0.16.4 (vault credenciales)    |
+| 22-bank-worker                  | ✅     | —       | [README.md](22-bank-worker/README.md)                  | v0.16.x (vault) + v0.18.0 (adapter Chase Design B)            |
 | 23-plugin-bridge                | ✅     | —       | [README.md](23-plugin-bridge/README.md)                | v0.17.0 (gateway WS mapi↔plugin kiro + BridgeCommandService)  |
 
 ---
@@ -309,6 +309,7 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 | 0.16.3  | 22-bank-worker      | ✅     | Credenciales descifradas en respuestas de lectura (vault copiar/pegar)                 | mapi-v0.16.3 | [22-bank-worker/v0.16.3.md](22-bank-worker/v0.16.3.md)           |
 | 0.16.4  | 22-bank-worker      | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                    | mapi-v0.16.4 | [22-bank-worker/v0.16.4.md](22-bank-worker/v0.16.4.md)           |
 | 0.17.0  | 23-plugin-bridge    | ✅     | Bridge WS mapi↔plugin (kiro): gateway + auth secret + presencia + BridgeCommandService | mapi-v0.17.0 | [23-plugin-bridge/v0.17.0.md](23-plugin-bridge/v0.17.0.md)       |
+| 0.18.0  | 22-bank-worker      | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo            | mapi-v0.18.0 | [22-bank-worker/v0.18.0.md](22-bank-worker/v0.18.0.md)           |
 
 ---
 

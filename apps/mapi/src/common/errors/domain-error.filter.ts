@@ -94,6 +94,11 @@ const STATUS_BY_CODE: Record<string, number> = {
   BRIDGE_NOT_CONNECTED: 503,
   BRIDGE_COMMAND_TIMEOUT: 504,
   BRIDGE_AUTH_ERROR: 401,
+
+  // 22-bank-worker adapters (v0.18.0)
+  BANK_FETCH_ERROR: 502,
+  CHASE_ACCOUNT_NOT_FOUND: 404,
+  BANK_ADAPTER_ERROR: 502,
 }
 
 interface ErrorBody {
