@@ -173,3 +173,63 @@ describe('dispatchCommand — execute_dom (rutea por tabId al content script)', 
     expect(result).toEqual({ error: 'tab cerrada' })
   })
 })
+
+describe('dispatchCommand — open_tab (corre en el SW)', () => {
+  const URL = 'https://secure.chase.com/web/auth/#/logon/logon/chaseOnline'
+
+  it('crea la pestaña y espera el load (onUpdated complete) antes de responder', async () => {
+    const create = vi.fn(async () => ({ id: 99, status: 'loading' }))
+    const addListener = vi.fn()
+    const removeListener = vi.fn()
+    vi.stubGlobal('chrome', { tabs: { create, onUpdated: { addListener, removeListener } } })
+
+    const p = dispatchCommand({ type: 'open_tab', correlationId: 'o1', payload: { url: URL } })
+
+    // Espera a que openTab registre el listener tras el create async.
+    await vi.waitFor(() => expect(addListener).toHaveBeenCalledTimes(1))
+    const listener = addListener.mock.calls[0][0] as (id: number, info: { status?: string }) => void
+
+    // Eventos que NO deben resolver: otra pestaña, o status distinto de complete.
+    listener(7, { status: 'complete' })
+    listener(99, { status: 'loading' })
+    // El que sí resuelve:
+    listener(99, { status: 'complete' })
+
+    const result = await p
+    expect(create).toHaveBeenCalledWith({ url: URL, active: true })
+    expect(result).toEqual({ tabId: 99, url: URL })
+    expect(removeListener).toHaveBeenCalledTimes(1)
+  })
+
+  it('si la pestaña ya viene complete, no espera onUpdated', async () => {
+    const create = vi.fn(async () => ({ id: 50, status: 'complete' }))
+    const addListener = vi.fn()
+    vi.stubGlobal('chrome', {
+      tabs: { create, onUpdated: { addListener, removeListener: vi.fn() } },
+    })
+
+    const result = await dispatchCommand({
+      type: 'open_tab',
+      correlationId: 'o2',
+      payload: { url: 'https://x.com/' },
+    })
+
+    expect(result).toEqual({ tabId: 50, url: 'https://x.com/' })
+    expect(addListener).not.toHaveBeenCalled()
+  })
+
+  it('devuelve error (sin lanzar) si chrome no devuelve tabId', async () => {
+    const create = vi.fn(async () => ({ id: undefined, status: 'loading' }))
+    vi.stubGlobal('chrome', {
+      tabs: { create, onUpdated: { addListener: vi.fn(), removeListener: vi.fn() } },
+    })
+
+    const result = await dispatchCommand({
+      type: 'open_tab',
+      correlationId: 'o3',
+      payload: { url: 'https://x.com/' },
+    })
+
+    expect(result).toEqual({ error: expect.stringContaining('tabId') })
+  })
+})

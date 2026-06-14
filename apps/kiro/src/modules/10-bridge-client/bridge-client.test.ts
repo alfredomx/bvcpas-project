@@ -416,6 +416,28 @@ describe('parseIncomingCommand', () => {
     ).toBeNull()
   })
 
+  it('parsea open_tab válido', () => {
+    expect(
+      parseIncomingCommand({
+        type: 'open_tab',
+        correlationId: 'o1',
+        payload: { url: 'https://secure.chase.com/web/auth/' },
+      }),
+    ).toEqual({
+      type: 'open_tab',
+      correlationId: 'o1',
+      payload: { url: 'https://secure.chase.com/web/auth/' },
+    })
+  })
+
+  it('rechaza open_tab sin url string', () => {
+    expect(parseIncomingCommand({ type: 'open_tab', correlationId: 'o2', payload: {} })).toBeNull()
+    expect(
+      parseIncomingCommand({ type: 'open_tab', correlationId: 'o3', payload: { url: 123 } }),
+    ).toBeNull()
+    expect(parseIncomingCommand({ type: 'open_tab', correlationId: 'o4' })).toBeNull()
+  })
+
   it('rechaza tipo desconocido', () => {
     expect(parseIncomingCommand({ type: 'foo', correlationId: 'a', payload: {} })).toBeNull()
   })

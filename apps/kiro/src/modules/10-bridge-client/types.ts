@@ -12,6 +12,7 @@
 //   mapi→plugin:  { type:'execute_fetch', correlationId, payload:{ method,url,headers,body } }
 //   mapi→plugin:  { type:'check_session', correlationId, payload:{ bank } }
 //   mapi→plugin:  { type:'list_tabs', correlationId }   (sin payload; v0.19.0)
+//   mapi→plugin:  { type:'open_tab', correlationId, payload:{ url } }   (abre pestaña + espera load)
 //   plugin→mapi:  { type:'result', correlationId, payload:{ ...resultado } }
 //
 // `correlationId` (transporte) === `requestId` del executor. Mismo concepto.
@@ -67,6 +68,22 @@ export interface ListTabsCommandMessage {
   correlationId: string
 }
 
+/** Payload de un `open_tab`: la URL a abrir en una pestaña nueva. */
+export interface OpenTabPayload {
+  url: string
+}
+
+/**
+ * Comando entrante mapi→plugin: abrir una pestaña nueva en `url` (corre en el SW
+ * con `chrome.tabs.create`) y esperar a que cargue. mapi lo usa cuando no hay una
+ * pestaña del portal abierta; el SW sobrevive a la navegación y puede responder.
+ */
+export interface OpenTabCommandMessage {
+  type: 'open_tab'
+  correlationId: string
+  payload: OpenTabPayload
+}
+
 /**
  * Payload de un `execute_dom`: la pestaña objetivo (`tabId`, sacado de
  * `list_tabs`) y la receta de pasos DOM. Los selectores/valores los dicta mapi.
@@ -89,6 +106,7 @@ export type IncomingCommandMessage =
   | CheckSessionCommandMessage
   | ListTabsCommandMessage
   | ExecuteDomCommandMessage
+  | OpenTabCommandMessage
 
 /** Una pestaña abierta (lo que `list_tabs` devuelve; mapi decide cuál usar). */
 export interface TabInfo {
@@ -104,11 +122,17 @@ export interface ListTabsResult {
   tabs: TabInfo[]
 }
 
+/** Resultado de `open_tab`: la pestaña creada (ya cargada). */
+export interface OpenTabResult {
+  tabId: number
+  url: string
+}
+
 /** Respuesta plugin→mapi, correlacionada por `correlationId`. */
 export interface ResultMessage {
   type: 'result'
   correlationId: string
-  payload: BridgeCommandResult | ListTabsResult | DomResult | BridgeErrorPayload
+  payload: BridgeCommandResult | ListTabsResult | DomResult | OpenTabResult | BridgeErrorPayload
 }
 
 /** Payload de error cuando un comando falla o es desconocido. */

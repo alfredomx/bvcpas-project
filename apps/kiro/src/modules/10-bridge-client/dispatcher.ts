@@ -20,13 +20,22 @@ import type {
   BridgeErrorPayload,
   IncomingCommandMessage,
   ListTabsResult,
+  OpenTabResult,
   RoutedDomMessage,
   RoutedFetchMessage,
   TabInfo,
 } from './types'
 
 /** Resultado del dispatch: el payload que se devuelve por el `result`. */
-export type DispatchResult = BridgeCommandResult | ListTabsResult | DomResult | BridgeErrorPayload
+export type DispatchResult =
+  | BridgeCommandResult
+  | ListTabsResult
+  | DomResult
+  | OpenTabResult
+  | BridgeErrorPayload
+
+/** Tope de espera para que una pestaña recién abierta termine de cargar. */
+const OPEN_TAB_LOAD_TIMEOUT_MS = 30_000
 
 /**
  * Lista las pestañas abiertas (corre en el SW). Devuelve la info cruda; mapi
@@ -44,6 +53,52 @@ async function listTabs(): Promise<ListTabsResult> {
       windowId: t.windowId,
     }))
   return { tabs: mapped }
+}
+
+/**
+ * Espera a que una pestaña termine de cargar (`status === 'complete'`) vía
+ * `chrome.tabs.onUpdated`. Rechaza al vencer el timeout. Limpia el listener en
+ * ambos casos. Corre en el SW, que sobrevive a la navegación de la pestaña.
+ */
+function waitForTabComplete(tabId: number, timeoutMs: number): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let settled = false
+    const listener = (updatedTabId: number, info: chrome.tabs.TabChangeInfo): void => {
+      if (settled || updatedTabId !== tabId || info.status !== 'complete') return
+      settled = true
+      cleanup()
+      resolve()
+    }
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(
+        new Error(`open_tab: timeout esperando la carga de la pestaña ${tabId} (${timeoutMs}ms)`),
+      )
+    }, timeoutMs)
+    function cleanup(): void {
+      chrome.tabs.onUpdated.removeListener(listener)
+      clearTimeout(timer)
+    }
+    chrome.tabs.onUpdated.addListener(listener)
+  })
+}
+
+/**
+ * Abre una pestaña nueva en `url` (corre en el SW con `chrome.tabs.create`) y
+ * espera a que termine de cargar antes de responder. El SW vive afuera de la
+ * pestaña, así que sobrevive a la navegación y sí puede contestar el `result`.
+ * mapi la usa cuando no hay una pestaña del portal abierta; luego manda la receta
+ * de login por `execute_dom` sobre el `tabId` devuelto.
+ */
+async function openTab(url: string): Promise<OpenTabResult> {
+  const tab = await chrome.tabs.create({ url, active: true })
+  if (tab.id === undefined) throw new Error('open_tab: chrome no devolvió un tabId')
+  if (tab.status !== 'complete') {
+    await waitForTabComplete(tab.id, OPEN_TAB_LOAD_TIMEOUT_MS)
+  }
+  return { tabId: tab.id, url }
 }
 
 /**
@@ -90,6 +145,12 @@ export async function dispatchCommand(command: IncomingCommandMessage): Promise<
     if (command.type === 'list_tabs') {
       // Corre en el SW: lista cruda de pestañas, mapi decide.
       return await listTabs()
+    }
+
+    if (command.type === 'open_tab') {
+      // Corre en el SW: abre la pestaña y espera su carga (el SW sobrevive a la
+      // navegación, el content script no). mapi luego usa el tabId con execute_dom.
+      return await openTab(command.payload.url)
     }
 
     if (command.type === 'execute_dom') {
