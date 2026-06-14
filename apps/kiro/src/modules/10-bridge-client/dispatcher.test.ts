@@ -87,6 +87,27 @@ describe('dispatchCommand — execute_fetch (rutea al content script)', () => {
   })
 })
 
+describe('dispatchCommand — list_tabs (corre en el SW)', () => {
+  it('devuelve la lista cruda de pestañas (solo las que tienen id)', async () => {
+    const query = vi.fn(async () => [
+      { id: 7, url: 'https://secure.chase.com/', title: 'Chase', active: true, windowId: 1 },
+      { id: undefined, url: 'chrome://newtab', title: 'New', active: false, windowId: 1 },
+      { id: 9, url: 'https://otra.com/', title: 'Otra', active: false, windowId: 2 },
+    ])
+    vi.stubGlobal('chrome', { tabs: { query } })
+
+    const result = (await dispatchCommand({ type: 'list_tabs', correlationId: 'c6' })) as {
+      tabs: { tabId: number; url?: string }[]
+    }
+
+    expect(query).toHaveBeenCalledTimes(1)
+    expect(result.tabs).toEqual([
+      { tabId: 7, url: 'https://secure.chase.com/', title: 'Chase', active: true, windowId: 1 },
+      { tabId: 9, url: 'https://otra.com/', title: 'Otra', active: false, windowId: 2 },
+    ])
+  })
+})
+
 describe('dispatchCommand — check_session (corre en el SW)', () => {
   it('llama chrome.tabs.query y devuelve el CheckSessionResult', async () => {
     const query = vi.fn(async () => [{ url: 'https://example.com/dashboard' }])

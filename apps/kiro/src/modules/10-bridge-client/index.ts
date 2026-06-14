@@ -12,15 +12,21 @@ export { dispatchCommand } from './dispatcher'
 export type { DispatchResult } from './dispatcher'
 export {
   readBridgeConfig,
-  setBridgeSecret,
+  setBridgeToken,
   setBridgeUrl,
+  loginToMapi,
+  saveOperatorSession,
+  readOperatorSession,
+  clearOperatorSession,
+  httpBaseFromBridgeUrl,
   writeBridgeStatus,
   DEFAULT_BRIDGE_URL,
-  STORAGE_KEY_SECRET,
+  STORAGE_KEY_TOKEN,
+  STORAGE_KEY_NAME,
   STORAGE_KEY_URL,
   STORAGE_KEY_STATUS,
 } from './config'
-export type { BridgeStatus } from './config'
+export type { BridgeStatus, OperatorSession } from './config'
 export { registerContentListener, handleRoutedMessage, isRoutedFetchMessage } from './content'
 export type {
   BridgeClientConfig,

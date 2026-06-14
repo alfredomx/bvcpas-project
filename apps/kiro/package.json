@@ -1,6 +1,6 @@
 {
   "name": "kiro",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "BV CPAs - extensión Chrome (ejecutor en QBO)",
   "private": true,
   "type": "module",

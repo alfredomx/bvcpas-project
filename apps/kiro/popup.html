@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es-MX">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>kiro</title>
@@ -32,6 +32,10 @@
         padding: 0.4rem 0.8rem;
         cursor: pointer;
       }
+      #greeting {
+        font-size: 0.9rem;
+        margin: 0.25rem 0 0 0;
+      }
       #status {
         margin-top: 0.6rem;
         font-size: 0.75rem;
@@ -46,12 +50,23 @@
   </head>
   <body>
     <h1>kiro — bridge</h1>
-    <label for="url">BRIDGE_URL</label>
-    <input id="url" type="text" placeholder="ws://localhost:4000/bridge" />
-    <label for="secret">Bridge secret</label>
-    <input id="secret" type="password" placeholder="shared secret" />
-    <button id="save">Guardar</button>
-    <button id="reconnect">Reconectar</button>
+
+    <div id="login-view">
+      <label for="url">BRIDGE URL</label>
+      <input id="url" type="text" placeholder="ws://localhost:4000/bridge" />
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@bv-cpas.com" />
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="mapi password" />
+      <button id="login">Login</button>
+    </div>
+
+    <div id="app-view" hidden>
+      <p id="greeting"></p>
+      <button id="reconnect">Reconnect</button>
+      <button id="logout">Logout</button>
+    </div>
+
     <div id="status"></div>
     <script type="module" src="./src/popup/popup.ts"></script>
   </body>

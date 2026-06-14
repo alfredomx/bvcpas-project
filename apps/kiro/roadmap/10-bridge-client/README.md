@@ -1,7 +1,7 @@
 # 10-bridge-client — WebSocket client + auth con mapi
 
 **App:** kiro
-**Status:** ✅ Cerrado (v0.2.0 — verificado en vivo con mapi v0.17.0; round-trip execute_fetch real OK)
+**Status:** ✅ v0.2.0 (WS client + execute_fetch) y v0.3.0 (login JWT en popup + list_tabs) cerradas y verificadas en vivo.
 **Backend asociado:** [`apps/mapi/roadmap/23-plugin-bridge`](../../../mapi/roadmap/23-plugin-bridge/README.md)
 **Última revisión:** 2026-06-13
 
@@ -79,3 +79,4 @@ flujo real el usuario está presente (dispara desde Claude) → SW despierto. Do
 | Versión | Estado | Tema                                                                                                          |
 | ------- | ------ | ------------------------------------------------------------------------------------------------------------- |
 | 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0 |
+| 0.3.0   | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + `list_tabs` stateless — espejo de mapi v0.19.0        |

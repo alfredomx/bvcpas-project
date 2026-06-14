@@ -23,11 +23,21 @@ function buildClientInfo(): ClientInfo {
 
 /**
  * Asegura que exista un BridgeClient conectado. Idempotente: si ya hay uno,
- * solo (re)conecta. Lee la config fresca de storage cada vez (el secret/URL
+ * solo (re)conecta. Lee la config fresca de storage cada vez (el JWT/URL
  * pueden haber cambiado desde el popup).
+ *
+ * Sin JWT (operador no logueado o tras logout) NO conecta: el `hello` fallaría
+ * y mapi cerraría el socket. Espera a que el popup haga login.
  */
 async function startOrReconnectBridge(): Promise<void> {
   const config = await readBridgeConfig()
+  if (!config.token) {
+    if (client) {
+      client.disconnect()
+      client = null
+    }
+    return
+  }
   if (!client) {
     client = new BridgeClient(config, { clientInfo: buildClientInfo() })
   }
@@ -54,17 +64,26 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 })
 
-// Reconexión bajo demanda desde el popup (tras cambiar secret/URL).
+// Mensajes desde el popup.
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg && typeof msg === 'object' && (msg as { kind?: string }).kind === 'kiro:reconnect') {
-    // El secret/URL pudo cambiar → recrear el cliente con la config fresca.
+  const kind = msg && typeof msg === 'object' ? (msg as { kind?: string }).kind : undefined
+
+  if (kind === 'kiro:reconnect') {
+    // El JWT/URL pudo cambiar (login) → recrear el cliente con la config fresca.
     // IMPORTANTE: apagar el cliente anterior (cierra su socket y cancela su
     // reconnect) ANTES de nulificarlo. Si solo se hace `client = null`, el
-    // cliente viejo queda zombi: sigue reconectando con la config vieja (ej.
-    // el secret anterior) en paralelo al nuevo.
+    // cliente viejo queda zombi: sigue reconectando con la config vieja en
+    // paralelo al nuevo.
     if (client) client.disconnect()
     client = null
     void startOrReconnectBridge()
+    return
+  }
+
+  if (kind === 'kiro:logout') {
+    // Logout: cerrar la conexión y NO reconectar (ya no hay JWT en storage).
+    if (client) client.disconnect()
+    client = null
   }
 })
 

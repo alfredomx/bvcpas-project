@@ -15,8 +15,8 @@ Plan y estado de cada módulo y versión del plugin `kiro` dentro de `bvcpas-pro
 
 ## Estado actual
 
-**Módulo activo:** ninguno. `10-bridge-client/` ✅ v0.2.0 cerrado (WS client + auth + reconnect/keepalive + dispatch al executor; 44 tests; round-trip en vivo con mapi v0.17.0 OK).
-**Siguiente:** sin definir — candidato `20-qbo-scripts/m2-uncats-write` (M2) cuando se decida.
+**Módulo activo:** ninguno. `10-bridge-client/` ✅ v0.2.0 (execute_fetch) + v0.3.0 (login JWT en popup + list_tabs; 49 tests) cerradas y verificadas en vivo (mapi v0.17.0 / v0.19.0).
+**Siguiente:** Fase 2 (kiro v0.4.0) — primitivas DOM (`navigate`/`fill`/`click`/`getDom`), acoplada a mapi v0.20.0.
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -202,11 +202,11 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
 ## Índice de módulos
 
-| Carpeta                        | Status | Mx  | TDD                                                   | Versiones                            |
-| ------------------------------ | ------ | --- | ----------------------------------------------------- | ------------------------------------ |
-| 00-foundation                  | ✅     | P0  | [README.md](00-foundation/README.md)                  | [v0.1.0](00-foundation/v0.1.0.md)    |
-| 10-bridge-client               | ✅     | P2  | [README.md](10-bridge-client/README.md)               | [v0.2.0](10-bridge-client/v0.2.0.md) |
-| 20-qbo-scripts/m2-uncats-write | 📅     | M2  | [README.md](20-qbo-scripts/m2-uncats-write/README.md) | —                                    |
+| Carpeta                        | Status | Mx  | TDD                                                   | Versiones                               |
+| ------------------------------ | ------ | --- | ----------------------------------------------------- | --------------------------------------- |
+| 00-foundation                  | ✅     | P0  | [README.md](00-foundation/README.md)                  | [v0.1.0](00-foundation/v0.1.0.md)       |
+| 10-bridge-client               | ✅     | P2  | [README.md](10-bridge-client/README.md)               | v0.2.0 + v0.3.0 (login JWT + list_tabs) |
+| 20-qbo-scripts/m2-uncats-write | 📅     | M2  | [README.md](20-qbo-scripts/m2-uncats-write/README.md) | —                                       |
 
 ---
 
@@ -216,6 +216,7 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 | ------- | ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------- |
 | 0.1.0   | 00-foundation    | ✅     | Scaffold Vite + Manifest v3 (popup "Hello")                                                                                     | kiro-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)       |
 | 0.2.0   | 10-bridge-client | ✅     | WS client + auth + reconnect/keepalive + dispatch al executor (incluye 21-fetch-executor) — round-trip en vivo con mapi v0.17.0 | kiro-v0.2.0 | [10-bridge-client/v0.2.0.md](10-bridge-client/v0.2.0.md) |
+| 0.3.0   | 10-bridge-client | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + list_tabs stateless — espejo de mapi v0.19.0                            | kiro-v0.3.0 | [10-bridge-client/v0.3.0.md](10-bridge-client/v0.3.0.md) |
 
 ---
 

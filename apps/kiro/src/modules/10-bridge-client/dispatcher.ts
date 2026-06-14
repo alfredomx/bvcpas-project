@@ -15,10 +15,34 @@
 
 import { handleBridgeCommand } from '../21-fetch-executor'
 import type { BridgeCommandResult } from '../21-fetch-executor/types'
-import type { BridgeErrorPayload, IncomingCommandMessage, RoutedFetchMessage } from './types'
+import type {
+  BridgeErrorPayload,
+  IncomingCommandMessage,
+  ListTabsResult,
+  RoutedFetchMessage,
+  TabInfo,
+} from './types'
 
 /** Resultado del dispatch: el payload que se devuelve por el `result`. */
-export type DispatchResult = BridgeCommandResult | BridgeErrorPayload
+export type DispatchResult = BridgeCommandResult | ListTabsResult | BridgeErrorPayload
+
+/**
+ * Lista las pestañas abiertas (corre en el SW). Devuelve la info cruda; mapi
+ * filtra por host y decide cuál usar (el plugin no interpreta nada — D-mapi-B09).
+ */
+async function listTabs(): Promise<ListTabsResult> {
+  const tabs = await chrome.tabs.query({})
+  const mapped: TabInfo[] = tabs
+    .filter((t): t is chrome.tabs.Tab & { id: number } => t.id !== undefined)
+    .map((t) => ({
+      tabId: t.id,
+      url: t.url,
+      title: t.title,
+      active: t.active,
+      windowId: t.windowId,
+    }))
+  return { tabs: mapped }
+}
 
 /**
  * Encuentra el id de una pestaña cuyo origin coincide con el de `targetUrl`.
@@ -59,6 +83,11 @@ export async function dispatchCommand(command: IncomingCommandMessage): Promise<
         type: 'check_session',
         instruction: { bank: command.payload.bank },
       })
+    }
+
+    if (command.type === 'list_tabs') {
+      // Corre en el SW: lista cruda de pestañas, mapi decide.
+      return await listTabs()
     }
 
     // execute_fetch → rutear al content script de la pestaña same-origin.

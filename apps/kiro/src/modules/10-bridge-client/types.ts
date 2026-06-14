@@ -8,9 +8,10 @@
 // se actualiza mapi y luego kiro. (Regla del proyecto, ver BACKLOG.)
 //
 // Protocolo (RPC sobre WebSocket):
-//   plugin→mapi:  { type:'hello', secret, clientInfo }
+//   plugin→mapi:  { type:'hello', token, clientInfo }   (token = JWT del operador, v0.19.0)
 //   mapi→plugin:  { type:'execute_fetch', correlationId, payload:{ method,url,headers,body } }
 //   mapi→plugin:  { type:'check_session', correlationId, payload:{ bank } }
+//   mapi→plugin:  { type:'list_tabs', correlationId }   (sin payload; v0.19.0)
 //   plugin→mapi:  { type:'result', correlationId, payload:{ ...resultado } }
 //
 // `correlationId` (transporte) === `requestId` del executor. Mismo concepto.
@@ -25,10 +26,10 @@ export interface ClientInfo {
   userAgent?: string
 }
 
-/** Primer mensaje plugin→mapi: autenticación con shared secret. */
+/** Primer mensaje plugin→mapi: autenticación con JWT del operador (v0.19.0). */
 export interface HelloMessage {
   type: 'hello'
-  secret: string
+  token: string
   clientInfo: ClientInfo
 }
 
@@ -59,14 +60,37 @@ export interface CheckSessionCommandMessage {
   payload: CheckSessionPayload
 }
 
+/** Comando entrante mapi→plugin: listar las pestañas abiertas (corre en el SW). */
+export interface ListTabsCommandMessage {
+  type: 'list_tabs'
+  correlationId: string
+}
+
 /** Unión de comandos entrantes que el plugin sabe despachar. */
-export type IncomingCommandMessage = ExecuteFetchCommandMessage | CheckSessionCommandMessage
+export type IncomingCommandMessage =
+  | ExecuteFetchCommandMessage
+  | CheckSessionCommandMessage
+  | ListTabsCommandMessage
+
+/** Una pestaña abierta (lo que `list_tabs` devuelve; mapi decide cuál usar). */
+export interface TabInfo {
+  tabId: number
+  url?: string
+  title?: string
+  active: boolean
+  windowId: number
+}
+
+/** Resultado de `list_tabs`. */
+export interface ListTabsResult {
+  tabs: TabInfo[]
+}
 
 /** Respuesta plugin→mapi, correlacionada por `correlationId`. */
 export interface ResultMessage {
   type: 'result'
   correlationId: string
-  payload: BridgeCommandResult | BridgeErrorPayload
+  payload: BridgeCommandResult | ListTabsResult | BridgeErrorPayload
 }
 
 /** Payload de error cuando un comando falla o es desconocido. */
@@ -74,12 +98,12 @@ export interface BridgeErrorPayload {
   error: string
 }
 
-/** Config del cliente bridge: de dónde conectar y con qué secret. */
+/** Config del cliente bridge: de dónde conectar y con qué JWT. */
 export interface BridgeClientConfig {
   /** URL del WebSocket del bridge (ej. `ws://localhost:4000/bridge`). */
   bridgeUrl: string
-  /** Shared secret para el `hello` (mismo valor que `BRIDGE_SECRET` en mapi). */
-  secret: string
+  /** JWT del operador para el `hello` (obtenido del login a mapi). */
+  token: string
 }
 
 /**

@@ -110,7 +110,7 @@ export class BridgeClient {
       this.reconnectAttempts = 0
       const hello: HelloMessage = {
         type: 'hello',
-        secret: this.config.secret,
+        token: this.config.token,
         clientInfo: this.clientInfo,
       }
       ws.send(JSON.stringify(hello))
@@ -225,6 +225,10 @@ export function parseIncomingCommand(raw: unknown): IncomingCommandMessage | nul
       correlationId,
       payload: { bank: payload.bank },
     }
+  }
+
+  if (msg.type === 'list_tabs') {
+    return { type: 'list_tabs', correlationId }
   }
 
   return null

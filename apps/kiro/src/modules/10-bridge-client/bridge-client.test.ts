@@ -45,7 +45,7 @@ class FakeWebSocket implements WebSocketLike {
 
 const CONFIG: BridgeClientConfig = {
   bridgeUrl: 'ws://localhost:4000/bridge',
-  secret: 's3cr3t-test',
+  token: 'jwt-test',
 }
 const CLIENT_INFO: ClientInfo = { version: '0.2.0', userAgent: 'test' }
 
@@ -82,7 +82,7 @@ afterEach(() => {
 })
 
 describe('BridgeClient — conexión y hello', () => {
-  it('al abrir manda hello con el secret y clientInfo', () => {
+  it('al abrir manda hello con el token (JWT) y clientInfo', () => {
     const { client } = makeClient()
     client.connect()
 
@@ -94,7 +94,7 @@ describe('BridgeClient — conexión y hello', () => {
     const hello = JSON.parse(ws.sent[0])
     expect(hello).toEqual({
       type: 'hello',
-      secret: 's3cr3t-test',
+      token: 'jwt-test',
       clientInfo: { version: '0.2.0', userAgent: 'test' },
     })
   })
