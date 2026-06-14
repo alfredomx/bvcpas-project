@@ -1,6 +1,6 @@
 # 23-plugin-bridge — WebSocket gateway hacia el plugin (kiro)
 
-**Estado del módulo**: ✅ v0.17.0 (bridge + execute_fetch) y v0.19.0 (auth JWT + list_tabs, Fase 1 de browser-automation) cerradas y verificadas en vivo.
+**Estado del módulo**: ✅ v0.17.0 (bridge + execute_fetch), v0.19.0 (auth JWT + list_tabs, Fase 1) y v0.20.0 (Fase 2: comando `execute_dom` + endpoints admin `POST /v1/bridge/tabs` y `/v1/bridge/dom`) cerradas.
 **Contraparte cliente**: [`apps/kiro/roadmap/10-bridge-client`](../../../kiro/roadmap/10-bridge-client/README.md).
 
 > Reemplaza las referencias viejas a `20-intuit/02-bridge` / `21-intuit-bridge` (planeadas,
@@ -84,7 +84,8 @@ El keepalive/reconnect vive del lado kiro (`10-bridge-client`).
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                                                                                  |
-| ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.17.0  | ✅     | Gateway WS + auth shared secret + presencia + BridgeCommandService (execute_fetch/check_session) — verificado en vivo con kiro v0.2.0 |
-| 0.19.0  | ✅     | Fase 1 browser-automation: auth JWT (retira BRIDGE_SECRET) + `list_tabs` (plugin stateless) — verificado en vivo con kiro v0.3.0      |
+| Versión | Estado | Tema                                                                                                                                            |
+| ------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.17.0  | ✅     | Gateway WS + auth shared secret + presencia + BridgeCommandService (execute_fetch/check_session) — verificado en vivo con kiro v0.2.0           |
+| 0.19.0  | ✅     | Fase 1 browser-automation: auth JWT (retira BRIDGE_SECRET) + `list_tabs` (plugin stateless) — verificado en vivo con kiro v0.3.0                |
+| 0.20.0  | ✅     | Fase 2: comando `execute_dom` (manda recetas DOM como DATA) + endpoints admin `POST /v1/bridge/tabs` y `/v1/bridge/dom` — espejo de kiro v0.4.0 |

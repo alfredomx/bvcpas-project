@@ -15,7 +15,7 @@ Plan y estado de cada módulo y versión de `mapi` dentro de `bvcpas-project`. E
 
 ## Estado actual
 
-**Versión actual de `package.json`: `0.19.0`.**
+**Versión actual de `package.json`: `0.20.0`.**
 
 **Módulos activos:**
 
@@ -251,66 +251,67 @@ Cuando todos los TODOs estén `[x]` y todo esté en main:
 
 ## Índice de módulos
 
-| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                     |
-| ------------------------------- | ------ | ------- | ------------------------------------------------------ | ------------------------------------------------------------- |
-| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                             |
-| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                              |
-| 11-clients                      | ✅     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                               |
-| 12-customer-support             | ✅     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0 + v0.13.1 + v0.13.2                                    |
-| 13-views                        | ✅     | M1+     | [README.md](13-views/README.md)                        | v0.6.1 + v0.12.1 + v0.13.0 + v0.14.0                          |
-| 14-call-logs                    | ✅     | —       | [README.md](14-call-logs/README.md)                    | v0.13.0                                                       |
-| 15-permissions                  | ✅     | base    | [README.md](15-permissions/README.md)                  | v0.15.0 — RBAC dinámico + overrides por usuario               |
-| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                                      |
-| 21-connections                  | ✅     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 → v0.12.0 (Microsoft/Google/Dropbox + Clover + Square) |
-| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                             |
-| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                             |
-| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                             |
-| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                             |
-| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                             |
-| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                             |
-| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                             |
-| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                             |
-| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                             |
-| 22-bank-worker                  | ✅     | —       | [README.md](22-bank-worker/README.md)                  | v0.16.x (vault) + v0.18.0 (adapter Chase Design B)            |
-| 23-plugin-bridge                | ✅     | —       | [README.md](23-plugin-bridge/README.md)                | v0.17.0 (gateway WS) + v0.19.0 (auth JWT + list_tabs)         |
+| Carpeta                         | Status | Mx      | TDD                                                    | Versiones                                                                         |
+| ------------------------------- | ------ | ------- | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| 00-foundation                   | ✅     | P0      | [README.md](00-foundation/README.md)                   | [v0.1.0](00-foundation/v0.1.0.md)                                                 |
+| 10-core-auth                    | ✅     | base    | [README.md](10-core-auth/README.md)                    | [v0.2.0](10-core-auth/v0.2.0.md)                                                  |
+| 11-clients                      | ✅     | base+M1 | [README.md](11-clients/README.md)                      | v0.4.0 + v0.5.0                                                                   |
+| 12-customer-support             | ✅     | M1      | [README.md](12-customer-support/README.md)             | v0.6.0 + v0.13.1 + v0.13.2                                                        |
+| 13-views                        | ✅     | M1+     | [README.md](13-views/README.md)                        | v0.6.1 + v0.12.1 + v0.13.0 + v0.14.0                                              |
+| 14-call-logs                    | ✅     | —       | [README.md](14-call-logs/README.md)                    | v0.13.0                                                                           |
+| 15-permissions                  | ✅     | base    | [README.md](15-permissions/README.md)                  | v0.15.0 — RBAC dinámico + overrides por usuario                                   |
+| 20-intuit-oauth                 | ✅     | P1      | [README.md](20-intuit-oauth/README.md)                 | v0.3.0 + v0.3.1 + v0.3.2                                                          |
+| 21-connections                  | ✅     | M3 prep | [README.md](21-connections/README.md)                  | v0.7.0 → v0.12.0 (Microsoft/Google/Dropbox + Clover + Square)                     |
+| 21-intuit-bridge                | 📅     | P2      | (futuro)                                               | —                                                                                 |
+| 22-connectors                   | 📅     | —       | (futuro: qbo-dev + qbo-internal)                       | —                                                                                 |
+| 50-features/m1-admin            | 📅     | M1      | [README.md](50-features/m1-admin/README.md)            | —                                                                                 |
+| 50-features/m2-uncats           | 📅     | M2      | [README.md](50-features/m2-uncats/README.md)           | —                                                                                 |
+| 50-features/m3-customer-support | 📅     | M3      | [README.md](50-features/m3-customer-support/README.md) | —                                                                                 |
+| 50-features/m4-stmts-recon      | 📅     | M4      | [README.md](50-features/m4-stmts-recon/README.md)      | —                                                                                 |
+| 50-features/m5-receipts         | 📅     | M5      | [README.md](50-features/m5-receipts/README.md)         | —                                                                                 |
+| 50-features/m6-form-1099        | 📅     | M6      | [README.md](50-features/m6-form-1099/README.md)        | —                                                                                 |
+| 50-features/m7-w9               | 📅     | M7      | [README.md](50-features/m7-w9/README.md)               | —                                                                                 |
+| 22-bank-worker                  | ✅     | —       | [README.md](22-bank-worker/README.md)                  | v0.16.x (vault) + v0.18.0 (adapter Chase Design B)                                |
+| 23-plugin-bridge                | ✅     | —       | [README.md](23-plugin-bridge/README.md)                | v0.17.0 (gateway) + v0.19.0 (JWT + list_tabs) + v0.20.0 (execute_dom + endpoints) |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo              | Estado | Tema                                                                                   | Tag          | Archivo                                                          |
-| ------- | ------------------- | ------ | -------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------- |
-| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify                  | mapi-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)               |
-| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                                  | mapi-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)                 |
-| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas          | mapi-v0.3.0  | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)           |
-| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)                   | mapi-v0.3.1  | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)           |
-| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B                 | mapi-v0.3.2  | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)           |
-| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests                      | mapi-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                     |
-| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=              | mapi-v0.5.0  | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                     |
-| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links               | mapi-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md)   |
-| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                        | mapi-v0.6.1  | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)               |
-| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                         | mapi-v0.6.2  | (carpeta y archivo borrados en v0.7.0)                           |
-| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)                   | mapi-v0.7.0  | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)             |
-| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access         | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)             |
-| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                                     | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)             |
-| 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)                 | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)           |
-| 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar                   | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)           |
-| 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location                      | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)           |
-| 0.12.1  | 13-views            | ✅     | Dashboard customer-support: public_link extendido + fix `responded_count`              | —            | [13-views/v0.12.1.md](13-views/v0.12.1.md)                       |
-| 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                                 | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
-| 0.13.0  | 13-views            | ✅     | Silent streak operativo (por mes activo) + `last_response_at` ⚠️ colisión nº           | —            | [13-views/v0.13.0.md](13-views/v0.13.0.md)                       |
-| 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total`         | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
-| 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                             | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
-| 0.14.0  | 13-views            | ✅     | Vista de integraciones por cliente + pause/resume                                      | mapi-v0.14.0 | [13-views/v0.14.0.md](13-views/v0.14.0.md)                       |
-| 0.15.0  | 15-permissions      | ✅     | RBAC backend completo + migración de roles fijos a permisos dinámicos                  | mapi-v0.15.0 | [15-permissions/v0.15.0.md](15-permissions/v0.15.0.md)           |
-| 0.16.0  | 22-bank-worker      | ✅     | bank-worker módulo 22: portales + credenciales/logins + cuentas + CRUD                 | mapi-v0.16.0 | [22-bank-worker/v0.16.0.md](22-bank-worker/v0.16.0.md)           |
-| 0.16.1  | 22-bank-worker      | ✅     | Endpoints globales de bank-credentials + nulos en credenciales (sin archivo)           | mapi-v0.16.1 | —                                                                |
-| 0.16.2  | 22-bank-worker      | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)                    | mapi-v0.16.2 | [22-bank-worker/v0.16.2.md](22-bank-worker/v0.16.2.md)           |
-| 0.16.3  | 22-bank-worker      | ✅     | Credenciales descifradas en respuestas de lectura (vault copiar/pegar)                 | mapi-v0.16.3 | [22-bank-worker/v0.16.3.md](22-bank-worker/v0.16.3.md)           |
-| 0.16.4  | 22-bank-worker      | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                    | mapi-v0.16.4 | [22-bank-worker/v0.16.4.md](22-bank-worker/v0.16.4.md)           |
-| 0.17.0  | 23-plugin-bridge    | ✅     | Bridge WS mapi↔plugin (kiro): gateway + auth secret + presencia + BridgeCommandService | mapi-v0.17.0 | [23-plugin-bridge/v0.17.0.md](23-plugin-bridge/v0.17.0.md)       |
-| 0.18.0  | 22-bank-worker      | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo            | mapi-v0.18.0 | [22-bank-worker/v0.18.0.md](22-bank-worker/v0.18.0.md)           |
-| 0.19.0  | 23-plugin-bridge    | ✅     | Browser-automation Fase 1: auth JWT (retira BRIDGE_SECRET) + list_tabs                 | mapi-v0.19.0 | [23-plugin-bridge/v0.19.0.md](23-plugin-bridge/v0.19.0.md)       |
+| Versión | Módulo              | Estado | Tema                                                                                                                             | Tag          | Archivo                                                          |
+| ------- | ------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------- |
+| 0.1.0   | 00-foundation       | ✅     | Bootstrap NestJS + core + DB/Health + Metrics/Scalar + deploy Coolify                                                            | mapi-v0.1.0  | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)               |
+| 0.2.0   | 10-core-auth        | ✅     | Auth (users + JWT + sesiones revocables + admin CRUD)                                                                            | mapi-v0.2.0  | [10-core-auth/v0.2.0.md](10-core-auth/v0.2.0.md)                 |
+| 0.3.0   | 20-intuit-oauth     | ✅     | Schema clients + intuit_tokens + 6 endpoints OAuth + proxy V3 + cron métricas                                                    | mapi-v0.3.0  | [20-intuit-oauth/v0.3.0.md](20-intuit-oauth/v0.3.0.md)           |
+| 0.3.1   | 20-intuit-oauth     | ✅     | Migración 77 clientes desde mapi v0.x prod (pg_dump+restore directo)                                                             | mapi-v0.3.1  | [20-intuit-oauth/v0.3.1.md](20-intuit-oauth/v0.3.1.md)           |
+| 0.3.2   | 20-intuit-oauth     | ✅     | Script TS reproducible de migración v0.x (drizzle puro) + tests Tipo B                                                           | mapi-v0.3.2  | [20-intuit-oauth/v0.3.2.md](20-intuit-oauth/v0.3.2.md)           |
+| 0.4.0   | 11-clients          | ✅     | CRUD admin de clientes — list/getById/update/changeStatus + tests                                                                | mapi-v0.4.0  | [11-clients/v0.4.0.md](11-clients/v0.4.0.md)                     |
+| 0.5.0   | 11-clients          | ✅     | Tier de clientes (silver/gold/platinum) + filtro en GET /v1/clients?tier=                                                        | mapi-v0.5.0  | [11-clients/v0.5.0.md](11-clients/v0.5.0.md)                     |
+| 0.6.0   | 12-customer-support | ✅     | Customer Support: snapshot uncats + responses + followups + public links                                                         | mapi-v0.6.0  | [12-customer-support/v0.6.0.md](12-customer-support/v0.6.0.md)   |
+| 0.6.1   | 13-dashboards       | ✅     | Dashboard customer-support — lista maestra + detalle de cliente                                                                  | mapi-v0.6.1  | [13-dashboards/v0.6.1.md](13-dashboards/v0.6.1.md)               |
+| 0.6.2   | 21-microsoft-oauth  | ⛔     | Microsoft OAuth (Outlook por usuario) — reemplazado por v0.7.0                                                                   | mapi-v0.6.2  | (carpeta y archivo borrados en v0.7.0)                           |
+| 0.7.0   | 21-connections      | ✅     | Refactor a módulo Conexiones genérico (multi-cuenta, multi-provider)                                                             | mapi-v0.7.0  | [21-connections/v0.7.0.md](21-connections/v0.7.0.md)             |
+| 0.8.0   | 21-connections      | ✅     | Refactor URLs Forma C + Intuit a Connections + scope_type + user_client_access                                                   | mapi-v0.8.0  | [21-connections/v0.8.0.md](21-connections/v0.8.0.md)             |
+| 0.9.0   | 21-connections      | ✅     | Dropbox + Google Drive (OAuth + listing on-demand)                                                                               | mapi-v0.9.0  | [21-connections/v0.9.0.md](21-connections/v0.9.0.md)             |
+| 0.10.0  | 21-connections      | ✅     | Sharing de conexiones (`connection_access` + 4 endpoints + accessRole)                                                           | mapi-v0.10.0 | [21-connections/v0.10.0.md](21-connections/v0.10.0.md)           |
+| 0.11.0  | 21-connections      | ✅     | auth_type=api_key + Clover via api_token + grupo Merchants en Scalar                                                             | mapi-v0.11.0 | [21-connections/v0.11.0.md](21-connections/v0.11.0.md)           |
+| 0.12.0  | 21-connections      | ✅     | Square OAuth provider + endpoint reporte placeholder por location                                                                | mapi-v0.12.0 | [21-connections/v0.12.0.md](21-connections/v0.12.0.md)           |
+| 0.12.1  | 13-views            | ✅     | Dashboard customer-support: public_link extendido + fix `responded_count`                                                        | —            | [13-views/v0.12.1.md](13-views/v0.12.1.md)                       |
+| 0.13.0  | 14-call-logs        | ✅     | Bitácora de llamadas a clientes (CRUD con hard delete)                                                                           | mapi-v0.13.0 | [14-call-logs/v0.13.0.md](14-call-logs/v0.13.0.md)               |
+| 0.13.0  | 13-views            | ✅     | Silent streak operativo (por mes activo) + `last_response_at` ⚠️ colisión nº                                                     | —            | [13-views/v0.13.0.md](13-views/v0.13.0.md)                       |
+| 0.13.1  | 12-customer-support | ✅     | Shape público alineado al admin: `qbo_txn_type`, `response{}` anidado, `total`                                                   | mapi-v0.13.1 | [12-customer-support/v0.13.1.md](12-customer-support/v0.13.1.md) |
+| 0.13.2  | 12-customer-support | ✅     | DELETE público para borrar nota (soft-delete, idempotente)                                                                       | mapi-v0.13.2 | [12-customer-support/v0.13.2.md](12-customer-support/v0.13.2.md) |
+| 0.14.0  | 13-views            | ✅     | Vista de integraciones por cliente + pause/resume                                                                                | mapi-v0.14.0 | [13-views/v0.14.0.md](13-views/v0.14.0.md)                       |
+| 0.15.0  | 15-permissions      | ✅     | RBAC backend completo + migración de roles fijos a permisos dinámicos                                                            | mapi-v0.15.0 | [15-permissions/v0.15.0.md](15-permissions/v0.15.0.md)           |
+| 0.16.0  | 22-bank-worker      | ✅     | bank-worker módulo 22: portales + credenciales/logins + cuentas + CRUD                                                           | mapi-v0.16.0 | [22-bank-worker/v0.16.0.md](22-bank-worker/v0.16.0.md)           |
+| 0.16.1  | 22-bank-worker      | ✅     | Endpoints globales de bank-credentials + nulos en credenciales (sin archivo)                                                     | mapi-v0.16.1 | —                                                                |
+| 0.16.2  | 22-bank-worker      | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)                                                              | mapi-v0.16.2 | [22-bank-worker/v0.16.2.md](22-bank-worker/v0.16.2.md)           |
+| 0.16.3  | 22-bank-worker      | ✅     | Credenciales descifradas en respuestas de lectura (vault copiar/pegar)                                                           | mapi-v0.16.3 | [22-bank-worker/v0.16.3.md](22-bank-worker/v0.16.3.md)           |
+| 0.16.4  | 22-bank-worker      | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                                                              | mapi-v0.16.4 | [22-bank-worker/v0.16.4.md](22-bank-worker/v0.16.4.md)           |
+| 0.17.0  | 23-plugin-bridge    | ✅     | Bridge WS mapi↔plugin (kiro): gateway + auth secret + presencia + BridgeCommandService                                           | mapi-v0.17.0 | [23-plugin-bridge/v0.17.0.md](23-plugin-bridge/v0.17.0.md)       |
+| 0.18.0  | 22-bank-worker      | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo                                                      | mapi-v0.18.0 | [22-bank-worker/v0.18.0.md](22-bank-worker/v0.18.0.md)           |
+| 0.19.0  | 23-plugin-bridge    | ✅     | Browser-automation Fase 1: auth JWT (retira BRIDGE_SECRET) + list_tabs                                                           | mapi-v0.19.0 | [23-plugin-bridge/v0.19.0.md](23-plugin-bridge/v0.19.0.md)       |
+| 0.20.0  | 23-plugin-bridge    | ✅     | Browser-automation Fase 2: comando `execute_dom` + endpoints `POST /v1/bridge/tabs` y `/v1/bridge/dom` — verificado en vivo 66ms | mapi-v0.20.0 | [23-plugin-bridge/v0.20.0.md](23-plugin-bridge/v0.20.0.md)       |
 
 ---
 

@@ -131,6 +131,10 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
   // Providers (acciones admin/uso de la conexión, distinto del flow OAuth).
   { name: 'Intuit API', description: 'Admin: proxy V3 + listado de tokens (sin OAuth)' },
   { name: 'Connections', description: 'Mis conexiones a servicios externos (cross-provider)' },
+  {
+    name: 'Bridge',
+    description: 'Plugin bridge: listar pestañas y ejecutar recetas DOM en la sesión del operador',
+  },
 
   // Utils
   { name: 'Public', description: 'Endpoints sin auth (acceso por token)' },
@@ -172,7 +176,7 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
     tags: ['OAuth - Intuit', 'OAuth - Microsoft', 'OAuth - Dropbox', 'OAuth - Google'],
   },
   { name: 'Merchants', tags: ['Merchants - Clover', 'Merchants - Square'] },
-  { name: 'Providers', tags: ['Intuit API', 'Connections'] },
+  { name: 'Providers', tags: ['Intuit API', 'Connections', 'Bridge'] },
   { name: 'Utils', tags: ['Public', 'Health'] },
 ]
 

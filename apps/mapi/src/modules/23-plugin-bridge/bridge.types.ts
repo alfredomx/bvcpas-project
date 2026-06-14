@@ -24,6 +24,39 @@ export interface CheckSessionPayload {
   bank: string
 }
 
+/**
+ * Un paso DOM genérico (espejo del intérprete de kiro `22-dom-executor`). El
+ * `selector`/`value` los arma mapi — el plugin solo ejecuta. NO contiene lógica
+ * de banco: la receta concreta (qué selectores) la decide quien llama.
+ */
+export type DomStep =
+  | { op: 'fill'; selector: string; value: string }
+  | { op: 'click'; selector: string }
+  | { op: 'waitFor'; selector: string; timeoutMs?: number }
+  | { op: 'getText'; selector: string }
+
+/** Payload de un `execute_dom`: pestaña objetivo (de `list_tabs`) + receta. */
+export interface ExecuteDomPayload {
+  tabId: number
+  steps: DomStep[]
+}
+
+/** Resultado de un paso (lo devuelve kiro; `value` solo para `getText`). */
+export interface DomStepResult {
+  op: DomStep['op']
+  ok: boolean
+  value?: string
+}
+
+/** Resultado de ejecutar una receta DOM (respuesta del plugin). */
+export interface DomResult {
+  requestId: string
+  ok: boolean
+  results: DomStepResult[]
+  failedStep?: number
+  error?: string
+}
+
 /** Una pestaña abierta de Chrome (lo que devuelve `list_tabs`). */
 export interface TabInfo {
   tabId: number
@@ -46,12 +79,13 @@ export type BridgeCommand =
   | { type: 'execute_fetch'; payload: ExecuteFetchPayload }
   | { type: 'check_session'; payload: CheckSessionPayload }
   | { type: 'list_tabs'; payload?: undefined }
+  | { type: 'execute_dom'; payload: ExecuteDomPayload }
 
 /** Mensaje saliente (mapi→plugin) ya correlacionado. */
 export interface OutgoingCommandMessage {
   type: BridgeCommand['type']
   correlationId: string
-  payload?: ExecuteFetchPayload | CheckSessionPayload
+  payload?: ExecuteFetchPayload | CheckSessionPayload | ExecuteDomPayload
 }
 
 /** `hello` entrante del plugin (v0.19.0: JWT del operador, ya no shared secret). */
