@@ -27,7 +27,12 @@ export {
   STORAGE_KEY_STATUS,
 } from './config'
 export type { BridgeStatus, OperatorSession } from './config'
-export { registerContentListener, handleRoutedMessage, isRoutedFetchMessage } from './content'
+export {
+  registerContentListener,
+  handleRoutedMessage,
+  isRoutedFetchMessage,
+  isRoutedDomMessage,
+} from './content'
 export type {
   BridgeClientConfig,
   ClientInfo,
@@ -36,5 +41,7 @@ export type {
   IncomingCommandMessage,
   ExecuteFetchPayload,
   CheckSessionPayload,
+  ExecuteDomPayload,
   RoutedFetchMessage,
+  RoutedDomMessage,
 } from './types'

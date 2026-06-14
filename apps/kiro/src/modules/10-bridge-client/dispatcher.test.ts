@@ -123,3 +123,53 @@ describe('dispatchCommand — check_session (corre en el SW)', () => {
     expect(result).toEqual({ bank: 'example.com', authenticated: true, tabCount: 1 })
   })
 })
+
+describe('dispatchCommand — execute_dom (rutea por tabId al content script)', () => {
+  it('rutea la receta a la pestaña indicada y devuelve su DomResult', async () => {
+    const domResult = { requestId: 'd1', ok: true, results: [{ op: 'fill', ok: true }] }
+    const sendMessage = vi.fn(async () => domResult)
+    vi.stubGlobal('chrome', { tabs: { sendMessage } })
+
+    const result = await dispatchCommand({
+      type: 'execute_dom',
+      correlationId: 'd1',
+      payload: { tabId: 42, steps: [{ op: 'fill', selector: '#u', value: 'x' }] },
+    })
+
+    expect(sendMessage).toHaveBeenCalledTimes(1)
+    expect(sendMessage).toHaveBeenCalledWith(42, {
+      kind: 'kiro:execute_dom',
+      correlationId: 'd1',
+      payload: { tabId: 42, steps: [{ op: 'fill', selector: '#u', value: 'x' }] },
+    })
+    expect(result).toEqual(domResult)
+  })
+
+  it('devuelve error (sin lanzar) si el content script no responde', async () => {
+    const sendMessage = vi.fn(async () => undefined)
+    vi.stubGlobal('chrome', { tabs: { sendMessage } })
+
+    const result = await dispatchCommand({
+      type: 'execute_dom',
+      correlationId: 'd2',
+      payload: { tabId: 9, steps: [] },
+    })
+
+    expect(result).toEqual({ error: expect.stringContaining('no respondió') })
+  })
+
+  it('captura si sendMessage lanza y devuelve { error }', async () => {
+    const sendMessage = vi.fn(async () => {
+      throw new Error('tab cerrada')
+    })
+    vi.stubGlobal('chrome', { tabs: { sendMessage } })
+
+    const result = await dispatchCommand({
+      type: 'execute_dom',
+      correlationId: 'd3',
+      payload: { tabId: 9, steps: [{ op: 'click', selector: '#b' }] },
+    })
+
+    expect(result).toEqual({ error: 'tab cerrada' })
+  })
+})

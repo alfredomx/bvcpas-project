@@ -15,16 +15,18 @@
 
 import { handleBridgeCommand } from '../21-fetch-executor'
 import type { BridgeCommandResult } from '../21-fetch-executor/types'
+import type { DomResult } from '../22-dom-executor/types'
 import type {
   BridgeErrorPayload,
   IncomingCommandMessage,
   ListTabsResult,
+  RoutedDomMessage,
   RoutedFetchMessage,
   TabInfo,
 } from './types'
 
 /** Resultado del dispatch: el payload que se devuelve por el `result`. */
-export type DispatchResult = BridgeCommandResult | ListTabsResult | BridgeErrorPayload
+export type DispatchResult = BridgeCommandResult | ListTabsResult | DomResult | BridgeErrorPayload
 
 /**
  * Lista las pestañas abiertas (corre en el SW). Devuelve la info cruda; mapi
@@ -88,6 +90,25 @@ export async function dispatchCommand(command: IncomingCommandMessage): Promise<
     if (command.type === 'list_tabs') {
       // Corre en el SW: lista cruda de pestañas, mapi decide.
       return await listTabs()
+    }
+
+    if (command.type === 'execute_dom') {
+      // Rutea al content script de la pestaña objetivo (mapi pasa el tabId,
+      // sacado de list_tabs). El content corre la receta y devuelve DomResult.
+      const routedDom: RoutedDomMessage = {
+        kind: 'kiro:execute_dom',
+        correlationId: command.correlationId,
+        payload: command.payload,
+      }
+      const domResponse = (await chrome.tabs.sendMessage(command.payload.tabId, routedDom)) as
+        | DomResult
+        | undefined
+      if (!domResponse) {
+        return {
+          error: `el content script no respondió (pestaña ${command.payload.tabId} sin content script?)`,
+        }
+      }
+      return domResponse
     }
 
     // execute_fetch → rutear al content script de la pestaña same-origin.

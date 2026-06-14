@@ -10,7 +10,8 @@
 // a mapi correlacionado por `correlationId`.
 
 import { executeFetch } from '../21-fetch-executor'
-import type { RoutedFetchMessage } from './types'
+import { executeDom } from '../22-dom-executor'
+import type { RoutedDomMessage, RoutedFetchMessage } from './types'
 
 /** Type guard del mensaje ruteado por el SW. */
 export function isRoutedFetchMessage(msg: unknown): msg is RoutedFetchMessage {
@@ -18,6 +19,18 @@ export function isRoutedFetchMessage(msg: unknown): msg is RoutedFetchMessage {
   const m = msg as Record<string, unknown>
   return (
     m.kind === 'kiro:execute_fetch' &&
+    typeof m.correlationId === 'string' &&
+    !!m.payload &&
+    typeof m.payload === 'object'
+  )
+}
+
+/** Type guard del mensaje ruteado de una receta DOM. */
+export function isRoutedDomMessage(msg: unknown): msg is RoutedDomMessage {
+  if (!msg || typeof msg !== 'object') return false
+  const m = msg as Record<string, unknown>
+  return (
+    m.kind === 'kiro:execute_dom' &&
     typeof m.correlationId === 'string' &&
     !!m.payload &&
     typeof m.payload === 'object'
@@ -35,17 +48,26 @@ export function handleRoutedMessage(
   _sender: unknown,
   sendResponse: (response: unknown) => void,
 ): boolean {
-  if (!isRoutedFetchMessage(msg)) return false
+  if (isRoutedFetchMessage(msg)) {
+    void executeFetch({
+      requestId: msg.correlationId,
+      method: msg.payload.method as never,
+      url: msg.payload.url,
+      headers: msg.payload.headers,
+      body: msg.payload.body,
+    }).then(sendResponse)
+    return true // respuesta asíncrona
+  }
 
-  void executeFetch({
-    requestId: msg.correlationId,
-    method: msg.payload.method as never,
-    url: msg.payload.url,
-    headers: msg.payload.headers,
-    body: msg.payload.body,
-  }).then(sendResponse)
+  if (isRoutedDomMessage(msg)) {
+    void executeDom({
+      requestId: msg.correlationId,
+      steps: msg.payload.steps,
+    }).then(sendResponse)
+    return true // respuesta asíncrona
+  }
 
-  return true // respuesta asíncrona
+  return false
 }
 
 /** Registra el listener en el content script. Llamado al cargar (no en tests). */

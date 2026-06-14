@@ -15,8 +15,8 @@ Plan y estado de cada módulo y versión del plugin `kiro` dentro de `bvcpas-pro
 
 ## Estado actual
 
-**Módulo activo:** ninguno. `10-bridge-client/` ✅ v0.2.0 (execute_fetch) + v0.3.0 (login JWT en popup + list_tabs; 49 tests) cerradas y verificadas en vivo (mapi v0.17.0 / v0.19.0).
-**Siguiente:** Fase 2 (kiro v0.4.0) — primitivas DOM (`navigate`/`fill`/`click`/`getDom`), acoplada a mapi v0.20.0.
+**Módulo activo:** ninguno. `10-bridge-client/` ✅ v0.2.0 (execute_fetch) + v0.3.0 (login JWT + list_tabs) + v0.3.1 (fix race keepalive/result 504) — verificadas en vivo (mapi v0.17.0–v0.19.0). `22-dom-executor/` ✅ v0.4.0 (ops DOM genéricas `fill`/`click`/`waitFor`/`getText`; unit verde, live pendiente de mapi v0.20.0).
+**Siguiente:** mapi v0.20.0 — armar y mandar la receta de login por el bridge (cierra el end-to-end de Fase 2; base de Fase 4 login Chase).
 
 > **Producto, filosofía y plan Mx:** ver [`docs/README.md`](../../../docs/README.md) (cross-app).
 
@@ -33,6 +33,9 @@ apps/kiro/roadmap/
 │   └── v0.1.0.md
 ├── 10-bridge-client/               ← P2 — WebSocket client + auth con mapi
 │   └── README.md
+├── 22-dom-executor/                ← Fase 2 — intérprete genérico de ops DOM ✅ v0.4.0
+│   ├── README.md
+│   └── v0.4.0.md
 ├── 20-qbo-scripts/                 ← content scripts QBO (Mx que requieren plugin)
 │   ├── README.md                   ← TDD del bloque
 │   └── m2-uncats-write/            ← M2 — escribe notas/memo en QBO
@@ -202,21 +205,24 @@ Numeradas globales **por app**: `D-kiro-001`, `D-kiro-002`, etc.
 
 ## Índice de módulos
 
-| Carpeta                        | Status | Mx  | TDD                                                   | Versiones                               |
-| ------------------------------ | ------ | --- | ----------------------------------------------------- | --------------------------------------- |
-| 00-foundation                  | ✅     | P0  | [README.md](00-foundation/README.md)                  | [v0.1.0](00-foundation/v0.1.0.md)       |
-| 10-bridge-client               | ✅     | P2  | [README.md](10-bridge-client/README.md)               | v0.2.0 + v0.3.0 (login JWT + list_tabs) |
-| 20-qbo-scripts/m2-uncats-write | 📅     | M2  | [README.md](20-qbo-scripts/m2-uncats-write/README.md) | —                                       |
+| Carpeta                        | Status | Mx  | TDD                                                   | Versiones                           |
+| ------------------------------ | ------ | --- | ----------------------------------------------------- | ----------------------------------- |
+| 00-foundation                  | ✅     | P0  | [README.md](00-foundation/README.md)                  | [v0.1.0](00-foundation/v0.1.0.md)   |
+| 10-bridge-client               | ✅     | P2  | [README.md](10-bridge-client/README.md)               | v0.2.0 + v0.3.0 + v0.3.1 (fix 504)  |
+| 22-dom-executor                | ✅     | F2  | [README.md](22-dom-executor/README.md)                | [v0.4.0](22-dom-executor/v0.4.0.md) |
+| 20-qbo-scripts/m2-uncats-write | 📅     | M2  | [README.md](20-qbo-scripts/m2-uncats-write/README.md) | —                                   |
 
 ---
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo           | Estado | Tema                                                                                                                            | Tag         | Archivo                                                  |
-| ------- | ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------- |
-| 0.1.0   | 00-foundation    | ✅     | Scaffold Vite + Manifest v3 (popup "Hello")                                                                                     | kiro-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)       |
-| 0.2.0   | 10-bridge-client | ✅     | WS client + auth + reconnect/keepalive + dispatch al executor (incluye 21-fetch-executor) — round-trip en vivo con mapi v0.17.0 | kiro-v0.2.0 | [10-bridge-client/v0.2.0.md](10-bridge-client/v0.2.0.md) |
-| 0.3.0   | 10-bridge-client | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + list_tabs stateless — espejo de mapi v0.19.0                            | kiro-v0.3.0 | [10-bridge-client/v0.3.0.md](10-bridge-client/v0.3.0.md) |
+| Versión | Módulo           | Estado | Tema                                                                                                                              | Tag         | Archivo                                                  |
+| ------- | ---------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------- |
+| 0.1.0   | 00-foundation    | ✅     | Scaffold Vite + Manifest v3 (popup "Hello")                                                                                       | kiro-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)       |
+| 0.2.0   | 10-bridge-client | ✅     | WS client + auth + reconnect/keepalive + dispatch al executor (incluye 21-fetch-executor) — round-trip en vivo con mapi v0.17.0   | kiro-v0.2.0 | [10-bridge-client/v0.2.0.md](10-bridge-client/v0.2.0.md) |
+| 0.3.0   | 10-bridge-client | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + list_tabs stateless — espejo de mapi v0.19.0                              | kiro-v0.3.0 | [10-bridge-client/v0.3.0.md](10-bridge-client/v0.3.0.md) |
+| 0.3.1   | 10-bridge-client | ✅     | Fix race keepalive/result (504 en mapi): reply en socket de origen + connect() no recicla socket sano — ChaseAdapter mapi v0.18.0 | kiro-v0.3.1 | [10-bridge-client/v0.3.1.md](10-bridge-client/v0.3.1.md) |
+| 0.4.0   | 22-dom-executor  | ✅     | Ops DOM genéricas (`fill`/`click`/`waitFor`/`getText`) + `execute_dom` por tabId (unit verde; live pendiente de mapi v0.20.0)     | kiro-v0.4.0 | [22-dom-executor/v0.4.0.md](22-dom-executor/v0.4.0.md)   |
 
 ---
 
