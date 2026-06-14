@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common'
+import { BridgeAdminController } from './bridge-admin.controller'
 import { BridgeCommandService } from './bridge-command.service'
 import { PluginBridgeGateway } from './plugin-bridge.gateway'
 
@@ -10,6 +11,7 @@ import { PluginBridgeGateway } from './plugin-bridge.gateway'
  * (ver main.ts) para que el gateway use `ws` en vez de socket.io.
  */
 @Module({
+  controllers: [BridgeAdminController],
   providers: [PluginBridgeGateway, BridgeCommandService],
   exports: [BridgeCommandService],
 })
