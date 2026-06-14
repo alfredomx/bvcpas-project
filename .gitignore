@@ -144,3 +144,5 @@ apps/*/reference/
 CLAUDE.md
 CLAUDE-mapi-context.md
 seeds-tmp
+# Cheques bancarios guardados en demo (no es destino final)
+apps/mapi/.downloads/

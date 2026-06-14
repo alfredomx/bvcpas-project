@@ -20,5 +20,6 @@ Cada vez que diseñamos un dashboard nuevo, antes/durante el desarrollo del back
 ## Índice
 
 - [`customer-support.md`](customer-support.md) — primera tab del dashboard. Snapshot de uncats + AMAs, respuestas del cliente vía link público, status mensual.
+- [`bank-download.md`](bank-download.md) — step-flow de descarga bancaria. Elegir credencial/cuenta (`list_credentials`) y descargar cheques por rango (`download_checks`) sobre la sesión viva del banco.
 
 (Cuando entren más Mx: reconciliations, w-9, 1099, mgt-report, tax-packet, qtr-payroll, property-tax — cada uno tendrá su archivo.)

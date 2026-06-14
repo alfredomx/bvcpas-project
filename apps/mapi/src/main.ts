@@ -136,6 +136,38 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     description: 'Plugin bridge: listar pestañas y ejecutar recetas DOM en la sesión del operador',
   },
 
+  // Banking — catálogo, credenciales, cuentas y descarga vía plugin.
+  {
+    name: 'Banking - Portals',
+    displayName: 'Portals',
+    description: 'Catálogo de portales bancarios',
+  },
+  {
+    name: 'Banking - Credentials',
+    displayName: 'Credentials',
+    description: 'Credenciales bancarias por cliente',
+  },
+  {
+    name: 'Banking - Credentials Global',
+    displayName: 'Credentials Global',
+    description: 'Vista global de todas las credenciales del despacho',
+  },
+  {
+    name: 'Banking - Accounts',
+    displayName: 'Accounts',
+    description: 'Cuentas individuales (mask + tipo) dentro de un login',
+  },
+  {
+    name: 'Banking - Chase',
+    displayName: 'Chase',
+    description: 'Adapter Chase (Design B) — descarga directa por endpoint',
+  },
+  {
+    name: 'Banking - Download',
+    displayName: 'Download',
+    description: 'Step-flow: elegir credencial/cuenta y descargar cheques por rango',
+  },
+
   // Utils
   { name: 'Public', description: 'Endpoints sin auth (acceso por token)' },
   { name: 'Health', description: 'Liveness check' },
@@ -177,6 +209,17 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
   },
   { name: 'Merchants', tags: ['Merchants - Clover', 'Merchants - Square'] },
   { name: 'Providers', tags: ['Intuit API', 'Connections', 'Bridge'] },
+  {
+    name: 'Banking',
+    tags: [
+      'Banking - Portals',
+      'Banking - Credentials',
+      'Banking - Credentials Global',
+      'Banking - Accounts',
+      'Banking - Chase',
+      'Banking - Download',
+    ],
+  },
   { name: 'Utils', tags: ['Public', 'Health'] },
 ]
 

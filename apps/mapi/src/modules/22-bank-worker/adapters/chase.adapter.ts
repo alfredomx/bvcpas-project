@@ -1,8 +1,21 @@
 import { randomUUID } from 'node:crypto'
 import { Logger } from '@nestjs/common'
-import { BankAdapter, type BankAccount } from './bank-adapter.base'
+import {
+  BankAdapter,
+  type BankAccount,
+  type BankLoginCredentials,
+  type BankLoginRecipe,
+} from './bank-adapter.base'
 import type { BankFetchExecutor, BankFetchRequest, FetchResult } from './bank-fetch.types'
 import { BankAdapterError, BankFetchError, ChaseAccountNotFoundError } from '../bank-worker.errors'
+
+/**
+ * URL del logonbox de Chase como pestaña top-level. El form de login queda en el
+ * documento (no en el iframe sandboxed), así que el fill+click corre directo.
+ * El prefijo de pod (`secureNNea`) lo resuelve Chase desde el host canónico.
+ * Validado en vivo 2026-06-14 (memoria `project_chase_login_automation`).
+ */
+const CHASE_LOGON_URL = 'https://secure.chase.com/web/auth/#/logon/logon/chaseOnline'
 
 // ── Resultados específicos de Chase (portados del proyecto original) ─────────
 
@@ -11,6 +24,12 @@ export interface DownloadedImage {
   type: 'CHECK' | 'DEPOSIT_SLIP'
   frontImageBase64?: string
   rearImageBase64?: string
+  /** Número de cheque (para el nombre de archivo). Puede faltar. */
+  checkNumber?: string
+  /** Fecha de posteo del cheque (YYYYMMDD, como la da Chase). */
+  postDate?: string
+  /** Monto del cheque (negativo = retiro). */
+  amount?: number
 }
 
 export interface DepositResult {
@@ -57,6 +76,24 @@ export class ChaseAdapter extends BankAdapter {
     super(exec)
   }
 
+  /**
+   * Receta de login de Chase (validada en vivo 2026-06-14, D-kiro-B13). mapi abre
+   * `url` con open_tab/list_tabs y manda los `steps` por execute_dom; el `fill` de
+   * kiro usa el native setter + eventos input/change (React no registra un
+   * `value=x` pelón). Los datos post-login (cuentas/cheques) van por fetch.
+   */
+  buildLoginRecipe(creds: BankLoginCredentials): BankLoginRecipe {
+    return {
+      url: CHASE_LOGON_URL,
+      steps: [
+        { op: 'waitFor', selector: '#userId-input-field-input' },
+        { op: 'fill', selector: '#userId-input-field-input', value: creds.username },
+        { op: 'fill', selector: '#password-input-field-input', value: creds.password },
+        { op: 'click', selector: '#signin-button' },
+      ],
+    }
+  }
+
   async getAllAccounts(): Promise<BankAccount[]> {
     const response = await this._request<{ items?: ChaseMenuItem[] }>(
       '/svc/rr/documents/secure/v1/menu/list',
@@ -101,6 +138,9 @@ export class ChaseAdapter extends BankAdapter {
           type: 'CHECK',
           frontImageBase64: image.checkFrontImage,
           rearImageBase64: image.checkRearImage,
+          checkNumber: tx.checkNumber,
+          postDate: tx.date,
+          amount: tx.amount,
         })
         if (i < txns.length - 1) await delay(300)
       }
@@ -144,6 +184,9 @@ export class ChaseAdapter extends BankAdapter {
           type: 'DEPOSIT_SLIP',
           frontImageBase64: slipImg.checkFrontImage,
           rearImageBase64: slipImg.checkRearImage,
+          checkNumber: dep.checkNumber,
+          postDate: dep.date,
+          amount: depositResult.totalAmount,
         }
         await delay(300)
       }
@@ -154,7 +197,7 @@ export class ChaseAdapter extends BankAdapter {
           const checkImg = await this._downloadImage(
             accountInfo.id,
             checkTx.sequenceNumber,
-            checkTx.date ?? dep.date,
+            checkTx.postDate ?? dep.date,
             'CHECK',
           )
           depositResult.checksImages.push({
@@ -162,6 +205,9 @@ export class ChaseAdapter extends BankAdapter {
             type: 'CHECK',
             frontImageBase64: checkImg.checkFrontImage,
             rearImageBase64: checkImg.checkRearImage,
+            checkNumber: checkTx.checkNumber,
+            postDate: checkTx.postDate ?? dep.date,
+            amount: checkTx.amount,
           })
           if (checkIdx < details.transactions.length - 1) await delay(300)
         }
@@ -524,13 +570,24 @@ interface ChaseTxn {
   sequenceNumber: string
   date: string
   amount?: number
+  /** Número de cheque que da Chase en la actividad (puede faltar). */
+  checkNumber?: string
+}
+
+/** Item dentro del detalle de un depósito (los cheques que lo componen). */
+interface ChaseDepositItem {
+  sequenceNumber: string
+  /** Fecha de posteo del item (YYYYMMDD). En el detalle viene como `postDate`. */
+  postDate?: string
+  checkNumber?: string
+  amount?: number
 }
 
 interface ChaseDepositDetails {
   depositSequenceNumber?: string
   totalDepositAmount?: number
   depositSlipAvailable?: boolean
-  transactions?: ChaseTxn[]
+  transactions?: ChaseDepositItem[]
 }
 
 interface ChaseImageResponse {

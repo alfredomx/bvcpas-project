@@ -1,3 +1,4 @@
+import type { DomStep } from '../../23-plugin-bridge/bridge.types'
 import type { BankFetchExecutor } from './bank-fetch.types'
 
 /**
@@ -20,6 +21,24 @@ export interface BankAccount {
   name?: string
 }
 
+/** Credenciales descifradas que recibe el adapter para armar la receta de login. */
+export interface BankLoginCredentials {
+  username: string
+  password: string
+  securityQa?: string | null
+}
+
+/**
+ * Receta de login: la URL del logonbox a abrir + los pasos DOM (fill/click) que
+ * kiro ejecuta a ciegas. La lógica (selectores) vive en el adapter (mapi); kiro
+ * sigue tonto. La navegación a `url` la hace mapi con `open_tab`/`list_tabs`,
+ * NO es un paso DOM (recargar mata el content script).
+ */
+export interface BankLoginRecipe {
+  url: string
+  steps: DomStep[]
+}
+
 export abstract class BankAdapter {
   protected constructor(protected readonly exec: BankFetchExecutor) {}
 
@@ -39,6 +58,13 @@ export abstract class BankAdapter {
     format: 'CSV' | 'QBO',
   ): Promise<unknown>
   abstract downloadStatements(accountMask: string, year: string, month: string): Promise<unknown>
+
+  /**
+   * Construye la receta de login (URL del logonbox + pasos DOM) con las
+   * credenciales descifradas. Opcional: un banco cuyo login no esté automatizado
+   * no la implementa → el caller lanza `BankLoginNotSupportedError`.
+   */
+  buildLoginRecipe?(creds: BankLoginCredentials): BankLoginRecipe
 
   /** MM-DD-YYYY → YYYYMMDD (formato clásico de APIs financieras). */
   protected _formatDate(dateStr: string): string {

@@ -189,6 +189,9 @@ describe('ChaseAdapter (Design B port)', () => {
         type: 'CHECK',
         frontImageBase64: 'FRONT64',
         rearImageBase64: 'REAR64',
+        checkNumber: undefined,
+        postDate: '20260301',
+        amount: undefined,
       },
     ])
   })
@@ -212,6 +215,22 @@ describe('ChaseAdapter (Design B port)', () => {
     const stmts = await new ChaseAdapter(exec).downloadStatements('8250', '2026', '1')
     expect(stmts).toHaveLength(1)
     expect(stmts[0]).toEqual({ documentId: 'DOC1', date: '20260115', pdfBase64: pdfB64 })
+  })
+
+  it('buildLoginRecipe arma la receta del logonbox con las creds (fill user/pass + click)', () => {
+    const { exec } = makeExec(() => ({}))
+    const recipe = new ChaseAdapter(exec).buildLoginRecipe({
+      username: 'alfredo',
+      password: 'S3cret',
+    })
+
+    expect(recipe.url).toBe('https://secure.chase.com/web/auth/#/logon/logon/chaseOnline')
+    expect(recipe.steps).toEqual([
+      { op: 'waitFor', selector: '#userId-input-field-input' },
+      { op: 'fill', selector: '#userId-input-field-input', value: 'alfredo' },
+      { op: 'fill', selector: '#password-input-field-input', value: 'S3cret' },
+      { op: 'click', selector: '#signin-button' },
+    ])
   })
 
   it('_assertOk: error de red del plugin → BankFetchError', async () => {

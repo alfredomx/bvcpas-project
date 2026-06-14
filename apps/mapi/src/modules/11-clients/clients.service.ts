@@ -29,6 +29,20 @@ export interface ListClientsResponse {
   pageSize: number
 }
 
+/**
+ * Resultado de resolver una referencia difusa a un cliente:
+ * - `resolved`: un solo cliente (por alias exacto o por match único de nombre).
+ * - `ambiguous`: varios candidatos — el caller elige y luego confirma el alias.
+ * - `not_found`: ningún cliente coincide.
+ */
+export type ResolveClientResult =
+  | { status: 'resolved'; via: 'alias' | 'match'; client: Client }
+  | { status: 'ambiguous'; candidates: Client[] }
+  | { status: 'not_found' }
+
+/** Cuántos candidatos máximo devolver en el caso ambiguo. */
+const RESOLVE_CANDIDATES_LIMIT = 10
+
 const EDITABLE_FIELDS = [
   'legalName',
   'dba',
@@ -87,6 +101,40 @@ export class ClientsService {
     const row = await this.repo.findById(id)
     if (!row) throw new ClientNotFoundError(id)
     return row
+  }
+
+  /**
+   * Resuelve una referencia difusa (`q`) a un cliente, en este orden:
+   *   1. Alias guardado exacto → resuelve directo (sin preguntar).
+   *   2. Si no hay alias: match difuso por `legal_name`.
+   *      - exactamente 1 → resuelto.
+   *      - varios → ambiguo (el caller elige y confirma).
+   *      - 0 → no encontrado.
+   */
+  async resolve(q: string): Promise<ResolveClientResult> {
+    const normalized = q.trim().toLowerCase()
+
+    const byAlias = await this.repo.findByAlias(normalized)
+    if (byAlias) return { status: 'resolved', via: 'alias', client: byAlias }
+
+    const matches = await this.repo.searchByLegalName(q.trim(), RESOLVE_CANDIDATES_LIMIT + 1)
+    if (matches.length === 0) return { status: 'not_found' }
+    if (matches.length === 1) return { status: 'resolved', via: 'match', client: matches[0] }
+    return { status: 'ambiguous', candidates: matches.slice(0, RESOLVE_CANDIDATES_LIMIT) }
+  }
+
+  /**
+   * Guarda un alias → cliente en el diccionario. El alias se normaliza a
+   * minúsculas. Si el cliente no existe, lanza ClientNotFoundError.
+   * La próxima vez que `resolve` reciba ese alias, pega directo.
+   */
+  async confirmAlias(alias: string, clientId: string): Promise<{ alias: string; client: Client }> {
+    const client = await this.repo.findById(clientId)
+    if (!client) throw new ClientNotFoundError(clientId)
+
+    const normalized = alias.trim().toLowerCase()
+    await this.repo.upsertAlias(normalized, clientId)
+    return { alias: normalized, client }
   }
 
   async update(id: string, payload: EditablePayload, actorUserId: string): Promise<Client> {

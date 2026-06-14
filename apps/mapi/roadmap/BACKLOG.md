@@ -194,6 +194,30 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
   siempre da con la carpeta correcta aunque cambien los nombres. Se
   implementa con la primera versión que escriba PDFs (v0.16.0).
 
+### Trigger: rehacer adapters delgados (v0.22.0)
+
+> Refactor del contrato `BankAdapter`: los métodos `downloadX` están
+> gordos (mezclan operación cruda del banco + política de orquestación
+> — rango, qué descargar, loops). Se parten en **primitivas** (1 op de
+> banco c/u) y la política (rango/latest/nombrado/guardado) sube al
+> `BankDownloadService` en mapi. El smoke en vivo pendiente de v0.21.0
+> se cubre AQUÍ con el formato nuevo (no se duplica trabajo).
+
+- **Adapters delgados (v0.22.0)**. Primitivas en el adapter:
+  `getAllAccounts`, `searchTransactions`, `getDepositDetails`,
+  `downloadImage`, `listStatements(mask,{yearsBack})` (solo metadata,
+  sin PDF, sin filtro de rango), `downloadStatementPdf(mask,ref)`,
+  `exportTransactions`. mapi orquesta: "último statement" =
+  `listStatements → max(date) → downloadStatementPdf` (resuelve el
+  hueco de que hoy no hay modo "latest", solo rango). Abrir con TDD
+  primero. Es refactor de contrato → version-worthy.
+- **Smoke en vivo de `download_transactions`** (CSV/QBO) — diferido de
+  v0.21.0; se corre contra Chase real con el adapter ya delgado.
+- **Smoke en vivo de depósitos con cheques internos** — diferido de
+  v0.21.0 (el depósito de prueba 2026-06-14 fue solo slip). Esperar un
+  depósito real con cheques o ampliar el rango para cazarlo; valida la
+  ruta `MM-DD-YYYY - <checkNumber> (<amount>).pdf` con datos reales.
+
 ---
 
 ## Histórico

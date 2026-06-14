@@ -10,6 +10,7 @@ import {
   type NewClient,
   clients,
 } from '../../db/schema/clients'
+import { clientAliases } from '../../db/schema/client-aliases'
 
 export interface CreateClientData {
   legalName: string
@@ -80,6 +81,45 @@ export class ClientsRepository {
       .where(eq(clients.qboRealmId, realmId))
       .limit(1)
     return row ?? null
+  }
+
+  /**
+   * Resuelve un alias guardado (diccionario `client_aliases`) al cliente al
+   * que apunta. `alias` debe venir ya normalizado (minúsculas, trim).
+   */
+  async findByAlias(alias: string): Promise<Client | null> {
+    const [row] = await this.db
+      .select({ client: clients })
+      .from(clientAliases)
+      .innerJoin(clients, eq(clientAliases.clientId, clients.id))
+      .where(eq(clientAliases.alias, alias))
+      .limit(1)
+    return row?.client ?? null
+  }
+
+  /**
+   * Búsqueda difusa por `legal_name` (parcial, case-insensitive). Devuelve
+   * hasta `limit` candidatos ordenados por nombre. Usada por el resolve
+   * cuando no hay alias exacto.
+   */
+  async searchByLegalName(q: string, limit: number): Promise<Client[]> {
+    return this.db
+      .select()
+      .from(clients)
+      .where(ilike(clients.legalName, `%${q}%`))
+      .orderBy(asc(clients.legalName))
+      .limit(limit)
+  }
+
+  /**
+   * Guarda/re-apunta un alias. Si el alias ya existe, lo re-apunta al nuevo
+   * cliente (upsert). `alias` debe venir normalizado.
+   */
+  async upsertAlias(alias: string, clientId: string): Promise<void> {
+    await this.db
+      .insert(clientAliases)
+      .values({ alias, clientId })
+      .onConflictDoUpdate({ target: clientAliases.alias, set: { clientId } })
   }
 
   async create(data: CreateClientData): Promise<Client> {
