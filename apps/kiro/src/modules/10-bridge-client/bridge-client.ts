@@ -278,6 +278,12 @@ export function parseIncomingCommand(raw: unknown): IncomingCommandMessage | nul
     return { type: 'open_tab', correlationId, payload: { url: payload.url } }
   }
 
+  if (msg.type === 'close_tab') {
+    const payload = msg.payload as Record<string, unknown> | undefined
+    if (!payload || typeof payload.tabId !== 'number') return null
+    return { type: 'close_tab', correlationId, payload: { tabId: payload.tabId } }
+  }
+
   return null
 }
 

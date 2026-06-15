@@ -174,6 +174,37 @@ describe('dispatchCommand — execute_dom (rutea por tabId al content script)', 
   })
 })
 
+describe('dispatchCommand — close_tab (corre en el SW)', () => {
+  it('cierra la pestaña con chrome.tabs.remove y devuelve closed:true', async () => {
+    const remove = vi.fn(async () => undefined)
+    vi.stubGlobal('chrome', { tabs: { remove } })
+
+    const result = await dispatchCommand({
+      type: 'close_tab',
+      correlationId: 'x1',
+      payload: { tabId: 42 },
+    })
+
+    expect(remove).toHaveBeenCalledWith(42)
+    expect(result).toEqual({ tabId: 42, closed: true })
+  })
+
+  it('idempotente: si remove lanza (pestaña ya cerrada) devuelve closed:false, no error', async () => {
+    const remove = vi.fn(async () => {
+      throw new Error('No tab with id: 42')
+    })
+    vi.stubGlobal('chrome', { tabs: { remove } })
+
+    const result = await dispatchCommand({
+      type: 'close_tab',
+      correlationId: 'x2',
+      payload: { tabId: 42 },
+    })
+
+    expect(result).toEqual({ tabId: 42, closed: false })
+  })
+})
+
 describe('dispatchCommand — open_tab (corre en el SW)', () => {
   const URL = 'https://secure.chase.com/web/auth/#/logon/logon/chaseOnline'
 
