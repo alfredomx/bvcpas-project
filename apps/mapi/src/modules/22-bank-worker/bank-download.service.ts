@@ -8,7 +8,13 @@ import { ClientBankAccountsRepository } from './client-bank-accounts.repository'
 import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
 import { getAdapterFactory } from './adapters/adapter-registry'
 import type { BankAdapter, StatementRef } from './adapters/bank-adapter.base'
-import type { DepositResult, DownloadedImage, StatementResult } from './bank-download.types'
+import type {
+  DepositResult,
+  DownloadProgress,
+  DownloadedImage,
+  ProgressFn,
+  StatementResult,
+} from './bank-download.types'
 import { resolveDateRange } from './date-range.util'
 import {
   DEMO_DOWNLOADS_DIR,
@@ -104,6 +110,7 @@ export class BankDownloadService {
     clientId: string,
     dto: DownloadChecksDto,
     userId: string,
+    onProgress?: ProgressFn,
   ): Promise<DownloadChecksResponse> {
     const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
     const masks = dto.accountMasks
@@ -111,8 +118,10 @@ export class BankDownloadService {
 
     const accounts: DownloadChecksResponse['accounts'] = []
     let totalChecks = 0
-    for (const mask of masks) {
+    for (let mi = 0; mi < masks.length; mi++) {
+      const mask = masks[mi]
       const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
+      await this.report(onProgress, 'checks', mask, mi, masks.length, 0, txns.length)
       const checks: DownloadedImage[] = []
       for (let i = 0; i < txns.length; i++) {
         const tx = txns[i]
@@ -127,6 +136,7 @@ export class BankDownloadService {
           postDate: tx.date,
           amount: tx.amount,
         })
+        await this.report(onProgress, 'checks', mask, mi, masks.length, i + 1, txns.length)
         if (i < txns.length - 1) await this.pace()
       }
       accounts.push({ account_mask: mask, count: checks.length, checks })
@@ -182,6 +192,7 @@ export class BankDownloadService {
     clientId: string,
     dto: DownloadDepositsDto,
     userId: string,
+    onProgress?: ProgressFn,
   ): Promise<DownloadDepositsResponse> {
     const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
     const masks = dto.accountMasks
@@ -189,8 +200,10 @@ export class BankDownloadService {
 
     const accounts: DownloadDepositsResponse['accounts'] = []
     let totalImages = 0
-    for (const mask of masks) {
+    for (let mi = 0; mi < masks.length; mi++) {
+      const mask = masks[mi]
       const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
+      await this.report(onProgress, 'deposits', mask, mi, masks.length, 0, deps.length)
       const deposits: DepositResult[] = []
       for (let di = 0; di < deps.length; di++) {
         const dep = deps[di]
@@ -242,6 +255,7 @@ export class BankDownloadService {
         }
 
         deposits.push(result)
+        await this.report(onProgress, 'deposits', mask, mi, masks.length, di + 1, deps.length)
         if (di < deps.length - 1) await this.pace()
       }
 
@@ -313,6 +327,7 @@ export class BankDownloadService {
     clientId: string,
     dto: DownloadStatementsDto,
     userId: string,
+    onProgress?: ProgressFn,
   ): Promise<DownloadStatementsResponse> {
     const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
     const masks = dto.accountMasks
@@ -323,9 +338,11 @@ export class BankDownloadService {
 
     const accounts: DownloadStatementsResponse['accounts'] = []
     let total = 0
-    for (const mask of masks) {
+    for (let mi = 0; mi < masks.length; mi++) {
+      const mask = masks[mi]
       const refs = await adapter.listStatements(mask, { yearsBack })
       const selected = this.selectStatements(refs, dto)
+      await this.report(onProgress, 'statements', mask, mi, masks.length, 0, selected.length)
       const statements: StatementResult[] = []
       for (let i = 0; i < selected.length; i++) {
         const pdf = await adapter.downloadStatementPdf(mask, selected[i])
@@ -334,6 +351,7 @@ export class BankDownloadService {
           date: selected[i].date,
           pdfBase64: pdf.toString('base64'),
         })
+        await this.report(onProgress, 'statements', mask, mi, masks.length, i + 1, selected.length)
         if (i < selected.length - 1) await this.pace()
       }
       accounts.push({ account_mask: mask, count: statements.length, statements })
@@ -380,6 +398,7 @@ export class BankDownloadService {
     clientId: string,
     dto: DownloadTransactionsDto,
     userId: string,
+    onProgress?: ProgressFn,
   ): Promise<DownloadTransactionsResponse> {
     const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
     const masks = dto.accountMasks
@@ -387,7 +406,8 @@ export class BankDownloadService {
 
     const accounts: DownloadTransactionsResponse['accounts'] = []
     let savedDir: string | null = null
-    for (const mask of masks) {
+    for (let mi = 0; mi < masks.length; mi++) {
+      const mask = masks[mi]
       const buffer = await adapter.exportTransactions(mask, from, to, dto.format)
       const content = buffer.toString('utf8')
       if (dto.save) {
@@ -407,6 +427,7 @@ export class BankDownloadService {
         bytes: buffer.length,
         content: dto.save ? undefined : content,
       })
+      await this.report(onProgress, 'transactions', mask, mi, masks.length, 1, 1)
     }
 
     await this.events.log(
@@ -512,6 +533,20 @@ export class BankDownloadService {
   /** Pausa anti rate-limit entre fetches de imágenes. */
   private pace(): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, FETCH_PACE_MS))
+  }
+
+  /** Emite un progreso (objeto) si hay callback. `accountIndex` se pasa 0-based. */
+  private async report(
+    onProgress: ProgressFn | undefined,
+    stage: DownloadProgress['stage'],
+    account: string,
+    accountIndex: number,
+    accountTotal: number,
+    done: number,
+    total: number,
+  ): Promise<void> {
+    if (!onProgress) return
+    await onProgress({ stage, account, accountIndex: accountIndex + 1, accountTotal, done, total })
   }
 
   /** Resuelve credencial → portal → adapter (errores 404/501). Compartido por las descargas. */

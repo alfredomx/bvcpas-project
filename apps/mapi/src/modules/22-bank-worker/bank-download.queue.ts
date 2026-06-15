@@ -4,6 +4,7 @@ import { Job, Queue, QueueEvents } from 'bullmq'
 import { AppConfigService } from '../../core/config/config.service'
 import { BANK_DOWNLOAD_QUEUE, connectionFromUrl } from '../../core/queue/queue.module'
 import { BankDownloadService } from './bank-download.service'
+import type { ProgressFn } from './bank-download.types'
 import type {
   DownloadChecksDto,
   DownloadDepositsDto,
@@ -37,24 +38,18 @@ export class BankDownloadProcessor extends WorkerHost {
 
   async process(job: Job<BankDownloadJob>): Promise<unknown> {
     const d = job.data
-    await job.updateProgress(5)
-    let result: unknown
+    // Conecta el progreso (objeto: etapa + cuenta + done/total) a bull-board.
+    const onProgress: ProgressFn = (p) => job.updateProgress(p)
     switch (d.kind) {
       case 'checks':
-        result = await this.service.downloadChecks(d.clientId, d.dto, d.userId)
-        break
+        return this.service.downloadChecks(d.clientId, d.dto, d.userId, onProgress)
       case 'deposits':
-        result = await this.service.downloadDeposits(d.clientId, d.dto, d.userId)
-        break
+        return this.service.downloadDeposits(d.clientId, d.dto, d.userId, onProgress)
       case 'statements':
-        result = await this.service.downloadStatements(d.clientId, d.dto, d.userId)
-        break
+        return this.service.downloadStatements(d.clientId, d.dto, d.userId, onProgress)
       case 'transactions':
-        result = await this.service.downloadTransactions(d.clientId, d.dto, d.userId)
-        break
+        return this.service.downloadTransactions(d.clientId, d.dto, d.userId, onProgress)
     }
-    await job.updateProgress(100)
-    return result
   }
 }
 

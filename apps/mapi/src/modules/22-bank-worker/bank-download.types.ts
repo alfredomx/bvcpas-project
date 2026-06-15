@@ -34,3 +34,20 @@ export interface StatementResult {
   date: string
   pdfBase64: string
 }
+
+/**
+ * Progreso de una descarga (objeto, para que bull-board lo muestre en la pestaña
+ * "Progress" y se vea el avance en bancos lentos). `done/total` es dentro de la
+ * cuenta actual; `accountIndex/accountTotal` ubica en qué cuenta va.
+ */
+export interface DownloadProgress {
+  stage: 'checks' | 'deposits' | 'statements' | 'transactions'
+  account: string
+  accountIndex: number
+  accountTotal: number
+  done: number
+  total: number
+}
+
+/** Callback opcional de progreso (el worker lo conecta a `job.updateProgress`). */
+export type ProgressFn = (p: DownloadProgress) => void | Promise<void>

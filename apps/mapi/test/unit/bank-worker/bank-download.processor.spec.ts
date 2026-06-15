@@ -27,16 +27,39 @@ function build() {
 }
 
 describe('BankDownloadProcessor', () => {
-  it('CR-bw-q-001: kind=checks → downloadChecks(clientId, dto, userId) + progreso 100', async () => {
+  it('CR-bw-q-001: kind=checks → downloadChecks(clientId, dto, userId, onProgress)', async () => {
     const { service, proc } = build()
     const dto = { credentialId: 'cred', accountMasks: ['9027'] } as never
     const job = fakeJob({ kind: 'checks', clientId: 'c1', userId: 'u1', dto })
 
     const res = await proc.process(job)
 
-    expect(service.downloadChecks).toHaveBeenCalledWith('c1', dto, 'u1')
+    expect(service.downloadChecks).toHaveBeenCalledWith('c1', dto, 'u1', expect.any(Function))
     expect(res).toEqual({ ok: 'checks' })
-    expect(job.updateProgress).toHaveBeenCalledWith(100)
+  })
+
+  it('CR-bw-q-003: el callback de progreso del worker llega a job.updateProgress (objeto)', async () => {
+    const { service, proc } = build()
+    // El service mock invoca su 4º arg (onProgress) con un objeto de progreso.
+    const progress = {
+      stage: 'checks',
+      account: '9027',
+      accountIndex: 1,
+      accountTotal: 1,
+      done: 3,
+      total: 8,
+    }
+    ;(service.downloadChecks as jest.Mock).mockImplementation(
+      async (_c: string, _d: unknown, _u: string, onProgress?: (p: unknown) => Promise<void>) => {
+        await onProgress?.(progress)
+        return { ok: 'checks' }
+      },
+    )
+    const job = fakeJob({ kind: 'checks', clientId: 'c1', userId: 'u1', dto: {} as never })
+
+    await proc.process(job)
+
+    expect(job.updateProgress).toHaveBeenCalledWith(progress)
   })
 
   it('CR-bw-q-002: enruta deposits / statements / transactions por kind', async () => {
