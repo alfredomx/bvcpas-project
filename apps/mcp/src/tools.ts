@@ -116,12 +116,13 @@ export const listClientAccountsTool: ToolDef = {
   name: 'list_client_accounts',
   description:
     'Lista las credenciales/portales bancarios conectados de un cliente (qué bancos tiene), ' +
-    'cada una con el portal (id, nombre, portal_url). Requiere clientId (UUID). Filtro opcional ' +
-    '`portal` (parcial, case-insensitive) para resolver la credencial de un banco en una llamada.',
+    'cada una con el portal (id, nombre, portal_url). `clientId` = nombre o UUID (si das el ' +
+    'nombre, ej "bilia", el tool lo resuelve solo). Filtro opcional `portal` (parcial, ' +
+    'case-insensitive) para resolver la credencial de un banco en una llamada.',
   inputSchema: {
     type: 'object',
     properties: {
-      clientId: { type: 'string', description: 'UUID del cliente.' },
+      clientId: { type: 'string', description: 'Nombre o UUID del cliente.' },
       portal: {
         type: 'string',
         description: 'Filtra por nombre de portal (parcial, case-insensitive). Ej: "chase".',
@@ -131,9 +132,11 @@ export const listClientAccountsTool: ToolDef = {
     additionalProperties: false,
   },
   handler: async (args, client) => {
-    const clientId = encodeURIComponent(String(args.clientId))
+    const clientId = await resolveClientId(args.clientId, client)
     const query = qs({ portal: args.portal })
-    const res = await client.get(`/v1/clients/${clientId}/banking/credentials${query}`)
+    const res = await client.get(
+      `/v1/clients/${encodeURIComponent(clientId)}/banking/credentials${query}`,
+    )
     return pretty(res)
   },
 }
@@ -142,7 +145,7 @@ export const listClientTransactionsTool: ToolDef = {
   name: 'list_client_transactions',
   description:
     'Lista las transacciones del snapshot de un cliente: los uncats y los AMAs (Ask My ' +
-    'Accountant). Requiere clientId (UUID — encuéntralo con list_clients). El campo `category` ' +
+    'Accountant). `clientId` = nombre o UUID (si das el nombre se resuelve solo). El campo `category` ' +
     'separa los tipos: uncats = "uncategorized_expense" + "uncategorized_income"; AMAs = ' +
     '"ask_my_accountant". Sin `category` trae los tres. Cada item incluye date, vendor, memo, ' +
     'account, amount y la nota del cliente si la hay. Filtros opcionales: `filter` ' +
@@ -151,7 +154,7 @@ export const listClientTransactionsTool: ToolDef = {
   inputSchema: {
     type: 'object',
     properties: {
-      clientId: { type: 'string', description: 'UUID del cliente.' },
+      clientId: { type: 'string', description: 'Nombre o UUID del cliente.' },
       category: {
         type: 'string',
         enum: ['uncategorized_expense', 'uncategorized_income', 'ask_my_accountant'],
@@ -171,14 +174,14 @@ export const listClientTransactionsTool: ToolDef = {
     additionalProperties: false,
   },
   handler: async (args, client) => {
-    const clientId = encodeURIComponent(String(args.clientId))
+    const clientId = await resolveClientId(args.clientId, client)
     const query = qs({
       category: args.category,
       filter: args.filter,
       startDate: args.startDate,
       endDate: args.endDate,
     })
-    const res = await client.get(`/v1/clients/${clientId}/transactions${query}`)
+    const res = await client.get(`/v1/clients/${encodeURIComponent(clientId)}/transactions${query}`)
     return pretty(res)
   },
 }
@@ -203,13 +206,29 @@ const clientLabel = (c: ClientRow): string =>
   c.legal_name ?? c.legalName ?? c.name ?? '(sin nombre)'
 
 /**
- * Resuelve un cliente (UUID o nombre) a su UUID. Si es UUID lo devuelve tal cual; si es nombre
- * busca con `?search=` (server-side, ilike). 0 coincidencias o 2+ → lanza Error legible (el chat
- * lo ve como mensaje). Nunca adivina entre varios (decisión del operador, D-mcp-007).
+ * Cache en memoria nombre(normalizado)→UUID. Vive lo que dure el proceso del MCP (stdio,
+ * se reinicia seguido), así que el riesgo de quedarse con un id viejo si renombran un cliente es
+ * mínimo. Evita repegarle a `/clients?search=` cada vez que se pregunta por el mismo cliente.
+ * Solo se cachean resoluciones de 1 match exacto (0/2+ lanzan error y no se cachean).
+ */
+const clientIdCache = new Map<string, string>()
+
+/** Vacía el cache de resolución de clientes (test/manual). */
+export const clearClientCache = (): void => clientIdCache.clear()
+
+/**
+ * Resuelve un cliente (UUID o nombre) a su UUID. Resolver REUSABLE — úsalo en cualquier tool que
+ * reciba un cliente. Si es UUID lo devuelve tal cual; si es nombre busca con `?search=`
+ * (server-side, ilike: "sre" → "SRE Services, LLC") y cachea el resultado en memoria. 0
+ * coincidencias o 2+ → lanza Error legible (el chat lo ve como mensaje). Nunca adivina entre
+ * varios (decisión del operador, D-mcp-007).
  */
 const resolveClientId = async (clientArg: unknown, mapi: MapiClient): Promise<string> => {
   const raw = String(clientArg ?? '').trim()
   if (UUID_RE.test(raw)) return raw
+  const key = raw.toLowerCase()
+  const cached = clientIdCache.get(key)
+  if (cached) return cached
   const res = await mapi.get(`/v1/clients${qs({ search: raw, pageSize: 50 })}`)
   const matches = clientsOf(res)
   if (matches.length === 0) {
@@ -223,6 +242,7 @@ const resolveClientId = async (clientArg: unknown, mapi: MapiClient): Promise<st
       `"${raw}" coincide con ${matches.length} clientes. Especifica cuál (nombre exacto o UUID):\n${list}`,
     )
   }
+  clientIdCache.set(key, matches[0].id)
   return matches[0].id
 }
 
