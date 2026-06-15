@@ -194,6 +194,29 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
   siempre da con la carpeta correcta aunque cambien los nombres. Se
   implementa con la primera versión que escriba PDFs (v0.16.0).
 
+### Trigger: cuando cierre `mcp v0.1.0` (queda libre el slot de versión 🚧)
+
+> **Hallazgo (2026-06-15):** el endpoint per-cliente
+> `GET /v1/clients/:id/banking/credentials` (`service.list()` → `toResponse()`,
+> [client-bank-accounts.service.ts:157](../../src/modules/22-bank-worker/client-bank-accounts.service.ts))
+> devuelve solo `bank_portal_id`, **sin el nombre del portal** — no hace join
+> contra `bank_portals`. Es una asimetría con el endpoint global
+> `GET /v1/banking/credentials` (`listGlobalWithJoins()` → `toGlobalResponse()`,
+> misma clase :330), que **sí** incluye `portal` completo (con nombre).
+>
+> Surgió consumiendo el tool MCP `list_client_accounts` (envuelve el per-cliente):
+> devuelve IDs sin nombre, obligando a cruzar manualmente contra `list_portals`.
+>
+> **Decisión (operador, 2026-06-15):** se arregla en mapi (join), NO en el wrapper
+> MCP. Razón: el wrapper es delgado por diseño (D-mcp-002, cero lógica); el gap es
+> del backend y el fix sirve a todos los consumidores (MCP + frontend bvcpas + futuros),
+> no solo al MCP.
+>
+> **Cómo:** branch `mapi/22-bank-worker`, versión patch (≈ `v0.28.1`), TDD-first.
+> Que el per-cliente incluya el nombre del portal vía join (espejo de
+> `listGlobalWithJoins`, o ampliar `toResponse()`/repo). No se abre hasta cerrar
+> `mcp v0.1.0` por la regla de una sola versión 🚧 a la vez.
+
 ---
 
 ## Histórico
