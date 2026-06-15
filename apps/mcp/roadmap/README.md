@@ -73,6 +73,13 @@ agente descubra a quién puede bajarle antes de disparar.
 `GET /v1/clients/:id/banking/credentials` — credenciales/portales de un cliente (qué
 bancos tiene conectados). Requiere `clientId`.
 
+### 5. `list_client_transactions`
+
+`GET /v1/clients/:id/transactions` — uncats y AMAs del cliente (snapshot de
+`client_transactions`). Requiere `clientId` (UUID). `category` distingue: uncats =
+`uncategorized_expense`/`uncategorized_income`, AMAs = `ask_my_accountant`. Filtros opcionales
+`filter`, `startDate`/`endDate`. (mcp v0.1.2)
+
 ## Decisiones
 
 - **D-mcp-001** — App separada `apps/mcp` (no embebida en mapi) para la prueba inicial.
@@ -95,7 +102,8 @@ bancos tiene conectados). Requiere `clientId`.
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                                                      | Archivo                |
-| ------- | ------ | --------------------------------------------------------------------------------------------------------- | ---------------------- |
-| 0.1.0   | ✅     | Scaffold app + 4 tools (bank_download + 3 de lectura) sobre stdio contra mapi local                       | [v0.1.0.md](v0.1.0.md) |
-| 0.1.1   | ✅     | Filtros/paginación en tools: `search`/`page`/`pageSize` en list_clients, `portal` en list_client_accounts | [v0.1.1.md](v0.1.1.md) |
+| Versión | Estado | Tema                                                                                                                | Archivo                |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 0.1.0   | ✅     | Scaffold app + 4 tools (bank_download + 3 de lectura) sobre stdio contra mapi local                                 | [v0.1.0.md](v0.1.0.md) |
+| 0.1.1   | ✅     | Filtros/paginación en tools: `search`/`page`/`pageSize` en list_clients, `portal` en list_client_accounts           | [v0.1.1.md](v0.1.1.md) |
+| 0.1.2   | ✅     | Tool `list_client_transactions` — visibilidad de uncats y AMAs por cliente (wrapper de `/clients/:id/transactions`) | [v0.1.2.md](v0.1.2.md) |

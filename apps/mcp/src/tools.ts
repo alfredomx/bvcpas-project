@@ -138,11 +138,57 @@ export const listClientAccountsTool: ToolDef = {
   },
 }
 
+export const listClientTransactionsTool: ToolDef = {
+  name: 'list_client_transactions',
+  description:
+    'Lista las transacciones del snapshot de un cliente: los uncats y los AMAs (Ask My ' +
+    'Accountant). Requiere clientId (UUID — encuéntralo con list_clients). El campo `category` ' +
+    'separa los tipos: uncats = "uncategorized_expense" + "uncategorized_income"; AMAs = ' +
+    '"ask_my_accountant". Sin `category` trae los tres. Cada item incluye date, vendor, memo, ' +
+    'account, amount y la nota del cliente si la hay. Filtros opcionales: `filter` ' +
+    '(all/income/expense), `startDate`/`endDate` (YYYY-MM-DD). Nota: el snapshot lo llena el ' +
+    'sync de customer-support; si viene vacío, el cliente aún no se ha sincronizado.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      clientId: { type: 'string', description: 'UUID del cliente.' },
+      category: {
+        type: 'string',
+        enum: ['uncategorized_expense', 'uncategorized_income', 'ask_my_accountant'],
+        description:
+          'Tipo de transacción. Para "los AMAs" usa "ask_my_accountant". Para "los uncats" ' +
+          'omite category (trae expense + income) o pide un tipo específico.',
+      },
+      filter: {
+        type: 'string',
+        enum: ['all', 'income', 'expense'],
+        description: 'Filtro income/expense/all (alternativa a category cuando no pides AMAs).',
+      },
+      startDate: { type: 'string', description: 'Fecha inicial YYYY-MM-DD (opcional).' },
+      endDate: { type: 'string', description: 'Fecha final YYYY-MM-DD (opcional).' },
+    },
+    required: ['clientId'],
+    additionalProperties: false,
+  },
+  handler: async (args, client) => {
+    const clientId = encodeURIComponent(String(args.clientId))
+    const query = qs({
+      category: args.category,
+      filter: args.filter,
+      startDate: args.startDate,
+      endDate: args.endDate,
+    })
+    const res = await client.get(`/v1/clients/${clientId}/transactions${query}`)
+    return pretty(res)
+  },
+}
+
 export const TOOLS: ToolDef[] = [
   bankDownloadTool,
   listClientsTool,
   listPortalsTool,
   listClientAccountsTool,
+  listClientTransactionsTool,
 ]
 
 export const TOOLS_BY_NAME: Record<string, ToolDef> = Object.fromEntries(
