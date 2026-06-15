@@ -1,19 +1,27 @@
 import { ClientBankAccountsService } from '../../../src/modules/22-bank-worker/client-bank-accounts.service'
-import type { ClientBankAccountsRepository } from '../../../src/modules/22-bank-worker/client-bank-accounts.repository'
-import type { GlobalCredentialRow } from '../../../src/modules/22-bank-worker/client-bank-accounts.repository'
+import type {
+  ClientBankAccountsRepository,
+  ClientCredentialRow,
+  GlobalCredentialRow,
+} from '../../../src/modules/22-bank-worker/client-bank-accounts.repository'
 import type { BankPortalsRepository } from '../../../src/modules/22-bank-worker/bank-portals.repository'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import { EncryptionService } from '../../../src/core/encryption/encryption.service'
 import type { ClientBankAccount } from '../../../src/db/schema/client-bank-accounts'
 
 /**
- * Tests Tipo A para v0.16.3 — credenciales descifradas en las respuestas.
+ * Tests Tipo A — credenciales per-cliente.
  *
- * Cobertura:
+ * v0.16.3 — credenciales descifradas en las respuestas:
  * - CR-bw-001: list() descifra username/password.
  * - CR-bw-002: findById() descifra username/password/security_qa.
  * - CR-bw-003: security_qa = null cuando no se capturó.
  * - CR-bw-004: listGlobal() descifra las credenciales en los joins.
+ *
+ * v0.28.1 — nombre del portal (join) + filtro por portal:
+ * - CR-bw-031a: list() devuelve portal {id,name,portal_url} y bank_portal_id === portal.id.
+ * - CR-bw-031b: findById() devuelve portal con nombre.
+ * - CR-bw-032: list(clientId, 'chase') pasa el término al repo (filtro por portal).
  */
 
 const NOW = new Date()
@@ -37,6 +45,12 @@ function buildRow(overrides: Partial<ClientBankAccount> = {}): ClientBankAccount
   }
 }
 
+const CHASE_PORTAL = { id: 'portal-1', name: 'Chase', portal_url: null }
+
+function buildCredRow(overrides: Partial<ClientBankAccount> = {}): ClientCredentialRow {
+  return { credential: buildRow(overrides), portal: CHASE_PORTAL }
+}
+
 interface Mocks {
   repo: jest.Mocked<ClientBankAccountsRepository>
   portalsRepo: jest.Mocked<BankPortalsRepository>
@@ -46,8 +60,8 @@ interface Mocks {
 function makeMocks(): Mocks {
   return {
     repo: {
-      listByClient: jest.fn(),
-      findById: jest.fn(),
+      listByClientWithPortal: jest.fn(),
+      findByIdWithPortal: jest.fn(),
       listGlobalWithJoins: jest.fn(),
     } as unknown as jest.Mocked<ClientBankAccountsRepository>,
     portalsRepo: {} as unknown as jest.Mocked<BankPortalsRepository>,
@@ -67,7 +81,7 @@ function buildService(m: Mocks): ClientBankAccountsService {
 describe('ClientBankAccountsService — reveal (v0.16.3)', () => {
   it('CR-bw-001: list() descifra username y password', async () => {
     const m = makeMocks()
-    m.repo.listByClient.mockResolvedValue([buildRow()])
+    m.repo.listByClientWithPortal.mockResolvedValue([buildCredRow()])
     const svc = buildService(m)
 
     const [cred] = await svc.list('client-1')
@@ -78,7 +92,7 @@ describe('ClientBankAccountsService — reveal (v0.16.3)', () => {
 
   it('CR-bw-002: findById() descifra username/password/security_qa', async () => {
     const m = makeMocks()
-    m.repo.findById.mockResolvedValue(buildRow())
+    m.repo.findByIdWithPortal.mockResolvedValue(buildCredRow())
     const svc = buildService(m)
 
     const cred = await svc.findById('cred-1', 'client-1')
@@ -90,7 +104,7 @@ describe('ClientBankAccountsService — reveal (v0.16.3)', () => {
 
   it('CR-bw-003: security_qa = null cuando no se capturó', async () => {
     const m = makeMocks()
-    m.repo.findById.mockResolvedValue(buildRow({ securityQaEncrypted: null }))
+    m.repo.findByIdWithPortal.mockResolvedValue(buildCredRow({ securityQaEncrypted: null }))
     const svc = buildService(m)
 
     const cred = await svc.findById('cred-1', 'client-1')
@@ -114,5 +128,38 @@ describe('ClientBankAccountsService — reveal (v0.16.3)', () => {
     expect(result.items[0].username).toBe('alfredo.user')
     expect(result.items[0].password).toBe('S3cret!Pass')
     expect(result.items[0].security_qa).toBe('mascota: Firulais')
+  })
+})
+
+describe('ClientBankAccountsService — portal en credenciales per-cliente (v0.28.1)', () => {
+  it('CR-bw-031a: list() devuelve portal con nombre y bank_portal_id === portal.id', async () => {
+    const m = makeMocks()
+    m.repo.listByClientWithPortal.mockResolvedValue([buildCredRow()])
+    const svc = buildService(m)
+
+    const [cred] = await svc.list('client-1')
+
+    expect(cred.portal).toEqual({ id: 'portal-1', name: 'Chase', portal_url: null })
+    expect(cred.bank_portal_id).toBe(cred.portal.id)
+  })
+
+  it('CR-bw-031b: findById() devuelve portal con nombre', async () => {
+    const m = makeMocks()
+    m.repo.findByIdWithPortal.mockResolvedValue(buildCredRow())
+    const svc = buildService(m)
+
+    const cred = await svc.findById('cred-1', 'client-1')
+
+    expect(cred.portal.name).toBe('Chase')
+  })
+
+  it('CR-bw-032: list(clientId, term) pasa el filtro de portal al repo', async () => {
+    const m = makeMocks()
+    m.repo.listByClientWithPortal.mockResolvedValue([buildCredRow()])
+    const svc = buildService(m)
+
+    await svc.list('client-1', 'chase')
+
+    expect(m.repo.listByClientWithPortal).toHaveBeenCalledWith('client-1', 'chase')
   })
 })

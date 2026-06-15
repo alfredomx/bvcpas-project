@@ -136,3 +136,4 @@ El moat (endpoints, CSRF, paginación) vive en mapi; el plugin nunca ve esa lóg
 | 0.26.0  | ✅     | Desloguear + cerrar pestaña tras cada extracción (`close_tab` + receta logout Chase) — 401 unit verdes                                            | [v0.26.0.md](v0.26.0.md) |
 | 0.27.0  | ✅     | Verbo único `POST /v1/banking/download` (resuelve cliente+credencial+login+descarga+logout en 1 llamada) — 411 unit verdes                        | [v0.27.0.md](v0.27.0.md) |
 | 0.28.0  | ✅     | Verbo batch: `client` acepta array → 1 job `client-download` por cliente (worker hace login→descarga→logout), async por la cola — 412 unit verdes | [v0.28.0.md](v0.28.0.md) |
+| 0.28.1  | ✅     | Credenciales per-cliente con `portal` (join) + filtro `?portal=`; `save` por default en el verbo de descarga — 418 unit verdes                    | [v0.28.1.md](v0.28.1.md) |

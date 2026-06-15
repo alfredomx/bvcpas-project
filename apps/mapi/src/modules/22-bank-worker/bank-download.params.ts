@@ -52,14 +52,28 @@ export function resolveMasks(live: ListAccountsResponse, accounts?: 'all' | stri
   return [...new Set(source)]
 }
 
-/** Arma el DTO real del tipo y lo valida (con masks ya resueltas); inválido → 400. */
+/**
+ * Arma el DTO real del tipo y lo valida (con masks ya resueltas); inválido → 400.
+ *
+ * D-mapi-BW-033: el verbo de descarga **guarda por default** (`save: true`). El
+ * caso operativo es "descárgame los estados" → persistir a `.downloads`; el modo
+ * preview (base64 sin escribir) es la excepción, se pide explícito con
+ * `save: false`. Por eso el default va aquí (path del verbo), no en el schema:
+ * los step endpoints de bajo nivel conservan `save` opt-in.
+ */
 export function buildDownloadDto(
   what: DownloadWhat,
   credentialId: string,
   accountMasks: string[],
   params: Record<string, unknown>,
 ): Record<string, unknown> {
-  const parsed = SCHEMA_BY_WHAT[what].safeParse({ ...params, credentialId, accountMasks })
+  // `save: true` primero → un `save` explícito en params (incl. false) lo pisa.
+  const parsed = SCHEMA_BY_WHAT[what].safeParse({
+    save: true,
+    ...params,
+    credentialId,
+    accountMasks,
+  })
   if (!parsed.success) {
     throw new BadRequestException({
       message: `Parámetros inválidos para "${what}": ${parsed.error.issues

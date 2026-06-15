@@ -27,15 +27,15 @@ export class ClientBankAccountsService {
     private readonly encryption: EncryptionService,
   ) {}
 
-  async list(clientId: string): Promise<ClientBankAccountResponse[]> {
-    const rows = await this.repo.listByClient(clientId)
-    return rows.map((r) => this.toResponse(r))
+  async list(clientId: string, portalTerm?: string): Promise<ClientBankAccountResponse[]> {
+    const rows = await this.repo.listByClientWithPortal(clientId, portalTerm)
+    return rows.map((r) => this.toResponse(r.credential, r.portal))
   }
 
   async findById(id: string, clientId: string): Promise<ClientBankAccountResponse> {
-    const row = await this.repo.findById(id, clientId)
+    const row = await this.repo.findByIdWithPortal(id, clientId)
     if (!row) throw new ClientBankAccountNotFoundError(id)
-    return this.toResponse(row)
+    return this.toResponse(row.credential, row.portal)
   }
 
   async create(
@@ -69,7 +69,11 @@ export class ClientBankAccountsService {
       { type: 'client_bank_account', id: row.id },
     )
 
-    return this.toResponse(row)
+    return this.toResponse(row, {
+      id: portal.id,
+      name: portal.name,
+      portal_url: portal.portalUrl,
+    })
   }
 
   async update(
@@ -140,7 +144,13 @@ export class ClientBankAccountsService {
       )
     }
 
-    return this.toResponse(row)
+    const portal = await this.portalsRepo.findById(row.bankPortalId)
+    if (!portal) throw new BankPortalNotFoundError(row.bankPortalId)
+    return this.toResponse(row, {
+      id: portal.id,
+      name: portal.name,
+      portal_url: portal.portalUrl,
+    })
   }
 
   async delete(id: string, clientId: string, userId: string): Promise<void> {
@@ -154,11 +164,15 @@ export class ClientBankAccountsService {
     )
   }
 
-  private toResponse(row: ClientBankAccount): ClientBankAccountResponse {
+  private toResponse(
+    row: ClientBankAccount,
+    portal: { id: string; name: string; portal_url: string | null },
+  ): ClientBankAccountResponse {
     return {
       id: row.id,
       client_id: row.clientId,
       bank_portal_id: row.bankPortalId,
+      portal,
       nickname: row.nickname,
       username: row.usernameEncrypted ? this.encryption.decrypt(row.usernameEncrypted) : null,
       password: row.passwordEncrypted ? this.encryption.decrypt(row.passwordEncrypted) : null,
