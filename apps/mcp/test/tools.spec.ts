@@ -6,6 +6,8 @@ import {
   listPortalsTool,
   listClientAccountsTool,
   listClientTransactionsTool,
+  listUncatsTool,
+  listAmasTool,
 } from '../src/tools'
 
 /** fetch falso que registra la llamada y responde lo que se le configure. */
@@ -27,6 +29,21 @@ function clientWith(calls: { url: string; init: RequestInit }[], status = 200, b
     fetchFn: fakeFetch(calls, () => ({ status, body })),
   })
 }
+
+/** fetch falso que decide la respuesta según la URL (para tools que hacen 2 llamadas). */
+function clientRouter(
+  calls: { url: string; init: RequestInit }[],
+  route: (url: string) => { status: number; body: unknown },
+) {
+  const fetchFn = (async (url: string | URL, init?: RequestInit) => {
+    calls.push({ url: String(url), init: init ?? {} })
+    const { status, body } = route(String(url))
+    return new Response(body === undefined ? '' : JSON.stringify(body), { status })
+  }) as unknown as typeof fetch
+  return new MapiClient({ baseUrl: 'http://localhost:4000', jwt: 'JWT123', fetchFn })
+}
+
+const BILIA = 'ebe62603-a2ea-413d-96f2-c6e2c933b488'
 
 const headersOf = (init: RequestInit) => init.headers as Record<string, string>
 
@@ -165,5 +182,87 @@ describe('tools de lectura', () => {
     expect(calls[0].url).toBe(
       'http://localhost:4000/v1/clients/ad390fdb-1/transactions?filter=expense&startDate=2025-01-01&endDate=2026-04-30',
     )
+  })
+})
+
+describe('list_uncats / list_amas (resuelven nombre → UUID)', () => {
+  const TXNS = {
+    items: [
+      { id: 't1', category: 'uncategorized_expense', vendor_name: 'Dollar Tree', amount: '-3.50' },
+      { id: 't2', category: 'uncategorized_income', vendor_name: 'Zelle', amount: '200.00' },
+      { id: 't3', category: 'ask_my_accountant', vendor_name: 'Efrain', amount: '-200.00' },
+    ],
+    total: 3,
+  }
+
+  it('CR-mcp-013: list_uncats con UUID → GET transactions directo, filtra a uncats (sin AMA)', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, () => ({ status: 200, body: TXNS }))
+    const out = await listUncatsTool.handler({ client: BILIA }, client)
+    expect(calls).toHaveLength(1)
+    expect(calls[0].url).toBe(`http://localhost:4000/v1/clients/${BILIA}/transactions`)
+    const parsed = JSON.parse(out)
+    expect(parsed.total).toBe(2)
+    expect(parsed.items.map((t: { id: string }) => t.id)).toEqual(['t1', 't2'])
+  })
+
+  it('CR-mcp-014: list_uncats con NOMBRE → resuelve vía /v1/clients?search y luego transactions', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, (url) =>
+      url.includes('/transactions')
+        ? { status: 200, body: TXNS }
+        : {
+            status: 200,
+            body: { items: [{ id: BILIA, legal_name: 'Bilia Eatery, LLC' }], total: 1 },
+          },
+    )
+    await listUncatsTool.handler({ client: 'bilia' }, client)
+    expect(calls).toHaveLength(2)
+    expect(calls[0].url).toBe('http://localhost:4000/v1/clients?search=bilia&pageSize=50')
+    expect(calls[1].url).toBe(`http://localhost:4000/v1/clients/${BILIA}/transactions`)
+  })
+
+  it('CR-mcp-015: list_amas con NOMBRE → resuelve y pide category=ask_my_accountant', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, (url) =>
+      url.includes('/transactions')
+        ? { status: 200, body: { items: [TXNS.items[2]], total: 1 } }
+        : {
+            status: 200,
+            body: { items: [{ id: BILIA, legal_name: 'Bilia Eatery, LLC' }], total: 1 },
+          },
+    )
+    await listAmasTool.handler({ client: 'bilia' }, client)
+    expect(calls[1].url).toBe(
+      `http://localhost:4000/v1/clients/${BILIA}/transactions?category=ask_my_accountant`,
+    )
+  })
+
+  it('CR-mcp-016: nombre sin coincidencias → error claro, no llama transactions', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, () => ({ status: 200, body: { items: [], total: 0 } }))
+    await expect(listUncatsTool.handler({ client: 'zzz' }, client)).rejects.toThrow(
+      /coincida con "zzz"/,
+    )
+    expect(calls).toHaveLength(1)
+  })
+
+  it('CR-mcp-017: nombre ambiguo (2+ matches) → error que lista las coincidencias', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, () => ({
+      status: 200,
+      body: {
+        items: [
+          { id: 'a1', legal_name: 'Art & Beauty Granite, LLC' },
+          { id: 'a2', legal_name: 'Arcmen Engineering, LLC' },
+        ],
+        total: 2,
+      },
+    }))
+    await expect(listUncatsTool.handler({ client: 'ar' }, client)).rejects.toThrow(
+      /coincide con 2 clientes/,
+    )
+    await expect(listUncatsTool.handler({ client: 'ar' }, client)).rejects.toThrow(/a1/)
+    expect(calls.every((c) => !c.url.includes('/transactions'))).toBe(true)
   })
 })
