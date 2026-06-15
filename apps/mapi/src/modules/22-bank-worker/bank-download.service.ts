@@ -321,7 +321,8 @@ export class BankDownloadService {
 
   /**
    * Descarga estados de cuenta (PDF). `latest` baja solo el más reciente; si no,
-   * desde `year`/`month` al mes actual. Si `save`, los escribe como `YYYY-MM.pdf`.
+   * el rango de meses [`from` .. `to`] (`to` ausente → mes actual). Si `save`, los
+   * escribe como `YYYY-MM.pdf`.
    */
   async downloadStatements(
     clientId: string,
@@ -334,7 +335,7 @@ export class BankDownloadService {
     const client = await this.clientsRepo.findById(clientId)
     const yearsBack = dto.latest
       ? 1
-      : Math.max(0, new Date().getFullYear() - parseInt(dto.year ?? '', 10))
+      : Math.max(0, new Date().getFullYear() - parseInt((dto.from ?? '').slice(0, 4), 10))
 
     const accounts: DownloadStatementsResponse['accounts'] = []
     let total = 0
@@ -506,19 +507,26 @@ export class BankDownloadService {
   }
 
   /**
-   * Elige qué statements bajar de la lista cruda: `latest` → solo el de fecha
-   * máxima; si no, filtra al rango [year/month .. mes actual].
+   * Elige qué statements bajar de la lista cruda (por fecha DEL statement):
+   * - `latest`     → solo el de fecha máxima.
+   * - `from`/`to`  → rango de meses [from-01 .. fin de mes de `to`]. `to` ausente → mes actual.
+   *   "mayo" exacto: from=to="2026-05". "enero a marzo": from="2026-01", to="2026-03".
    */
   private selectStatements(refs: StatementRef[], dto: DownloadStatementsDto): StatementRef[] {
     if (dto.latest) {
       if (refs.length === 0) return []
       return [refs.reduce((a, b) => (a.date >= b.date ? a : b))]
     }
-    const yearFrom = parseInt(dto.year ?? '', 10)
-    const monthFrom = parseInt(dto.month ?? '1', 10)
-    const now = new Date()
-    const low = new Date(yearFrom, monthFrom - 1, 1)
-    const high = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    const [fy, fm] = (dto.from ?? '').split('-').map((s) => parseInt(s, 10))
+    const low = new Date(fy, fm - 1, 1)
+    let high: Date
+    if (dto.to) {
+      const [ty, tm] = dto.to.split('-').map((s) => parseInt(s, 10))
+      high = new Date(ty, tm, 0) // último día del mes `to`
+    } else {
+      const now = new Date()
+      high = new Date(now.getFullYear(), now.getMonth() + 1, 0) // fin del mes actual
+    }
     return refs.filter((r) => {
       if (!/^\d{8}$/.test(r.date)) return false
       const dt = new Date(

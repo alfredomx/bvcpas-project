@@ -241,26 +241,36 @@ export const DownloadStatementsSchema = z
     latest: z
       .boolean()
       .optional()
-      .describe('Baja SOLO el estado de cuenta más reciente. Alternativa a year/month.'),
-    year: z
+      .describe('Baja SOLO el estado de cuenta más reciente. Alternativa al rango `from`/`to`.'),
+    from: z
       .string()
-      .regex(/^\d{4}$/, 'year debe ser YYYY')
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'from debe ser YYYY-MM')
       .optional()
-      .describe('Año de inicio (YYYY). Requerido si no se usa `latest`.'),
-    month: z
+      .describe(
+        'Inicio del rango (YYYY-MM, inclusive). Requerido si no se usa `latest`. ' +
+          'Ej: "mayo 2026" → from:"2026-05".',
+      ),
+    to: z
       .string()
-      .regex(/^([1-9]|1[0-2])$/, 'month 1-12')
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'to debe ser YYYY-MM')
       .optional()
-      .describe('Mes de inicio (1-12). Opcional (con `year`).'),
+      .describe(
+        'Fin del rango (YYYY-MM, inclusive). Opcional → si se omite, hasta el mes actual. ' +
+          '"mayo" exacto → from y to ambos "2026-05". "enero a marzo" → from:"2026-01", to:"2026-03". ' +
+          'Todo 2026 → from:"2026-01", to:"2026-12".',
+      ),
     save: z.boolean().optional().describe('Guarda los PDFs (YYYY-MM.pdf) en .downloads/.'),
   })
   .strict()
   .superRefine((data, ctx) => {
-    if (data.latest && data.year) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `latest` O `year`, no ambos.' })
+    if (data.latest && data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `latest` O `from`, no ambos.' })
     }
-    if (!data.latest && !data.year) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Falta `latest` o `year`.' })
+    if (!data.latest && !data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Falta `latest` o `from`.' })
+    }
+    if (data.to && data.from && data.to < data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: '`to` no puede ser anterior a `from`.' })
     }
   })
 export class DownloadStatementsDto extends createZodDto(DownloadStatementsSchema) {}
