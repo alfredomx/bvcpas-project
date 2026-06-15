@@ -25,8 +25,14 @@ import {
   ChangeStatusSchema,
   ClientDto,
   ClientsListResponseDto,
+  ConfirmAliasDto,
+  ConfirmAliasResponseDto,
+  ConfirmAliasSchema,
   ListClientsQueryDto,
   ListClientsQuerySchema,
+  ResolveClientDto,
+  ResolveClientResponseDto,
+  ResolveClientSchema,
   UpdateClientDto,
   UpdateClientSchema,
 } from './dto/clients.dto'
@@ -92,6 +98,48 @@ export class ClientsController {
       page: result.page,
       pageSize: result.pageSize,
     }
+  }
+
+  @Post('resolve')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission('clients.read')
+  @ApiOperation({
+    summary: 'POST /v1/clients/resolve',
+    description:
+      'Resuelve una referencia difusa a un cliente ("bilia", "moy"). Primero busca un alias ' +
+      'guardado (match exacto); si no, busca difuso por legal_name. Devuelve `resolved` (1), ' +
+      '`ambiguous` (varios candidatos para que el conector pregunte) o `not_found`. Base del ' +
+      'lenguaje natural del conector (D-mapi-BW-020).',
+  })
+  @ApiResponse({ status: 200, type: ResolveClientResponseDto })
+  async resolve(
+    @Body(new ZodValidationPipe(ResolveClientSchema)) dto: ResolveClientDto,
+  ): Promise<ResolveClientResponseDto> {
+    const r = await this.clients.resolve(dto.q)
+    if (r.status === 'resolved')
+      return { status: 'resolved', via: r.via, client: serialize(r.client) }
+    if (r.status === 'ambiguous')
+      return { status: 'ambiguous', candidates: r.candidates.map(serialize) }
+    return { status: 'not_found' }
+  }
+
+  @Post('aliases')
+  @HttpCode(HttpStatus.OK)
+  @RequirePermission('clients.update')
+  @ApiOperation({
+    summary: 'POST /v1/clients/aliases',
+    description:
+      'Guarda (upsert) un alias → cliente. El alias se normaliza a minúsculas. La próxima vez que ' +
+      '`resolve` reciba ese alias, pega directo sin preguntar. El conector solo lo llama cuando la ' +
+      'resolución fue única (no para términos ambiguos como "summit").',
+  })
+  @ApiResponse({ status: 200, type: ConfirmAliasResponseDto })
+  @ApiResponse({ status: 404, description: 'Cliente no encontrado' })
+  async confirmAlias(
+    @Body(new ZodValidationPipe(ConfirmAliasSchema)) dto: ConfirmAliasDto,
+  ): Promise<ConfirmAliasResponseDto> {
+    const r = await this.clients.confirmAlias(dto.alias, dto.clientId)
+    return { alias: r.alias, client: serialize(r.client) }
   }
 
   @Get(':id')

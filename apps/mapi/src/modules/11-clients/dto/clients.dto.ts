@@ -28,7 +28,7 @@ export const ListClientsQuerySchema = z
 
 export class ListClientsQueryDto extends createZodDto(ListClientsQuerySchema) {}
 
-const ClientSchema = z.object({
+export const ClientSchema = z.object({
   id: z.string().uuid(),
   legal_name: z.string(),
   dba: z.string().nullable(),
@@ -121,6 +121,50 @@ export const UpdateClientSchema = z
   )
 
 export class UpdateClientDto extends createZodDto(UpdateClientSchema) {}
+
+// ───── resolve_client (alias + fuzzy) — v0.22.1 ─────
+
+export const ResolveClientSchema = z
+  .object({
+    q: z
+      .string()
+      .trim()
+      .min(1)
+      .describe(
+        'Referencia del cliente: alias guardado, nombre legal o fragmento ("bilia", "moy").',
+      ),
+  })
+  .strict()
+export class ResolveClientDto extends createZodDto(ResolveClientSchema) {}
+
+export const ResolveClientResponseSchema = z.object({
+  status: z
+    .enum(['resolved', 'ambiguous', 'not_found'])
+    .describe('resolved = 1 cliente; ambiguous = varios candidatos; not_found = ninguno.'),
+  via: z.enum(['alias', 'match']).optional().describe('Cómo se resolvió (solo si resolved).'),
+  client: ClientSchema.optional().describe('Cliente resuelto (solo si resolved).'),
+  candidates: z
+    .array(ClientSchema)
+    .optional()
+    .describe('Candidatos a desambiguar (solo si ambiguous).'),
+})
+export type ResolveClientResponse = z.infer<typeof ResolveClientResponseSchema>
+export class ResolveClientResponseDto extends createZodDto(ResolveClientResponseSchema) {}
+
+export const ConfirmAliasSchema = z
+  .object({
+    alias: z.string().trim().min(1).describe('Alias a guardar (se normaliza a minúsculas).'),
+    clientId: z.string().uuid().describe('Cliente al que apunta el alias.'),
+  })
+  .strict()
+export class ConfirmAliasDto extends createZodDto(ConfirmAliasSchema) {}
+
+export const ConfirmAliasResponseSchema = z.object({
+  alias: z.string().describe('Alias normalizado guardado.'),
+  client: ClientSchema,
+})
+export type ConfirmAliasResponse = z.infer<typeof ConfirmAliasResponseSchema>
+export class ConfirmAliasResponseDto extends createZodDto(ConfirmAliasResponseSchema) {}
 
 export const ChangeStatusSchema = z
   .object({

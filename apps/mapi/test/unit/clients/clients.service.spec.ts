@@ -57,6 +57,9 @@ function makeMocks(): Mocks {
       create: jest.fn(),
       update: jest.fn(),
       list: jest.fn(),
+      findByAlias: jest.fn(),
+      searchByLegalName: jest.fn(),
+      upsertAlias: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<ClientsRepository>,
     events: { log: jest.fn().mockResolvedValue(undefined) },
   }
@@ -237,6 +240,74 @@ describe('ClientsService', () => {
 
       expect(m.repo.update).not.toHaveBeenCalled()
       expect(m.events.log).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('CR-clients-009 — resolve() (alias + fuzzy)', () => {
+    it('alias guardado → resolved/alias (sin buscar por nombre)', async () => {
+      const m = makeMocks()
+      const client = buildClient({ id: 'c-bilia' })
+      m.repo.findByAlias.mockResolvedValueOnce(client)
+
+      const res = await buildService(m).resolve('Bilia')
+
+      expect(m.repo.findByAlias).toHaveBeenCalledWith('bilia')
+      expect(m.repo.searchByLegalName).not.toHaveBeenCalled()
+      expect(res).toEqual({ status: 'resolved', via: 'alias', client })
+    })
+
+    it('sin alias, 1 match por nombre → resolved/match', async () => {
+      const m = makeMocks()
+      const client = buildClient({ id: 'c1' })
+      m.repo.findByAlias.mockResolvedValueOnce(null)
+      m.repo.searchByLegalName.mockResolvedValueOnce([client])
+
+      const res = await buildService(m).resolve('bilia eatery')
+
+      expect(res).toEqual({ status: 'resolved', via: 'match', client })
+    })
+
+    it('sin alias, 0 matches → not_found', async () => {
+      const m = makeMocks()
+      m.repo.findByAlias.mockResolvedValueOnce(null)
+      m.repo.searchByLegalName.mockResolvedValueOnce([])
+
+      expect(await buildService(m).resolve('xyz')).toEqual({ status: 'not_found' })
+    })
+
+    it('sin alias, 2+ matches → ambiguous con candidatos', async () => {
+      const m = makeMocks()
+      const a = buildClient({ id: 'summit-group', legalName: 'Summit Group' })
+      const b = buildClient({ id: 'summit-geo', legalName: 'Summit Geomatics' })
+      m.repo.findByAlias.mockResolvedValueOnce(null)
+      m.repo.searchByLegalName.mockResolvedValueOnce([a, b])
+
+      const res = await buildService(m).resolve('summit')
+
+      expect(res).toEqual({ status: 'ambiguous', candidates: [a, b] })
+    })
+  })
+
+  describe('CR-clients-010 — confirmAlias()', () => {
+    it('upsert del alias normalizado y devuelve { alias, client }', async () => {
+      const m = makeMocks()
+      const client = buildClient({ id: 'c-bilia' })
+      m.repo.findById.mockResolvedValueOnce(client)
+
+      const res = await buildService(m).confirmAlias('  Bilia  ', 'c-bilia')
+
+      expect(m.repo.upsertAlias).toHaveBeenCalledWith('bilia', 'c-bilia')
+      expect(res).toEqual({ alias: 'bilia', client })
+    })
+
+    it('cliente inexistente → ClientNotFoundError', async () => {
+      const m = makeMocks()
+      m.repo.findById.mockResolvedValueOnce(null)
+
+      await expect(buildService(m).confirmAlias('bilia', 'nope')).rejects.toBeInstanceOf(
+        ClientNotFoundError,
+      )
+      expect(m.repo.upsertAlias).not.toHaveBeenCalled()
     })
   })
 })
