@@ -120,18 +120,19 @@ El moat (endpoints, CSRF, paginación) vive en mapi; el plugin nunca ve esa lóg
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                                                                       | Archivo                  |
-| ------- | ------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)                                                             | [v0.15.0.md](v0.15.0.md) |
-| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)                                                                    | [v0.16.0.md](v0.16.0.md) |
-| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)                                                        | [v0.16.2.md](v0.16.2.md) |
-| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)                                                              | [v0.16.3.md](v0.16.3.md) |
-| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                                                        | [v0.16.4.md](v0.16.4.md) |
-| 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo                                                | [v0.18.0.md](v0.18.0.md) |
-| 0.21.0  | ✅     | Step-flow descarga: login en vivo + cuentas + checks/deposits/statements/transactions + PDF storage + presets              | [v0.21.0.md](v0.21.0.md) |
-| 0.22.0  | ✅     | Adapters delgados (primitivas) + política en mapi + modo "latest"                                                          | [v0.22.0.md](v0.22.0.md) |
-| 0.23.0  | ✅     | Read verbs (checks/deposits/statements list) — preview sin descargar imágenes/PDF                                          | [v0.23.0.md](v0.23.0.md) |
-| 0.25.0  | ✅     | Descargas por la cola (worker BullMQ concurrency 1) → visibles en bull-board                                               | [v0.25.0.md](v0.25.0.md) |
-| 0.25.1  | ✅     | Progreso fino (objeto etapa+done/total) por-ítem en la pestaña Progress de bull-board                                      | [v0.25.1.md](v0.25.1.md) |
-| 0.26.0  | ✅     | Desloguear + cerrar pestaña tras cada extracción (`close_tab` + receta logout Chase) — 401 unit verdes                     | [v0.26.0.md](v0.26.0.md) |
-| 0.27.0  | ✅     | Verbo único `POST /v1/banking/download` (resuelve cliente+credencial+login+descarga+logout en 1 llamada) — 411 unit verdes | [v0.27.0.md](v0.27.0.md) |
+| Versión | Estado | Tema                                                                                                                                              | Archivo                  |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)                                                                                    | [v0.15.0.md](v0.15.0.md) |
+| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)                                                                                           | [v0.16.0.md](v0.16.0.md) |
+| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)                                                                               | [v0.16.2.md](v0.16.2.md) |
+| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)                                                                                     | [v0.16.3.md](v0.16.3.md) |
+| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                                                                               | [v0.16.4.md](v0.16.4.md) |
+| 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo                                                                       | [v0.18.0.md](v0.18.0.md) |
+| 0.21.0  | ✅     | Step-flow descarga: login en vivo + cuentas + checks/deposits/statements/transactions + PDF storage + presets                                     | [v0.21.0.md](v0.21.0.md) |
+| 0.22.0  | ✅     | Adapters delgados (primitivas) + política en mapi + modo "latest"                                                                                 | [v0.22.0.md](v0.22.0.md) |
+| 0.23.0  | ✅     | Read verbs (checks/deposits/statements list) — preview sin descargar imágenes/PDF                                                                 | [v0.23.0.md](v0.23.0.md) |
+| 0.25.0  | ✅     | Descargas por la cola (worker BullMQ concurrency 1) → visibles en bull-board                                                                      | [v0.25.0.md](v0.25.0.md) |
+| 0.25.1  | ✅     | Progreso fino (objeto etapa+done/total) por-ítem en la pestaña Progress de bull-board                                                             | [v0.25.1.md](v0.25.1.md) |
+| 0.26.0  | ✅     | Desloguear + cerrar pestaña tras cada extracción (`close_tab` + receta logout Chase) — 401 unit verdes                                            | [v0.26.0.md](v0.26.0.md) |
+| 0.27.0  | ✅     | Verbo único `POST /v1/banking/download` (resuelve cliente+credencial+login+descarga+logout en 1 llamada) — 411 unit verdes                        | [v0.27.0.md](v0.27.0.md) |
+| 0.28.0  | ✅     | Verbo batch: `client` acepta array → 1 job `client-download` por cliente (worker hace login→descarga→logout), async por la cola — 412 unit verdes | [v0.28.0.md](v0.28.0.md) |

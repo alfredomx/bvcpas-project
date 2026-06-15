@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common'
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
@@ -13,13 +13,14 @@ import {
 } from './dto/bank-download.dto'
 
 /**
- * Verbo único de descarga bancaria (v0.27.0). Una sola llamada hace todo:
- * resuelve el cliente por nombre, elige la credencial descargable, hace login en
- * vivo, descarga y (al terminar) desloguea + cierra la pestaña.
+ * Verbo único de descarga bancaria (v0.27.0 → batch v0.28.0). `client` es uno o
+ * **varios** nombres/UUIDs. mapi resuelve cada cliente + credencial y **encola 1
+ * job por cliente**; el worker hace login → descarga → logout serializado por la
+ * cola (1 sesión de banco a la vez). Async: responde **202** con `{ jobs }` —
+ * jobId o error por cliente. El avance/resultado/fallos quedan en bull-board.
  *
  * `POST /v1/banking/download { client, what, params }`. Reemplaza el encadenado
- * manual de 4 endpoints (`credentials` → `accounts` → `download_*`). Los step
- * endpoints por `:id` siguen existiendo para control fino.
+ * manual de 4 endpoints. Los step endpoints por `:id` siguen para control fino.
  */
 @ApiTags('Banking - Download')
 @ApiBearerAuth('bearer')
@@ -28,31 +29,26 @@ export class BankDownloadOrchestratorController {
   constructor(private readonly orchestrator: BankDownloadOrchestratorService) {}
 
   @Post()
-  @HttpCode(200)
+  @HttpCode(HttpStatus.ACCEPTED)
   @RequirePermission('banking.read')
   @ApiOperation({
-    summary: 'Descarga bancaria en 1 llamada (resuelve cliente + login + descarga + logout)',
+    summary: 'Descarga bancaria de 1 o N clientes (encola; resuelve + login + descarga + logout)',
     description:
-      'Verbo único: `client` (nombre o UUID) + `what` (checks/deposits/statements/transactions) + ' +
-      '`params` (range/from/to/year/month/format/save según el tipo). Resuelve el cliente por ' +
-      'nombre (auto-elige si solo uno tiene credencial descargable; si hay varios → 409 con ' +
-      'candidatos), elige la credencial con adapter (Chase), hace login en vivo, descarga por la ' +
-      'cola, y al terminar desloguea + cierra la pestaña. `accounts:"all"` (default) = todas.',
+      'Verbo único: `client` (nombre/UUID o array) + `what` (checks/deposits/statements/' +
+      'transactions) + `params` (range/from/to/year/month/format/save según el tipo). Resuelve ' +
+      'cada cliente por nombre (auto-elige si solo uno tiene credencial descargable; si hay ' +
+      'varios → error en ese entry), elige la credencial con adapter (Chase) y **encola 1 job por ' +
+      'cliente**. El worker corre cada job (login en vivo → descarga → logout + cerrar pestaña) ' +
+      'serializado por la cola = 1 sesión de banco a la vez. Responde 202 con `{ jobs }`; el ' +
+      'avance/resultado/fallos se ven en bull-board. `accounts:"all"` (default) = todas.',
   })
   @ApiResponse({
-    status: 200,
-    description: 'Descarga completada (incluye el resultado del download_* en `result`).',
+    status: 202,
+    description:
+      'Jobs encolados. `jobs[]` lleva jobId (status=queued) o code/message (status=error) por cliente.',
     type: OrchestrateDownloadResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Parámetros inválidos para el tipo.' })
-  @ApiResponse({ status: 404, description: 'Cliente no encontrado.' })
-  @ApiResponse({
-    status: 409,
-    description: 'Cliente ambiguo o varias credenciales descargables (ver `details`).',
-  })
-  @ApiResponse({ status: 422, description: 'El cliente no tiene credencial descargable.' })
-  @ApiResponse({ status: 502, description: 'No se pudo establecer la sesión (login/MFA/banco).' })
-  @ApiResponse({ status: 503, description: 'No hay plugin conectado.' })
+  @ApiResponse({ status: 400, description: 'Parámetros (`params`) inválidos para el tipo.' })
   async download(
     @Body(new ZodValidationPipe(OrchestrateDownloadSchema)) body: OrchestrateDownloadDto,
     @CurrentUser() actor: SessionContext,

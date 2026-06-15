@@ -1,19 +1,15 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
-import { z } from 'zod'
+import { Injectable } from '@nestjs/common'
 import { ClientsService } from '../11-clients/clients.service'
 import { ClientsRepository } from '../11-clients/clients.repository'
+import { DomainError } from '../../common/errors/domain.error'
 import type { Client } from '../../db/schema/clients'
 import { BankDownloadService } from './bank-download.service'
-import { BankSessionService } from './bank-session.service'
-import { BankDownloadQueueService, type BankDownloadJob } from './bank-download.queue'
-import {
-  DownloadChecksSchema,
-  DownloadDepositsSchema,
-  DownloadStatementsSchema,
-  DownloadTransactionsSchema,
-  type ListAccountsResponse,
-  type OrchestrateDownloadDto,
-  type OrchestrateDownloadResponse,
+import { BankDownloadQueueService } from './bank-download.queue'
+import { validateParamsShape } from './bank-download.params'
+import type {
+  OrchestrateDownloadDto,
+  OrchestrateDownloadResponse,
+  OrchestrateJobEntry,
 } from './dto/bank-download.dto'
 import {
   DownloadClientAmbiguousError,
@@ -24,26 +20,16 @@ import {
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/** Schema de validación de `params` por tipo de descarga. */
-const SCHEMA_BY_WHAT = {
-  checks: DownloadChecksSchema,
-  deposits: DownloadDepositsSchema,
-  statements: DownloadStatementsSchema,
-  transactions: DownloadTransactionsSchema,
-} as const
-
 /**
- * Verbo único de descarga (v0.27.0). Colapsa el flujo de 4 llamadas
- * (resolve → credencial → login → descarga) en UNA: el LLM/operador manda
- * `{ client, what, params }` y mapi encadena todo server-side. El logout +
- * cierre de pestaña ya es automático (v0.26.0, en el worker).
+ * Verbo único de descarga (v0.27.0 → batch en v0.28.0). El cliente manda
+ * `{ client, what, params }` donde `client` es uno o **varios** nombres/UUIDs.
+ * mapi resuelve cada cliente + credencial **al recibir** (feedback inmediato de
+ * qué se encoló y qué falló) y **encola 1 job por cliente** (`client-download`)
+ * que el worker corre solo (login → descarga → logout), serializado por la cola.
  *
- * - **Cliente por nombre**: resuelve por legal_name/alias/UUID. Si el nombre es
- *   ambiguo, auto-elige al único candidato con credencial descargable; si hay
- *   varios, devuelve candidatos (409) — cero adivinanza.
- * - **Credencial**: auto-elige la única con `download_supported` (Chase hoy); si
- *   hay varias, pide especificar (409, o `credentialId` explícito).
- * - **Descarga**: encola por la cola (bull-board + concurrency 1) y espera.
+ * Async: responde con `{ jobs: [...] }` (jobId o error por cliente). El avance,
+ * resultado y fallos quedan **registrados en bull-board** — si algo truena a
+ * mitad del batch, ese job queda `failed` y los demás siguen.
  */
 @Injectable()
 export class BankDownloadOrchestratorService {
@@ -51,7 +37,6 @@ export class BankDownloadOrchestratorService {
     private readonly clients: ClientsService,
     private readonly clientsRepo: ClientsRepository,
     private readonly downloads: BankDownloadService,
-    private readonly session: BankSessionService,
     private readonly queue: BankDownloadQueueService,
   ) {}
 
@@ -59,31 +44,47 @@ export class BankDownloadOrchestratorService {
     input: OrchestrateDownloadDto,
     userId: string,
   ): Promise<OrchestrateDownloadResponse> {
-    const client = await this.resolveClient(input.client)
-    const credentialId = await this.pickCredential(client, input.credentialId)
+    const queries = Array.isArray(input.client) ? input.client : [input.client]
+    const params = input.params ?? {}
+    // Valida la forma de params UNA vez (es igual para todo el batch) → 400 si está mal.
+    validateParamsShape(input.what, params)
 
-    // Login en vivo + cuentas reales (abre Chase y se loguea con el vault).
-    const live = await this.session.listAccounts(client.id, credentialId, userId)
-    const accountMasks = this.resolveMasks(live, input.accounts)
+    // `credentialId` forzado solo aplica con 1 cliente (con varios, cada uno resuelve el suyo).
+    const forced = queries.length === 1 ? input.credentialId : undefined
 
-    const dto = this.buildDto(input.what, credentialId, accountMasks, input.params ?? {})
-    const job = {
-      kind: input.what,
-      clientId: client.id,
-      userId,
-      dto,
-    } as BankDownloadJob
-
-    const result = await this.queue.runAndWait(job, `${input.what} ${client.legalName}`)
-
-    return {
-      client: { id: client.id, legal_name: client.legalName },
-      credential_id: credentialId,
-      portal: live.portal,
-      what: input.what,
-      accounts_used: accountMasks,
-      result,
+    const jobs: OrchestrateJobEntry[] = []
+    for (const q of queries) {
+      try {
+        const client = await this.resolveClient(q)
+        const credentialId = await this.pickCredential(client, forced)
+        const jobId = await this.queue.enqueue(
+          {
+            kind: 'client-download',
+            what: input.what,
+            clientId: client.id,
+            credentialId,
+            userId,
+            accounts: input.accounts ?? 'all',
+            params,
+          },
+          `${input.what} ${client.legalName}`,
+        )
+        jobs.push({
+          client: q,
+          status: 'queued',
+          clientId: client.id,
+          legalName: client.legalName,
+          jobId,
+        })
+      } catch (err) {
+        if (err instanceof DomainError) {
+          jobs.push({ client: q, status: 'error', code: err.code, message: err.message })
+        } else {
+          throw err // errores no-dominio (400 de params ya salió arriba) → propaga.
+        }
+      }
     }
+    return { what: input.what, jobs }
   }
 
   /** Resuelve el cliente por UUID o nombre; desambigua por credencial descargable. */
@@ -128,29 +129,5 @@ export class BankDownloadOrchestratorService {
   private async hasDownloadableCredential(clientId: string): Promise<boolean> {
     const creds = (await this.downloads.listCredentials(clientId)).data
     return creds.some((c) => c.download_supported && c.status === 'active')
-  }
-
-  /** "all" (o vacío) → todas las masks del login (deduplicadas); si no, las pedidas. */
-  private resolveMasks(live: ListAccountsResponse, accounts?: 'all' | string[]): string[] {
-    const source = !accounts || accounts === 'all' ? live.accounts.map((a) => a.mask) : accounts
-    return [...new Set(source)]
-  }
-
-  /** Arma el DTO del tipo y lo valida con su schema; inválido → 400. */
-  private buildDto(
-    what: OrchestrateDownloadDto['what'],
-    credentialId: string,
-    accountMasks: string[],
-    params: Record<string, unknown>,
-  ): z.infer<(typeof SCHEMA_BY_WHAT)[typeof what]> {
-    const parsed = SCHEMA_BY_WHAT[what].safeParse({ ...params, credentialId, accountMasks })
-    if (!parsed.success) {
-      throw new BadRequestException({
-        message: `Parámetros inválidos para "${what}": ${parsed.error.issues
-          .map((i) => i.message)
-          .join('; ')}`,
-      })
-    }
-    return parsed.data
   }
 }

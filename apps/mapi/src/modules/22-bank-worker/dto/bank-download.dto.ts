@@ -411,25 +411,29 @@ export const ListStatementRefsResponseSchema = z.object({
 export type ListStatementRefsResponse = z.infer<typeof ListStatementRefsResponseSchema>
 export class ListStatementRefsResponseDto extends createZodDto(ListStatementRefsResponseSchema) {}
 
-// ───── orquestación: 1 verbo de descarga (v0.27.0) ────────────────────────
+// ───── orquestación: 1 verbo de descarga, 1 o N clientes (v0.27.0 / v0.28.0) ──
 
 /** Tipos que el verbo único de descarga sabe orquestar. */
 export const ORCHESTRATE_WHATS = ['checks', 'deposits', 'statements', 'transactions'] as const
 
 /**
- * Verbo único: resuelve cliente por nombre → credencial descargable → login →
- * descarga → logout, en una sola llamada. `params` lleva lo específico del tipo
- * (range/from/to/year/month/format/save) y se valida contra el schema de `what`.
+ * Verbo único (v0.28.0 batch): `client` es uno o **varios** nombres/UUIDs. mapi
+ * resuelve cada cliente + credencial al recibir y **encola 1 job por cliente**
+ * (`client-download`); el worker hace login → descarga → logout serializado. Async:
+ * responde `{ jobs }` (jobId o error por cliente); el avance/resultado/fallos
+ * viven en bull-board. `params` lleva lo específico del tipo.
  */
 export const OrchestrateDownloadSchema = z
   .object({
-    client: z.string().min(1).describe('Nombre (legal_name / alias / dba) o UUID del cliente.'),
+    client: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .describe('Cliente(s): un nombre/UUID o un array de ellos. Cada uno = 1 job.'),
     what: z.enum(ORCHESTRATE_WHATS).describe('Qué descargar.'),
     credentialId: z
       .string()
       .uuid()
       .optional()
-      .describe('Forzar credencial (si el cliente tiene varias descargables).'),
+      .describe('Forzar credencial (solo con 1 cliente que tenga varias descargables).'),
     accounts: z
       .union([z.literal('all'), z.array(mask).min(1)])
       .optional()
@@ -444,14 +448,22 @@ export const OrchestrateDownloadSchema = z
   .strict()
 export class OrchestrateDownloadDto extends createZodDto(OrchestrateDownloadSchema) {}
 
+/** Un cliente del batch: encolado (jobId) o fallido al resolver (code/message). */
+export const OrchestrateJobEntrySchema = z.object({
+  client: z.string().describe('Lo que mandó el caller (nombre/UUID).'),
+  status: z.enum(['queued', 'error']),
+  clientId: z.string().uuid().optional(),
+  legalName: z.string().optional(),
+  jobId: z.string().optional().describe('ID del job en bull-board (si status=queued).'),
+  code: z.string().optional().describe('Código de error de dominio (si status=error).'),
+  message: z.string().optional(),
+})
+export type OrchestrateJobEntry = z.infer<typeof OrchestrateJobEntrySchema>
+
 export const OrchestrateDownloadResponseSchema = z.object({
-  client: z.object({ id: z.string().uuid(), legal_name: z.string() }),
-  credential_id: z.string().uuid(),
-  portal: z.string(),
   what: z.enum(ORCHESTRATE_WHATS),
-  accounts_used: z.array(z.string()),
-  /** El resultado del download_* correspondiente (shape según `what`). */
-  result: z.unknown(),
+  /** Un entry por cliente pedido: encolado (jobId) o error al resolver. */
+  jobs: z.array(OrchestrateJobEntrySchema),
 })
 export type OrchestrateDownloadResponse = z.infer<typeof OrchestrateDownloadResponseSchema>
 export class OrchestrateDownloadResponseDto extends createZodDto(

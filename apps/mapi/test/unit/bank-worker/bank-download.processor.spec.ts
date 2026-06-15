@@ -26,6 +26,16 @@ function build() {
   } as unknown as jest.Mocked<BankDownloadService>
   const session = {
     endSession: jest.fn().mockResolvedValue(undefined),
+    listAccounts: jest.fn().mockResolvedValue({
+      credential_id: 'cred',
+      portal: 'Chase Bank',
+      today: '06-15-2026',
+      timezone: 'America/Chicago',
+      accounts: [
+        { mask: '7011', type: 'checking', name: 'x' },
+        { mask: '7011', type: 'checking', name: 'dup' }, // dedupe
+      ],
+    }),
   } as unknown as jest.Mocked<BankSessionService>
   return { service, session, proc: new BankDownloadProcessor(service, session) }
 }
@@ -42,6 +52,32 @@ describe('BankDownloadProcessor', () => {
     expect(res).toEqual({ ok: 'checks' })
     // v0.26.0: tras la extracción se desloguea + cierra la pestaña.
     expect(session.endSession).toHaveBeenCalledWith('c1', 'cred', 'u1')
+  })
+
+  it('CR-bw-q-005: kind=client-download → login + masks deduplicadas + download + logout', async () => {
+    const { service, session, proc } = build()
+    const credId = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb'
+    const job = fakeJob({
+      kind: 'client-download',
+      what: 'statements',
+      clientId: 'c1',
+      credentialId: credId,
+      userId: 'u1',
+      accounts: 'all',
+      params: { latest: true },
+    } as never)
+
+    const res = await proc.process(job)
+
+    expect(session.listAccounts).toHaveBeenCalledWith('c1', credId, 'u1')
+    expect(service.downloadStatements).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({ credentialId: credId, accountMasks: ['7011'], latest: true }),
+      'u1',
+      expect.any(Function),
+    )
+    expect(session.endSession).toHaveBeenCalledWith('c1', credId, 'u1')
+    expect(res).toEqual({ ok: 'statements' })
   })
 
   it('CR-bw-q-004: endSession corre aunque la descarga falle (finally), sin tapar el error', async () => {
