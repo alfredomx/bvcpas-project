@@ -108,4 +108,27 @@ describe('tools de lectura', () => {
     expect(calls[0].url).toBe('http://localhost:4000/v1/clients/ad390fdb-1/banking/credentials')
     expect(calls[0].init.method).toBe('GET')
   })
+
+  it('CR-mcp-007: list_clients con search → GET /v1/clients?search=sre', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { data: [], total: 1 })
+    await listClientsTool.handler({ search: 'sre' }, client)
+    expect(calls[0].url).toBe('http://localhost:4000/v1/clients?search=sre')
+  })
+
+  it('CR-mcp-008: list_clients con page+pageSize → query string correcto', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { data: [] })
+    await listClientsTool.handler({ page: 2, pageSize: 100 }, client)
+    expect(calls[0].url).toBe('http://localhost:4000/v1/clients?page=2&pageSize=100')
+  })
+
+  it('CR-mcp-009: list_client_accounts con portal → ?portal=chase', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { data: [] })
+    await listClientAccountsTool.handler({ clientId: 'ad390fdb-1', portal: 'chase' }, client)
+    expect(calls[0].url).toBe(
+      'http://localhost:4000/v1/clients/ad390fdb-1/banking/credentials?portal=chase',
+    )
+  })
 })

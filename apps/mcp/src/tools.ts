@@ -25,6 +25,17 @@ export interface ToolDef {
 
 const pretty = (v: unknown): string => JSON.stringify(v, null, 2)
 
+/** Arma `?a=1&b=2` desde los args; omite undefined/null/'' y encodea. '' si no hay nada. */
+const qs = (params: Record<string, unknown>): string => {
+  const parts: string[] = []
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== '') {
+      parts.push(`${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    }
+  }
+  return parts.length > 0 ? `?${parts.join('&')}` : ''
+}
+
 export const bankDownloadTool: ToolDef = {
   name: 'bank_download',
   description:
@@ -67,11 +78,26 @@ export const bankDownloadTool: ToolDef = {
 export const listClientsTool: ToolDef = {
   name: 'list_clients',
   description:
-    'Lista los clientes (id, nombre, realm QBO, tier, status). Útil para saber a quién se le ' +
-    'puede disparar una descarga antes de llamar bank_download.',
-  inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-  handler: async (_args, client) => {
-    const res = await client.get('/v1/clients')
+    'Lista los clientes (id, nombre, realm QBO, tier, status). La respuesta es paginada ' +
+    '(trae `total`, `page`, `pageSize`). Para ENCONTRAR un cliente por nombre usa `search` ' +
+    '(filtra server-side, 1 llamada) — no escanees la lista. Para navegar todos, usa ' +
+    '`page`/`pageSize`.',
+  inputSchema: {
+    type: 'object',
+    properties: {
+      search: {
+        type: 'string',
+        description:
+          'Filtro por nombre (match parcial, case-insensitive). Ej: "sre" → SRE Services, LLC.',
+      },
+      page: { type: 'number', description: 'Página (>=1, default 1).' },
+      pageSize: { type: 'number', description: 'Tamaño de página (1-200, default 50).' },
+    },
+    additionalProperties: false,
+  },
+  handler: async (args, client) => {
+    const query = qs({ search: args.search, page: args.page, pageSize: args.pageSize })
+    const res = await client.get(`/v1/clients${query}`)
     return pretty(res)
   },
 }
@@ -89,19 +115,25 @@ export const listPortalsTool: ToolDef = {
 export const listClientAccountsTool: ToolDef = {
   name: 'list_client_accounts',
   description:
-    'Lista las credenciales/portales bancarios conectados de un cliente (qué bancos tiene). ' +
-    'Requiere clientId (UUID).',
+    'Lista las credenciales/portales bancarios conectados de un cliente (qué bancos tiene), ' +
+    'cada una con el portal (id, nombre, portal_url). Requiere clientId (UUID). Filtro opcional ' +
+    '`portal` (parcial, case-insensitive) para resolver la credencial de un banco en una llamada.',
   inputSchema: {
     type: 'object',
     properties: {
       clientId: { type: 'string', description: 'UUID del cliente.' },
+      portal: {
+        type: 'string',
+        description: 'Filtra por nombre de portal (parcial, case-insensitive). Ej: "chase".',
+      },
     },
     required: ['clientId'],
     additionalProperties: false,
   },
   handler: async (args, client) => {
     const clientId = encodeURIComponent(String(args.clientId))
-    const res = await client.get(`/v1/clients/${clientId}/banking/credentials`)
+    const query = qs({ portal: args.portal })
+    const res = await client.get(`/v1/clients/${clientId}/banking/credentials${query}`)
     return pretty(res)
   },
 }

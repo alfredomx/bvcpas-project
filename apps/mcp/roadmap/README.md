@@ -95,6 +95,7 @@ bancos tiene conectados). Requiere `clientId`.
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                                | Archivo                |
-| ------- | ------ | ----------------------------------------------------------------------------------- | ---------------------- |
-| 0.1.0   | ✅     | Scaffold app + 4 tools (bank_download + 3 de lectura) sobre stdio contra mapi local | [v0.1.0.md](v0.1.0.md) |
+| Versión | Estado | Tema                                                                                                      | Archivo                |
+| ------- | ------ | --------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 0.1.0   | ✅     | Scaffold app + 4 tools (bank_download + 3 de lectura) sobre stdio contra mapi local                       | [v0.1.0.md](v0.1.0.md) |
+| 0.1.1   | ✅     | Filtros/paginación en tools: `search`/`page`/`pageSize` en list_clients, `portal` en list_client_accounts | [v0.1.1.md](v0.1.1.md) |
