@@ -60,17 +60,26 @@ interface Mocks {
   events: { log: jest.Mock }
   getAllAccounts: jest.Mock
   buildLoginRecipe: jest.Mock
+  buildLogoutRecipe: jest.Mock
 }
 
-function makeMocks(opts: { withLogin?: boolean } = {}): Mocks {
+function makeMocks(opts: { withLogin?: boolean; withLogout?: boolean } = {}): Mocks {
   const getAllAccounts = jest.fn()
   const buildLoginRecipe = jest.fn(() => ({
     url: LOGON_URL,
     steps: [{ op: 'click', selector: '#signin-button' }],
   }))
+  const buildLogoutRecipe = jest.fn(() => ({
+    url: LOGON_URL,
+    steps: [
+      { op: 'waitFor', selector: '#brand_bar_sign_in_out' },
+      { op: 'click', selector: '#brand_bar_sign_in_out' },
+    ],
+  }))
   const adapter = {
     getAllAccounts,
     ...(opts.withLogin === false ? {} : { buildLoginRecipe }),
+    ...(opts.withLogout === false ? {} : { buildLogoutRecipe }),
   } as unknown as BankAdapter
   mockGetAdapterFactory.mockReturnValue(() => adapter)
 
@@ -98,6 +107,7 @@ function makeMocks(opts: { withLogin?: boolean } = {}): Mocks {
     events: { log: jest.fn().mockResolvedValue(undefined) },
     getAllAccounts,
     buildLoginRecipe,
+    buildLogoutRecipe,
   }
 }
 
@@ -215,5 +225,71 @@ describe('BankSessionService.listAccounts', () => {
     await expect(build(m).listAccounts(CLIENT_ID, CRED_ID, 'user-1')).rejects.toBeInstanceOf(
       BankSessionNotEstablishedError,
     )
+  })
+})
+
+describe('BankSessionService.endSession (v0.26.0)', () => {
+  /** bridge.send que reporta una pestaña viva del portal para list_tabs. */
+  function bridgeWithPortalTab(tabId = 7): jest.Mock {
+    return jest.fn(async (cmd: { type: string }) => {
+      if (cmd.type === 'list_tabs') {
+        return {
+          tabs: [{ tabId, url: 'https://secure.chase.com/web/auth/x', active: true, windowId: 1 }],
+        }
+      }
+      return { requestId: 'd', ok: true, results: [] } // execute_dom / close_tab
+    })
+  }
+
+  it('CR-bw-sess-007: pestaña viva → execute_dom (logout) + close_tab + evento ended', async () => {
+    const m = makeMocks()
+    m.bridge.send = bridgeWithPortalTab(7)
+
+    await build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')
+
+    const sent = m.bridge.send.mock.calls.map((c) => (c[0] as { type: string }).type)
+    expect(sent).toEqual(['list_tabs', 'execute_dom', 'close_tab'])
+    const dom = m.bridge.send.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'execute_dom',
+    )
+    expect((dom![0] as { payload: { tabId: number } }).payload.tabId).toBe(7)
+    const close = m.bridge.send.mock.calls.find(
+      (c) => (c[0] as { type: string }).type === 'close_tab',
+    )
+    expect((close![0] as { payload: { tabId: number } }).payload.tabId).toBe(7)
+    expect(m.events.log).toHaveBeenCalledWith(
+      'bank.session.ended',
+      expect.objectContaining({ portal: 'Chase', tab_id: 7 }),
+      'user-1',
+      { type: 'client_bank_account', id: CRED_ID },
+    )
+  })
+
+  it('CR-bw-sess-008: pestaña ya cerrada (list_tabs vacío) → no execute_dom ni close_tab', async () => {
+    const m = makeMocks() // bridge default: list_tabs → { tabs: [] }
+    await build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')
+
+    const sent = m.bridge.send.mock.calls.map((c) => (c[0] as { type: string }).type)
+    expect(sent).toEqual(['list_tabs'])
+    expect(m.events.log).not.toHaveBeenCalled()
+  })
+
+  it('CR-bw-sess-009: adapter sin buildLogoutRecipe → no-op (ni siquiera list_tabs)', async () => {
+    const m = makeMocks({ withLogout: false })
+    await build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')
+    expect(m.bridge.send).not.toHaveBeenCalled()
+  })
+
+  it('CR-bw-sess-010: best-effort — si el bridge rechaza, NO lanza', async () => {
+    const m = makeMocks()
+    m.bridge.send = jest.fn().mockRejectedValue(new Error('plugin desconectado'))
+    await expect(build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')).resolves.toBeUndefined()
+  })
+
+  it('CR-bw-sess-011: credencial inexistente → no-op silencioso', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(null)
+    await build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')
+    expect(m.bridge.send).not.toHaveBeenCalled()
   })
 })

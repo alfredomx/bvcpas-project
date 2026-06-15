@@ -7,6 +7,7 @@ import {
   type BankImage,
   type BankLoginCredentials,
   type BankLoginRecipe,
+  type BankLogoutRecipe,
   type BankTxn,
   type StatementRef,
 } from './bank-adapter.base'
@@ -58,6 +59,21 @@ export class ChaseAdapter extends BankAdapter {
         { op: 'fill', selector: '#userId-input-field-input', value: creds.username },
         { op: 'fill', selector: '#password-input-field-input', value: creds.password },
         { op: 'click', selector: '#signin-button' },
+      ],
+    }
+  }
+
+  /**
+   * Receta de logout: click en el botón "Sign out" de la barra superior. El `url`
+   * es solo el host del portal para que mapi ubique la pestaña viva (no navega).
+   * Selector validado en vivo 2026-06-14 (id `#brand_bar_sign_in_out`).
+   */
+  buildLogoutRecipe(): BankLogoutRecipe {
+    return {
+      url: CHASE_LOGON_URL,
+      steps: [
+        { op: 'waitFor', selector: '#brand_bar_sign_in_out' },
+        { op: 'click', selector: '#brand_bar_sign_in_out' },
       ],
     }
   }

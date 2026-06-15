@@ -132,13 +132,67 @@ export class BankSessionService {
 
   /** Usa la pestaña del host del logonbox si ya existe; si no, abre una nueva. */
   private async ensureTab(url: string): Promise<number> {
-    const host = new URL(url).host
-    const tabs = (await this.bridge.send({ type: 'list_tabs' })) as ListTabsResult
-    const existing = tabs.tabs.find((t) => t.url !== undefined && safeHost(t.url) === host)
-    if (existing) return existing.tabId
+    const existing = await this.findTabByHost(url)
+    if (existing !== null) return existing
 
     const opened = (await this.bridge.send({ type: 'open_tab', payload: { url } })) as OpenTabResult
     return opened.tabId
+  }
+
+  /** tabId de una pestaña cuyo host coincide con el de `url`, o null si no hay. */
+  private async findTabByHost(url: string): Promise<number | null> {
+    const host = new URL(url).host
+    const tabs = (await this.bridge.send({ type: 'list_tabs' })) as ListTabsResult
+    const existing = tabs.tabs.find((t) => t.url !== undefined && safeHost(t.url) === host)
+    return existing ? existing.tabId : null
+  }
+
+  /**
+   * Cierra la sesión del banco tras una extracción (v0.26.0): desloguea el portal
+   * (receta DOM del adapter → click "Sign out") y cierra la pestaña (`close_tab`).
+   *
+   * **Best-effort**: nunca lanza. Si no hay receta de logout, ni pestaña viva, ni
+   * plugin conectado → no-op (loguea warning). Así no enmascara el resultado de la
+   * descarga: el job ya terminó, esto solo limpia la sesión.
+   */
+  async endSession(clientId: string, credentialId: string, userId: string): Promise<void> {
+    try {
+      const cred = await this.credsRepo.findById(credentialId, clientId)
+      if (!cred) return
+
+      const portal = await this.portalsRepo.findById(cred.bankPortalId)
+      if (!portal) return
+
+      const factory = getAdapterFactory(portal.name)
+      if (!factory) return
+      const adapter = factory(this.executor)
+
+      // Sin receta de logout no sabemos qué pestaña tocar → no-op.
+      if (!adapter.buildLogoutRecipe) return
+      const recipe = adapter.buildLogoutRecipe()
+
+      const tabId = await this.findTabByHost(recipe.url)
+      if (tabId === null) return // Pestaña ya cerrada: nada que desloguear.
+
+      await this.bridge.send({ type: 'execute_dom', payload: { tabId, steps: recipe.steps } })
+      await this.bridge.send({ type: 'close_tab', payload: { tabId } })
+
+      await this.events.log(
+        'bank.session.ended',
+        {
+          client_bank_account_id: cred.id,
+          client_id: clientId,
+          portal: portal.name,
+          tab_id: tabId,
+        },
+        userId,
+        { type: 'client_bank_account', id: cred.id },
+      )
+    } catch (err) {
+      this.logger.warn(
+        `endSession best-effort falló (cred ${credentialId}): ${err instanceof Error ? err.message : String(err)}`,
+      )
+    }
   }
 
   private decryptCreds(cred: ClientBankAccount): BankLoginCredentials {

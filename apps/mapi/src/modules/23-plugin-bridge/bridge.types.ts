@@ -7,6 +7,7 @@
  *   mapi→plugin:  { type:'check_session', correlationId, payload:{ bank } }
  *   mapi→plugin:  { type:'list_tabs', correlationId }   (sin payload; v0.19.0)
  *   mapi→plugin:  { type:'open_tab', correlationId, payload:{ url } }   (abre pestaña + espera load)
+ *   mapi→plugin:  { type:'close_tab', correlationId, payload:{ tabId } } (cierra pestaña; v0.26.0)
  *   plugin→mapi:  { type:'result', correlationId, payload:{ ...resultado } }
  *
  * `correlationId` (transporte) === `requestId` del executor de kiro.
@@ -34,6 +35,20 @@ export interface OpenTabPayload {
 export interface OpenTabResult {
   tabId: number
   url: string
+}
+
+/** Payload de un `close_tab`: la pestaña a cerrar (`tabId` de `list_tabs`/`open_tab`). */
+export interface CloseTabPayload {
+  tabId: number
+}
+
+/**
+ * Resultado de un `close_tab`. `closed=false` si la pestaña ya no existía
+ * (idempotente: no es error — no había nada que cerrar).
+ */
+export interface CloseTabResult {
+  tabId: number
+  closed: boolean
 }
 
 /**
@@ -93,12 +108,18 @@ export type BridgeCommand =
   | { type: 'list_tabs'; payload?: undefined }
   | { type: 'execute_dom'; payload: ExecuteDomPayload }
   | { type: 'open_tab'; payload: OpenTabPayload }
+  | { type: 'close_tab'; payload: CloseTabPayload }
 
 /** Mensaje saliente (mapi→plugin) ya correlacionado. */
 export interface OutgoingCommandMessage {
   type: BridgeCommand['type']
   correlationId: string
-  payload?: ExecuteFetchPayload | CheckSessionPayload | ExecuteDomPayload | OpenTabPayload
+  payload?:
+    | ExecuteFetchPayload
+    | CheckSessionPayload
+    | ExecuteDomPayload
+    | OpenTabPayload
+    | CloseTabPayload
 }
 
 /** `hello` entrante del plugin (v0.19.0: JWT del operador, ya no shared secret). */

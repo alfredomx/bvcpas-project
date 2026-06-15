@@ -4,6 +4,7 @@ import { Job, Queue, QueueEvents } from 'bullmq'
 import { AppConfigService } from '../../core/config/config.service'
 import { BANK_DOWNLOAD_QUEUE, connectionFromUrl } from '../../core/queue/queue.module'
 import { BankDownloadService } from './bank-download.service'
+import { BankSessionService } from './bank-session.service'
 import type { ProgressFn } from './bank-download.types'
 import type {
   DownloadChecksDto,
@@ -32,7 +33,10 @@ export type BankDownloadJob =
  */
 @Processor(BANK_DOWNLOAD_QUEUE, { concurrency: 1 })
 export class BankDownloadProcessor extends WorkerHost {
-  constructor(private readonly service: BankDownloadService) {
+  constructor(
+    private readonly service: BankDownloadService,
+    private readonly session: BankSessionService,
+  ) {
     super()
   }
 
@@ -40,15 +44,21 @@ export class BankDownloadProcessor extends WorkerHost {
     const d = job.data
     // Conecta el progreso (objeto: etapa + cuenta + done/total) a bull-board.
     const onProgress: ProgressFn = (p) => job.updateProgress(p)
-    switch (d.kind) {
-      case 'checks':
-        return this.service.downloadChecks(d.clientId, d.dto, d.userId, onProgress)
-      case 'deposits':
-        return this.service.downloadDeposits(d.clientId, d.dto, d.userId, onProgress)
-      case 'statements':
-        return this.service.downloadStatements(d.clientId, d.dto, d.userId, onProgress)
-      case 'transactions':
-        return this.service.downloadTransactions(d.clientId, d.dto, d.userId, onProgress)
+    try {
+      switch (d.kind) {
+        case 'checks':
+          return await this.service.downloadChecks(d.clientId, d.dto, d.userId, onProgress)
+        case 'deposits':
+          return await this.service.downloadDeposits(d.clientId, d.dto, d.userId, onProgress)
+        case 'statements':
+          return await this.service.downloadStatements(d.clientId, d.dto, d.userId, onProgress)
+        case 'transactions':
+          return await this.service.downloadTransactions(d.clientId, d.dto, d.userId, onProgress)
+      }
+    } finally {
+      // Tras CADA extracción: desloguear el portal + cerrar la pestaña (v0.26.0).
+      // Best-effort: endSession nunca lanza, no altera el resultado del job.
+      await this.session.endSession(d.clientId, d.dto.credentialId, d.userId)
     }
   }
 }

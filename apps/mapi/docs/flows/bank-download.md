@@ -122,6 +122,21 @@ Emite el evento `bank.checks.downloaded`. Errores: `404` (credencial / mask no e
 
 ---
 
+## Paso 4 — Cierre de sesión (automático, v0.26.0)
+
+Tras CADA descarga (checks/deposits/statements/transactions) el worker **desloguea el portal y
+cierra la pestaña** automáticamente (best-effort, no es un endpoint que llames):
+
+1. Ubica la pestaña del portal (`list_tabs`, host `secure.chase.com`).
+2. `execute_dom` con la receta de logout del adapter (click "Sign out", `#brand_bar_sign_in_out`).
+3. `close_tab` cierra la pestaña.
+4. Emite el evento `bank.session.ended`.
+
+Si no hay pestaña viva, ni receta de logout, ni plugin conectado → no-op silencioso (nunca rompe el
+resultado de la descarga). **Consecuencia**: 2 descargas seguidas del mismo cliente re-loguean.
+
+---
+
 ## Notas operativas
 
 - **Por qué pasos y no un `login()`**: cada paso es una operación reusable; `download_checks` corre
@@ -130,3 +145,4 @@ Emite el evento `bank.checks.downloaded`. Errores: `404` (credencial / mask no e
 - **Solo Chase hoy**: otros bancos → `501` hasta portar su adapter (mismo patrón Design B).
 - **El login** corre con `execute_dom` (kiro tonto); la receta (URL logonbox + selectores) vive en el
   adapter de mapi, validada en vivo. `open_tab` (kiro v0.5.0) cubre "abrir la pestaña si no hay".
+- **El logout** corre igual con `execute_dom` + `close_tab` (kiro v0.6.0) al terminar cada descarga.
