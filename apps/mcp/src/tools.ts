@@ -183,12 +183,112 @@ export const listClientTransactionsTool: ToolDef = {
   },
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+interface ClientRow {
+  id: string
+  legal_name?: string
+  legalName?: string
+  name?: string
+}
+
+/** Extrae el array de clientes del response de GET /v1/clients (items | data | array). */
+const clientsOf = (res: unknown): ClientRow[] => {
+  if (Array.isArray(res)) return res as ClientRow[]
+  const r = res as { items?: ClientRow[]; data?: ClientRow[] }
+  return r.items ?? r.data ?? []
+}
+
+const clientLabel = (c: ClientRow): string =>
+  c.legal_name ?? c.legalName ?? c.name ?? '(sin nombre)'
+
+/**
+ * Resuelve un cliente (UUID o nombre) a su UUID. Si es UUID lo devuelve tal cual; si es nombre
+ * busca con `?search=` (server-side, ilike). 0 coincidencias o 2+ → lanza Error legible (el chat
+ * lo ve como mensaje). Nunca adivina entre varios (decisión del operador, D-mcp-007).
+ */
+const resolveClientId = async (clientArg: unknown, mapi: MapiClient): Promise<string> => {
+  const raw = String(clientArg ?? '').trim()
+  if (UUID_RE.test(raw)) return raw
+  const res = await mapi.get(`/v1/clients${qs({ search: raw, pageSize: 50 })}`)
+  const matches = clientsOf(res)
+  if (matches.length === 0) {
+    throw new Error(
+      `No encontré ningún cliente que coincida con "${raw}". Usa list_clients para ver los nombres.`,
+    )
+  }
+  if (matches.length > 1) {
+    const list = matches.map((c) => `- ${clientLabel(c)} → ${c.id}`).join('\n')
+    throw new Error(
+      `"${raw}" coincide con ${matches.length} clientes. Especifica cuál (nombre exacto o UUID):\n${list}`,
+    )
+  }
+  return matches[0].id
+}
+
+const clientArgSchema = (verb: string): JsonSchema => ({
+  type: 'object',
+  properties: {
+    client: {
+      type: 'string',
+      description: `Nombre o UUID del cliente (ej: "Bilia"). Si das el nombre, el tool lo resuelve solo. ${verb}`,
+    },
+    startDate: { type: 'string', description: 'Fecha inicial YYYY-MM-DD (opcional).' },
+    endDate: { type: 'string', description: 'Fecha final YYYY-MM-DD (opcional).' },
+  },
+  required: ['client'],
+  additionalProperties: false,
+})
+
+export const listUncatsTool: ToolDef = {
+  name: 'list_uncats',
+  description:
+    'Uncats (transacciones sin categorizar) de un cliente: gastos e ingresos sin clasificar ' +
+    '(uncategorized_expense + uncategorized_income), excluye los AMAs. Dale el NOMBRE del cliente ' +
+    '(ej: "Bilia") y el tool lo resuelve a UUID solo. Cada item trae fecha, vendor, memo, cuenta, ' +
+    'monto y la nota del cliente si la hay. El snapshot lo llena el sync de customer-support; ' +
+    'si viene vacío, el cliente aún no se ha sincronizado.',
+  inputSchema: clientArgSchema('Para los AMAs usa list_amas.'),
+  handler: async (args, mapi) => {
+    const clientId = await resolveClientId(args.client, mapi)
+    const query = qs({ startDate: args.startDate, endDate: args.endDate })
+    const res = await mapi.get(`/v1/clients/${encodeURIComponent(clientId)}/transactions${query}`)
+    const all = (res as { items?: { category?: string }[] }).items ?? []
+    const items = all.filter(
+      (t) => t.category === 'uncategorized_expense' || t.category === 'uncategorized_income',
+    )
+    return pretty({ items, total: items.length })
+  },
+}
+
+export const listAmasTool: ToolDef = {
+  name: 'list_amas',
+  description:
+    'AMAs (Ask My Accountant) de un cliente: las transacciones marcadas como "ask_my_accountant" ' +
+    '(las que se mandan al contador, no al cliente). Dale el NOMBRE del cliente (ej: "Bilia") y el ' +
+    'tool lo resuelve a UUID solo. Cada item trae fecha, vendor, memo, cuenta y monto. El snapshot ' +
+    'lo llena el sync de customer-support; si viene vacío, el cliente aún no se ha sincronizado.',
+  inputSchema: clientArgSchema('Para los uncats usa list_uncats.'),
+  handler: async (args, mapi) => {
+    const clientId = await resolveClientId(args.client, mapi)
+    const query = qs({
+      category: 'ask_my_accountant',
+      startDate: args.startDate,
+      endDate: args.endDate,
+    })
+    const res = await mapi.get(`/v1/clients/${encodeURIComponent(clientId)}/transactions${query}`)
+    return pretty(res)
+  },
+}
+
 export const TOOLS: ToolDef[] = [
   bankDownloadTool,
   listClientsTool,
   listPortalsTool,
   listClientAccountsTool,
   listClientTransactionsTool,
+  listUncatsTool,
+  listAmasTool,
 ]
 
 export const TOOLS_BY_NAME: Record<string, ToolDef> = Object.fromEntries(

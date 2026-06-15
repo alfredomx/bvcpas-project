@@ -1,6 +1,6 @@
 {
   "name": "mcp",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "BV CPAs - servidor MCP (conector LLM -> mapi)",
   "private": true,
   "type": "module",
