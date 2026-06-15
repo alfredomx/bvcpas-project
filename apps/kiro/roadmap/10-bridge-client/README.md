@@ -1,7 +1,7 @@
 # 10-bridge-client — WebSocket client + auth con mapi
 
 **App:** kiro
-**Status:** ✅ v0.2.0 (WS client + execute_fetch), v0.3.0 (login JWT en popup + list_tabs) y v0.3.1 (fix race keepalive/result) cerradas y verificadas en vivo. 🚧 v0.5.0 (comando `open_tab`) listo para revisión.
+**Status:** ✅ v0.2.0 (WS client + execute_fetch), v0.3.0 (login JWT en popup + list_tabs), v0.3.1 (fix race keepalive/result) y v0.5.0 (`open_tab`) cerradas. 🚧 v0.6.0 (comando `close_tab`) listo para revisión.
 **Backend asociado:** [`apps/mapi/roadmap/23-plugin-bridge`](../../../mapi/roadmap/23-plugin-bridge/README.md)
 **Última revisión:** 2026-06-14
 
@@ -63,6 +63,7 @@ bancos vive en mapi (Design B); kiro solo transporta y ejecuta.
 | D-kiro-B10 | `connect()` no-op si ya hay socket vivo (`CONNECTING`/`OPEN`); el keepalive de 30s no recicla conexiones sanas (v0.3.1)                                                                      |
 | D-kiro-B11 | El `result` se responde por el socket que recibió el comando (no `this.ws`), robusto ante reconexión durante el dispatch (v0.3.1)                                                            |
 | D-kiro-B16 | `open_tab` corre en el SW (`chrome.tabs.create` + espera `onUpdated` complete), NO como op DOM (`location.href` mataría el content script → sin result → 504). Genérico, kiro tonto (v0.5.0) |
+| D-kiro-B17 | `close_tab` corre en el SW (`chrome.tabs.remove`), genérico, kiro tonto. Idempotente: pestaña inexistente → `closed:false`, no error (mapi lo trata best-effort) (v0.6.0)                    |
 
 ## Nota MV3 (riesgo conocido)
 
@@ -84,4 +85,5 @@ flujo real el usuario está presente (dispara desde Claude) → SW despierto. Do
 | 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0                                      |
 | 0.3.0   | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + `list_tabs` stateless — espejo de mapi v0.19.0                                             |
 | 0.3.1   | ✅     | Fix race keepalive/result (504 en mapi): reply en socket de origen + `connect()` no recicla socket sano — verificado con ChaseAdapter mapi v0.18.0 |
-| 0.5.0   | 🚧     | Comando `open_tab` (abrir pestaña + esperar load, en el SW) — para el auto-login bancario hands-off                                                |
+| 0.5.0   | ✅     | Comando `open_tab` (abrir pestaña + esperar load, en el SW) — para el auto-login bancario hands-off                                                |
+| 0.6.0   | 🚧     | Comando `close_tab` (cerrar pestaña en el SW) — desloguear + cerrar tras cada extracción (con mapi v0.26.0)                                        |

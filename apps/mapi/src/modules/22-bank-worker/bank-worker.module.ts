@@ -16,7 +16,9 @@ import { PluginBridgeModule } from '../23-plugin-bridge/plugin-bridge.module'
 import { QueueModule } from '../../core/queue/queue.module'
 import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
 import { BankDownloadController } from './bank-download.controller'
+import { BankDownloadOrchestratorController } from './bank-download.orchestrator.controller'
 import { BankDownloadService } from './bank-download.service'
+import { BankDownloadOrchestratorService } from './bank-download.orchestrator.service'
 import { BankSessionService } from './bank-session.service'
 import { BankDownloadProcessor, BankDownloadQueueService } from './bank-download.queue'
 
@@ -28,6 +30,7 @@ import { BankDownloadProcessor, BankDownloadQueueService } from './bank-download
     BankAccountsController,
     BankCredentialsGlobalController,
     BankDownloadController,
+    BankDownloadOrchestratorController,
   ],
   providers: [
     BankPortalsRepository,
@@ -38,6 +41,7 @@ import { BankDownloadProcessor, BankDownloadQueueService } from './bank-download
     BankAccountsService,
     BridgeFetchExecutor,
     BankDownloadService,
+    BankDownloadOrchestratorService,
     BankSessionService,
     BankDownloadProcessor,
     BankDownloadQueueService,

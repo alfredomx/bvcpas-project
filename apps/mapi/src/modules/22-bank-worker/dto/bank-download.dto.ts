@@ -241,26 +241,36 @@ export const DownloadStatementsSchema = z
     latest: z
       .boolean()
       .optional()
-      .describe('Baja SOLO el estado de cuenta más reciente. Alternativa a year/month.'),
-    year: z
+      .describe('Baja SOLO el estado de cuenta más reciente. Alternativa al rango `from`/`to`.'),
+    from: z
       .string()
-      .regex(/^\d{4}$/, 'year debe ser YYYY')
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'from debe ser YYYY-MM')
       .optional()
-      .describe('Año de inicio (YYYY). Requerido si no se usa `latest`.'),
-    month: z
+      .describe(
+        'Inicio del rango (YYYY-MM, inclusive). Requerido si no se usa `latest`. ' +
+          'Ej: "mayo 2026" → from:"2026-05".',
+      ),
+    to: z
       .string()
-      .regex(/^([1-9]|1[0-2])$/, 'month 1-12')
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'to debe ser YYYY-MM')
       .optional()
-      .describe('Mes de inicio (1-12). Opcional (con `year`).'),
+      .describe(
+        'Fin del rango (YYYY-MM, inclusive). Opcional → si se omite, hasta el mes actual. ' +
+          '"mayo" exacto → from y to ambos "2026-05". "enero a marzo" → from:"2026-01", to:"2026-03". ' +
+          'Todo 2026 → from:"2026-01", to:"2026-12".',
+      ),
     save: z.boolean().optional().describe('Guarda los PDFs (YYYY-MM.pdf) en .downloads/.'),
   })
   .strict()
   .superRefine((data, ctx) => {
-    if (data.latest && data.year) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `latest` O `year`, no ambos.' })
+    if (data.latest && data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `latest` O `from`, no ambos.' })
     }
-    if (!data.latest && !data.year) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Falta `latest` o `year`.' })
+    if (!data.latest && !data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Falta `latest` o `from`.' })
+    }
+    if (data.to && data.from && data.to < data.from) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: '`to` no puede ser anterior a `from`.' })
     }
   })
 export class DownloadStatementsDto extends createZodDto(DownloadStatementsSchema) {}
@@ -410,3 +420,62 @@ export const ListStatementRefsResponseSchema = z.object({
 })
 export type ListStatementRefsResponse = z.infer<typeof ListStatementRefsResponseSchema>
 export class ListStatementRefsResponseDto extends createZodDto(ListStatementRefsResponseSchema) {}
+
+// ───── orquestación: 1 verbo de descarga, 1 o N clientes (v0.27.0 / v0.28.0) ──
+
+/** Tipos que el verbo único de descarga sabe orquestar. */
+export const ORCHESTRATE_WHATS = ['checks', 'deposits', 'statements', 'transactions'] as const
+
+/**
+ * Verbo único (v0.28.0 batch): `client` es uno o **varios** nombres/UUIDs. mapi
+ * resuelve cada cliente + credencial al recibir y **encola 1 job por cliente**
+ * (`client-download`); el worker hace login → descarga → logout serializado. Async:
+ * responde `{ jobs }` (jobId o error por cliente); el avance/resultado/fallos
+ * viven en bull-board. `params` lleva lo específico del tipo.
+ */
+export const OrchestrateDownloadSchema = z
+  .object({
+    client: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1)])
+      .describe('Cliente(s): un nombre/UUID o un array de ellos. Cada uno = 1 job.'),
+    what: z.enum(ORCHESTRATE_WHATS).describe('Qué descargar.'),
+    credentialId: z
+      .string()
+      .uuid()
+      .optional()
+      .describe('Forzar credencial (solo con 1 cliente que tenga varias descargables).'),
+    accounts: z
+      .union([z.literal('all'), z.array(mask).min(1)])
+      .optional()
+      .describe('Cuentas a descargar. "all" (default) = todas las del login.'),
+    params: z
+      .record(z.string(), z.unknown())
+      .optional()
+      .describe(
+        'Parámetros del tipo (range/from/to/year/month/format/save). Validados según `what`.',
+      ),
+  })
+  .strict()
+export class OrchestrateDownloadDto extends createZodDto(OrchestrateDownloadSchema) {}
+
+/** Un cliente del batch: encolado (jobId) o fallido al resolver (code/message). */
+export const OrchestrateJobEntrySchema = z.object({
+  client: z.string().describe('Lo que mandó el caller (nombre/UUID).'),
+  status: z.enum(['queued', 'error']),
+  clientId: z.string().uuid().optional(),
+  legalName: z.string().optional(),
+  jobId: z.string().optional().describe('ID del job en bull-board (si status=queued).'),
+  code: z.string().optional().describe('Código de error de dominio (si status=error).'),
+  message: z.string().optional(),
+})
+export type OrchestrateJobEntry = z.infer<typeof OrchestrateJobEntrySchema>
+
+export const OrchestrateDownloadResponseSchema = z.object({
+  what: z.enum(ORCHESTRATE_WHATS),
+  /** Un entry por cliente pedido: encolado (jobId) o error al resolver. */
+  jobs: z.array(OrchestrateJobEntrySchema),
+})
+export type OrchestrateDownloadResponse = z.infer<typeof OrchestrateDownloadResponseSchema>
+export class OrchestrateDownloadResponseDto extends createZodDto(
+  OrchestrateDownloadResponseSchema,
+) {}

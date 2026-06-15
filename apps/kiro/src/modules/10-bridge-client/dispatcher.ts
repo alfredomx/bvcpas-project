@@ -18,6 +18,7 @@ import type { BridgeCommandResult } from '../21-fetch-executor/types'
 import type { DomResult } from '../22-dom-executor/types'
 import type {
   BridgeErrorPayload,
+  CloseTabResult,
   IncomingCommandMessage,
   ListTabsResult,
   OpenTabResult,
@@ -32,6 +33,7 @@ export type DispatchResult =
   | ListTabsResult
   | DomResult
   | OpenTabResult
+  | CloseTabResult
   | BridgeErrorPayload
 
 /** Tope de espera para que una pestaña recién abierta termine de cargar. */
@@ -102,6 +104,21 @@ async function openTab(url: string): Promise<OpenTabResult> {
 }
 
 /**
+ * Cierra una pestaña por id (corre en el SW con `chrome.tabs.remove`). mapi lo
+ * usa al terminar la extracción, tras desloguear el portal por `execute_dom`.
+ * Idempotente: si la pestaña ya no existe (el usuario la cerró, etc.) devuelve
+ * `closed:false` en vez de error — no hay nada que limpiar.
+ */
+async function closeTab(tabId: number): Promise<CloseTabResult> {
+  try {
+    await chrome.tabs.remove(tabId)
+    return { tabId, closed: true }
+  } catch {
+    return { tabId, closed: false }
+  }
+}
+
+/**
  * Encuentra el id de una pestaña cuyo origin coincide con el de `targetUrl`.
  * Devuelve null si la URL es inválida o no hay pestaña same-origin abierta.
  */
@@ -151,6 +168,11 @@ export async function dispatchCommand(command: IncomingCommandMessage): Promise<
       // Corre en el SW: abre la pestaña y espera su carga (el SW sobrevive a la
       // navegación, el content script no). mapi luego usa el tabId con execute_dom.
       return await openTab(command.payload.url)
+    }
+
+    if (command.type === 'close_tab') {
+      // Corre en el SW: cierra la pestaña del portal al terminar la extracción.
+      return await closeTab(command.payload.tabId)
     }
 
     if (command.type === 'execute_dom') {

@@ -13,6 +13,7 @@
 //   mapi→plugin:  { type:'check_session', correlationId, payload:{ bank } }
 //   mapi→plugin:  { type:'list_tabs', correlationId }   (sin payload; v0.19.0)
 //   mapi→plugin:  { type:'open_tab', correlationId, payload:{ url } }   (abre pestaña + espera load)
+//   mapi→plugin:  { type:'close_tab', correlationId, payload:{ tabId } } (cierra pestaña; v0.6.0)
 //   plugin→mapi:  { type:'result', correlationId, payload:{ ...resultado } }
 //
 // `correlationId` (transporte) === `requestId` del executor. Mismo concepto.
@@ -84,6 +85,22 @@ export interface OpenTabCommandMessage {
   payload: OpenTabPayload
 }
 
+/** Payload de un `close_tab`: la pestaña a cerrar (`tabId`, de `list_tabs`/`open_tab`). */
+export interface CloseTabPayload {
+  tabId: number
+}
+
+/**
+ * Comando entrante mapi→plugin: cerrar una pestaña (corre en el SW con
+ * `chrome.tabs.remove`). mapi lo usa al terminar la extracción para cerrar la
+ * pestaña del portal bancario tras desloguear (receta de logout por execute_dom).
+ */
+export interface CloseTabCommandMessage {
+  type: 'close_tab'
+  correlationId: string
+  payload: CloseTabPayload
+}
+
 /**
  * Payload de un `execute_dom`: la pestaña objetivo (`tabId`, sacado de
  * `list_tabs`) y la receta de pasos DOM. Los selectores/valores los dicta mapi.
@@ -107,6 +124,7 @@ export type IncomingCommandMessage =
   | ListTabsCommandMessage
   | ExecuteDomCommandMessage
   | OpenTabCommandMessage
+  | CloseTabCommandMessage
 
 /** Una pestaña abierta (lo que `list_tabs` devuelve; mapi decide cuál usar). */
 export interface TabInfo {
@@ -128,11 +146,26 @@ export interface OpenTabResult {
   url: string
 }
 
+/**
+ * Resultado de `close_tab`. `closed=false` si la pestaña ya no existía (cerrada
+ * por el usuario, navegada, etc.) → idempotente: no es error.
+ */
+export interface CloseTabResult {
+  tabId: number
+  closed: boolean
+}
+
 /** Respuesta plugin→mapi, correlacionada por `correlationId`. */
 export interface ResultMessage {
   type: 'result'
   correlationId: string
-  payload: BridgeCommandResult | ListTabsResult | DomResult | OpenTabResult | BridgeErrorPayload
+  payload:
+    | BridgeCommandResult
+    | ListTabsResult
+    | DomResult
+    | OpenTabResult
+    | CloseTabResult
+    | BridgeErrorPayload
 }
 
 /** Payload de error cuando un comando falla o es desconocido. */

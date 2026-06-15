@@ -438,6 +438,20 @@ describe('parseIncomingCommand', () => {
     expect(parseIncomingCommand({ type: 'open_tab', correlationId: 'o4' })).toBeNull()
   })
 
+  it('parsea close_tab válido', () => {
+    expect(
+      parseIncomingCommand({ type: 'close_tab', correlationId: 'x1', payload: { tabId: 42 } }),
+    ).toEqual({ type: 'close_tab', correlationId: 'x1', payload: { tabId: 42 } })
+  })
+
+  it('rechaza close_tab sin tabId number', () => {
+    expect(parseIncomingCommand({ type: 'close_tab', correlationId: 'x2', payload: {} })).toBeNull()
+    expect(
+      parseIncomingCommand({ type: 'close_tab', correlationId: 'x3', payload: { tabId: '7' } }),
+    ).toBeNull()
+    expect(parseIncomingCommand({ type: 'close_tab', correlationId: 'x4' })).toBeNull()
+  })
+
   it('rechaza tipo desconocido', () => {
     expect(parseIncomingCommand({ type: 'foo', correlationId: 'a', payload: {} })).toBeNull()
   })

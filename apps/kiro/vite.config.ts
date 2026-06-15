@@ -1,14 +1,30 @@
 import { defineConfig } from 'vite'
 import { resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
+// La versión de la extensión (la que Chrome muestra) sale del package.json, NO
+// del manifest a mano: así un bump de versión propaga solo al manifest del build
+// y nunca se desfasa (antes el manifest se quedaba viejo). El manifest.json del
+// repo mantiene la misma versión por claridad, pero el build siempre la reescribe.
+const pkgVersion = (
+  JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8')) as { version: string }
+).version
+
 export default defineConfig({
   plugins: [
     viteStaticCopy({
-      targets: [{ src: 'manifest.json', dest: '.' }],
+      targets: [
+        {
+          src: 'manifest.json',
+          dest: '.',
+          transform: (content) =>
+            JSON.stringify({ ...JSON.parse(content), version: pkgVersion }, null, 2),
+        },
+      ],
     }),
   ],
   build: {

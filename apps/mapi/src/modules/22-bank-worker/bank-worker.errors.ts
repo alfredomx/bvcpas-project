@@ -129,3 +129,47 @@ export class BankSessionNotEstablishedError extends DomainError {
     )
   }
 }
+
+// ── Orquestación de descarga (v0.27.0) ──────────────────────────────────────
+
+/** El nombre de cliente no matcheó ningún cliente. HTTP 404. */
+export class DownloadClientNotResolvedError extends DomainError {
+  readonly code = 'DOWNLOAD_CLIENT_NOT_RESOLVED'
+  constructor(query: string) {
+    super(`Ningún cliente coincide con "${query}"`)
+  }
+}
+
+/**
+ * El nombre matcheó varios clientes y más de uno tiene credencial descargable.
+ * `details.candidates` lista los clientes para que el caller especifique. HTTP 409.
+ */
+export class DownloadClientAmbiguousError extends DomainError {
+  readonly code = 'DOWNLOAD_CLIENT_AMBIGUOUS'
+  constructor(candidates: { id: string; legal_name: string }[]) {
+    super(`"${candidates.length}" clientes coinciden y varios tienen descarga; especifica cuál`, {
+      candidates,
+    })
+  }
+}
+
+/** El cliente no tiene ninguna credencial con descarga soportada (adapter). HTTP 422. */
+export class NoDownloadableCredentialError extends DomainError {
+  readonly code = 'NO_DOWNLOADABLE_CREDENTIAL'
+  constructor(clientName: string) {
+    super(`"${clientName}" no tiene ninguna credencial con descarga soportada (sin adapter)`)
+  }
+}
+
+/**
+ * El cliente tiene 2+ credenciales descargables (ej. dos portales con adapter).
+ * `details.credentials` lista las opciones. HTTP 409.
+ */
+export class MultipleDownloadableCredentialsError extends DomainError {
+  readonly code = 'MULTIPLE_DOWNLOADABLE_CREDENTIALS'
+  constructor(credentials: { credential_id: string; portal: string }[]) {
+    super(`El cliente tiene varias credenciales descargables; especifica el credentialId`, {
+      credentials,
+    })
+  }
+}

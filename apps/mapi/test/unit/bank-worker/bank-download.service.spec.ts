@@ -410,7 +410,7 @@ describe('BankDownloadService.downloadStatements (latest / rango sobre listState
     })
   })
 
-  it('CR-bw-dl-012: year/month filtra al rango [year-month .. mes actual]', async () => {
+  it('CR-bw-dl-012: from=to (mes exacto) baja SOLO ese mes', async () => {
     const m = makeMocks()
     m.credsRepo.findById.mockResolvedValue(credRow())
     m.adapterListStatements.mockResolvedValue(REFS)
@@ -418,14 +418,49 @@ describe('BankDownloadService.downloadStatements (latest / rango sobre listState
     const dto = {
       credentialId: CRED_ID,
       accountMasks: ['9027'],
-      year: '2026',
-      month: '4',
+      from: '2026-04',
+      to: '2026-04',
     } as DownloadStatementsDto
     const res = await build(m).downloadStatements(CLIENT_ID, dto, 'user-1')
 
-    // Abril (0430) y Mayo (0529) entran; Enero (0131) queda fuera del rango.
+    // "abril" = SOLO abril (0430). Enero y mayo quedan fuera.
+    expect(res.accounts[0].count).toBe(1)
+    expect(res.accounts[0].statements.map((s) => s.date)).toEqual(['20260430'])
+  })
+
+  it('CR-bw-dl-012b: from sin to baja de ese mes al mes actual', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterListStatements.mockResolvedValue(REFS)
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      from: '2026-04',
+    } as DownloadStatementsDto
+    const res = await build(m).downloadStatements(CLIENT_ID, dto, 'user-1')
+
+    // "desde abril" → abril (0430) y mayo (0529); enero (0131) queda antes del rango.
     expect(res.accounts[0].count).toBe(2)
     expect(res.accounts[0].statements.map((s) => s.date).sort()).toEqual(['20260430', '20260529'])
+  })
+
+  it('CR-bw-dl-012c: rango cerrado from..to (enero a abril) excluye lo posterior', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterListStatements.mockResolvedValue(REFS)
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      from: '2026-01',
+      to: '2026-04',
+    } as DownloadStatementsDto
+    const res = await build(m).downloadStatements(CLIENT_ID, dto, 'user-1')
+
+    // "enero a abril" → enero (0131) y abril (0430); mayo (0529) queda fuera.
+    expect(res.accounts[0].count).toBe(2)
+    expect(res.accounts[0].statements.map((s) => s.date).sort()).toEqual(['20260131', '20260430'])
   })
 })
 

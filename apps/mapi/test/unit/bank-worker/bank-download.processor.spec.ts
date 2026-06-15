@@ -1,5 +1,6 @@
 import { BankDownloadProcessor } from '../../../src/modules/22-bank-worker/bank-download.queue'
 import type { BankDownloadService } from '../../../src/modules/22-bank-worker/bank-download.service'
+import type { BankSessionService } from '../../../src/modules/22-bank-worker/bank-session.service'
 import type { BankDownloadJob } from '../../../src/modules/22-bank-worker/bank-download.queue'
 import type { Job } from 'bullmq'
 
@@ -23,12 +24,25 @@ function build() {
     downloadStatements: jest.fn().mockResolvedValue({ ok: 'statements' }),
     downloadTransactions: jest.fn().mockResolvedValue({ ok: 'transactions' }),
   } as unknown as jest.Mocked<BankDownloadService>
-  return { service, proc: new BankDownloadProcessor(service) }
+  const session = {
+    endSession: jest.fn().mockResolvedValue(undefined),
+    listAccounts: jest.fn().mockResolvedValue({
+      credential_id: 'cred',
+      portal: 'Chase Bank',
+      today: '06-15-2026',
+      timezone: 'America/Chicago',
+      accounts: [
+        { mask: '7011', type: 'checking', name: 'x' },
+        { mask: '7011', type: 'checking', name: 'dup' }, // dedupe
+      ],
+    }),
+  } as unknown as jest.Mocked<BankSessionService>
+  return { service, session, proc: new BankDownloadProcessor(service, session) }
 }
 
 describe('BankDownloadProcessor', () => {
   it('CR-bw-q-001: kind=checks → downloadChecks(clientId, dto, userId, onProgress)', async () => {
-    const { service, proc } = build()
+    const { service, session, proc } = build()
     const dto = { credentialId: 'cred', accountMasks: ['9027'] } as never
     const job = fakeJob({ kind: 'checks', clientId: 'c1', userId: 'u1', dto })
 
@@ -36,6 +50,44 @@ describe('BankDownloadProcessor', () => {
 
     expect(service.downloadChecks).toHaveBeenCalledWith('c1', dto, 'u1', expect.any(Function))
     expect(res).toEqual({ ok: 'checks' })
+    // v0.26.0: tras la extracción se desloguea + cierra la pestaña.
+    expect(session.endSession).toHaveBeenCalledWith('c1', 'cred', 'u1')
+  })
+
+  it('CR-bw-q-005: kind=client-download → login + masks deduplicadas + download + logout', async () => {
+    const { service, session, proc } = build()
+    const credId = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb'
+    const job = fakeJob({
+      kind: 'client-download',
+      what: 'statements',
+      clientId: 'c1',
+      credentialId: credId,
+      userId: 'u1',
+      accounts: 'all',
+      params: { latest: true },
+    } as never)
+
+    const res = await proc.process(job)
+
+    expect(session.listAccounts).toHaveBeenCalledWith('c1', credId, 'u1')
+    expect(service.downloadStatements).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({ credentialId: credId, accountMasks: ['7011'], latest: true }),
+      'u1',
+      expect.any(Function),
+    )
+    expect(session.endSession).toHaveBeenCalledWith('c1', credId, 'u1')
+    expect(res).toEqual({ ok: 'statements' })
+  })
+
+  it('CR-bw-q-004: endSession corre aunque la descarga falle (finally), sin tapar el error', async () => {
+    const { service, session, proc } = build()
+    ;(service.downloadChecks as jest.Mock).mockRejectedValue(new Error('tab stale'))
+    const dto = { credentialId: 'cred', accountMasks: ['9027'] } as never
+    const job = fakeJob({ kind: 'checks', clientId: 'c1', userId: 'u1', dto })
+
+    await expect(proc.process(job)).rejects.toThrow('tab stale')
+    expect(session.endSession).toHaveBeenCalledWith('c1', 'cred', 'u1')
   })
 
   it('CR-bw-q-003: el callback de progreso del worker llega a job.updateProgress (objeto)', async () => {

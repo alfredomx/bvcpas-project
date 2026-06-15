@@ -80,6 +80,17 @@ export interface BankLoginRecipe {
   steps: DomStep[]
 }
 
+/**
+ * Receta de logout: `url` se usa SOLO para ubicar la pestaña del portal por host
+ * (NO se navega — la pestaña ya está viva). `steps` son los pasos DOM (click en
+ * "Sign out") que kiro ejecuta sobre esa pestaña. Tras el logout, mapi la cierra
+ * con `close_tab`. La lógica (selectores) vive en el adapter; kiro sigue tonto.
+ */
+export interface BankLogoutRecipe {
+  url: string
+  steps: DomStep[]
+}
+
 export abstract class BankAdapter {
   protected constructor(protected readonly exec: BankFetchExecutor) {}
 
@@ -132,6 +143,13 @@ export abstract class BankAdapter {
    * no la implementa → el caller lanza `BankLoginNotSupportedError`.
    */
   buildLoginRecipe?(creds: BankLoginCredentials): BankLoginRecipe
+
+  /**
+   * Construye la receta de logout (host del portal + pasos DOM para desloguear).
+   * Opcional: un banco sin logout automatizado no la implementa → `endSession`
+   * lo trata como no-op. Tras desloguear, mapi cierra la pestaña con `close_tab`.
+   */
+  buildLogoutRecipe?(): BankLogoutRecipe
 
   /** MM-DD-YYYY → YYYYMMDD (formato clásico de APIs financieras). */
   protected _formatDate(dateStr: string): string {
