@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { MapiClient, MapiError } from '../src/mapi-client'
 import {
   bankDownloadTool,
@@ -8,7 +8,11 @@ import {
   listClientTransactionsTool,
   listUncatsTool,
   listAmasTool,
+  clearClientCache,
 } from '../src/tools'
+
+// El cache de resolución cliente→UUID es a nivel módulo: límpialo entre tests.
+beforeEach(() => clearClientCache())
 
 /** fetch falso que registra la llamada y responde lo que se le configure. */
 function fakeFetch(
@@ -122,8 +126,13 @@ describe('tools de lectura', () => {
   it('CR-mcp-006: list_client_accounts → GET /v1/clients/:id/banking/credentials (id encodeado)', async () => {
     const calls: { url: string; init: RequestInit }[] = []
     const client = clientWith(calls, 200, [])
-    await listClientAccountsTool.handler({ clientId: 'ad390fdb-1' }, client)
-    expect(calls[0].url).toBe('http://localhost:4000/v1/clients/ad390fdb-1/banking/credentials')
+    await listClientAccountsTool.handler(
+      { clientId: 'ebe62603-a2ea-413d-96f2-c6e2c933b488' },
+      client,
+    )
+    expect(calls[0].url).toBe(
+      'http://localhost:4000/v1/clients/ebe62603-a2ea-413d-96f2-c6e2c933b488/banking/credentials',
+    )
     expect(calls[0].init.method).toBe('GET')
   })
 
@@ -144,17 +153,25 @@ describe('tools de lectura', () => {
   it('CR-mcp-009: list_client_accounts con portal → ?portal=chase', async () => {
     const calls: { url: string; init: RequestInit }[] = []
     const client = clientWith(calls, 200, { data: [] })
-    await listClientAccountsTool.handler({ clientId: 'ad390fdb-1', portal: 'chase' }, client)
+    await listClientAccountsTool.handler(
+      { clientId: 'ebe62603-a2ea-413d-96f2-c6e2c933b488', portal: 'chase' },
+      client,
+    )
     expect(calls[0].url).toBe(
-      'http://localhost:4000/v1/clients/ad390fdb-1/banking/credentials?portal=chase',
+      'http://localhost:4000/v1/clients/ebe62603-a2ea-413d-96f2-c6e2c933b488/banking/credentials?portal=chase',
     )
   })
 
   it('CR-mcp-010: list_client_transactions → GET /v1/clients/:id/transactions (id encodeado)', async () => {
     const calls: { url: string; init: RequestInit }[] = []
     const client = clientWith(calls, 200, { items: [], total: 0 })
-    const out = await listClientTransactionsTool.handler({ clientId: 'ad390fdb-1' }, client)
-    expect(calls[0].url).toBe('http://localhost:4000/v1/clients/ad390fdb-1/transactions')
+    const out = await listClientTransactionsTool.handler(
+      { clientId: 'ebe62603-a2ea-413d-96f2-c6e2c933b488' },
+      client,
+    )
+    expect(calls[0].url).toBe(
+      'http://localhost:4000/v1/clients/ebe62603-a2ea-413d-96f2-c6e2c933b488/transactions',
+    )
     expect(calls[0].init.method).toBe('GET')
     expect(headersOf(calls[0].init).Authorization).toBe('Bearer JWT123')
     expect(JSON.parse(out)).toEqual({ items: [], total: 0 })
@@ -164,11 +181,11 @@ describe('tools de lectura', () => {
     const calls: { url: string; init: RequestInit }[] = []
     const client = clientWith(calls, 200, { items: [], total: 0 })
     await listClientTransactionsTool.handler(
-      { clientId: 'ad390fdb-1', category: 'ask_my_accountant' },
+      { clientId: 'ebe62603-a2ea-413d-96f2-c6e2c933b488', category: 'ask_my_accountant' },
       client,
     )
     expect(calls[0].url).toBe(
-      'http://localhost:4000/v1/clients/ad390fdb-1/transactions?category=ask_my_accountant',
+      'http://localhost:4000/v1/clients/ebe62603-a2ea-413d-96f2-c6e2c933b488/transactions?category=ask_my_accountant',
     )
   })
 
@@ -176,11 +193,16 @@ describe('tools de lectura', () => {
     const calls: { url: string; init: RequestInit }[] = []
     const client = clientWith(calls, 200, { items: [], total: 0 })
     await listClientTransactionsTool.handler(
-      { clientId: 'ad390fdb-1', filter: 'expense', startDate: '2025-01-01', endDate: '2026-04-30' },
+      {
+        clientId: 'ebe62603-a2ea-413d-96f2-c6e2c933b488',
+        filter: 'expense',
+        startDate: '2025-01-01',
+        endDate: '2026-04-30',
+      },
       client,
     )
     expect(calls[0].url).toBe(
-      'http://localhost:4000/v1/clients/ad390fdb-1/transactions?filter=expense&startDate=2025-01-01&endDate=2026-04-30',
+      'http://localhost:4000/v1/clients/ebe62603-a2ea-413d-96f2-c6e2c933b488/transactions?filter=expense&startDate=2025-01-01&endDate=2026-04-30',
     )
   })
 })
@@ -264,5 +286,52 @@ describe('list_uncats / list_amas (resuelven nombre → UUID)', () => {
     )
     await expect(listUncatsTool.handler({ client: 'ar' }, client)).rejects.toThrow(/a1/)
     expect(calls.every((c) => !c.url.includes('/transactions'))).toBe(true)
+  })
+
+  it('CR-mcp-018: resolución por nombre se cachea — 2da llamada no repega a /clients?search', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, (url) =>
+      url.includes('/transactions')
+        ? { status: 200, body: { items: [], total: 0 } }
+        : {
+            status: 200,
+            body: { items: [{ id: BILIA, legal_name: 'Bilia Eatery, LLC' }], total: 1 },
+          },
+    )
+    await listUncatsTool.handler({ client: 'bilia' }, client)
+    await listAmasTool.handler({ client: 'bilia' }, client)
+    const searchCalls = calls.filter((c) => c.url.includes('/clients?search'))
+    const txnCalls = calls.filter((c) => c.url.includes('/transactions'))
+    expect(searchCalls).toHaveLength(1) // solo la 1ra resuelve; la 2da usa cache
+    expect(txnCalls).toHaveLength(2)
+  })
+
+  it('CR-mcp-019: list_client_accounts acepta nombre → resuelve y pega a /banking/credentials', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, (url) =>
+      url.includes('/banking/credentials')
+        ? { status: 200, body: [] }
+        : {
+            status: 200,
+            body: { items: [{ id: BILIA, legal_name: 'Bilia Eatery, LLC' }], total: 1 },
+          },
+    )
+    await listClientAccountsTool.handler({ clientId: 'bilia' }, client)
+    expect(calls[0].url).toBe('http://localhost:4000/v1/clients?search=bilia&pageSize=50')
+    expect(calls[1].url).toBe(`http://localhost:4000/v1/clients/${BILIA}/banking/credentials`)
+  })
+
+  it('CR-mcp-020: list_client_transactions acepta nombre → resuelve y pega a /transactions', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientRouter(calls, (url) =>
+      url.includes('/transactions')
+        ? { status: 200, body: { items: [], total: 0 } }
+        : {
+            status: 200,
+            body: { items: [{ id: BILIA, legal_name: 'Bilia Eatery, LLC' }], total: 1 },
+          },
+    )
+    await listClientTransactionsTool.handler({ clientId: 'bilia' }, client)
+    expect(calls[1].url).toBe(`http://localhost:4000/v1/clients/${BILIA}/transactions`)
   })
 })

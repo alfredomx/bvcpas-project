@@ -87,6 +87,11 @@ trae los uncats (expense + income, sin AMAs); `list_amas` trae los AMAs (`ask_my
 Arg `client` (nombre o UUID) + `startDate`/`endDate` opcionales. Si el nombre coincide con 2+
 clientes, error con la lista — no adivina. (mcp v0.1.3)
 
+> **Resolución cliente por nombre (mcp v0.1.4):** `list_uncats`, `list_amas`,
+> `list_client_transactions` y `list_client_accounts` aceptan **nombre o UUID** vía un resolver
+> compartido (`resolveClientId`) con **cache en memoria** (parcial `ilike`: "sre" → "SRE
+> Services, LLC"; 2+ matches → error con lista). `bank_download` resuelve nombres del lado de mapi.
+
 ## Decisiones
 
 - **D-mcp-001** — App separada `apps/mcp` (no embebida en mapi) para la prueba inicial.
@@ -115,3 +120,4 @@ clientes, error con la lista — no adivina. (mcp v0.1.3)
 | 0.1.1   | ✅     | Filtros/paginación en tools: `search`/`page`/`pageSize` en list_clients, `portal` en list_client_accounts           | [v0.1.1.md](v0.1.1.md) |
 | 0.1.2   | ✅     | Tool `list_client_transactions` — visibilidad de uncats y AMAs por cliente (wrapper de `/clients/:id/transactions`) | [v0.1.2.md](v0.1.2.md) |
 | 0.1.3   | ✅     | Tools `list_uncats` y `list_amas` — atajos por nombre de cliente (resuelven UUID solos)                             | [v0.1.3.md](v0.1.3.md) |
+| 0.1.4   | ✅     | Resolución cliente→UUID reusable + cache; accounts/transactions también aceptan nombre                              | [v0.1.4.md](v0.1.4.md) |
