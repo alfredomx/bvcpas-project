@@ -32,6 +32,10 @@
       "prettier --check --config apps/kiro/.prettierrc",
       "node scripts/run-eslint.mjs apps/kiro"
     ],
+    "apps/mcp/**/*.{ts,tsx,js,mjs}": [
+      "prettier --check --config apps/mcp/.prettierrc",
+      "node scripts/run-eslint.mjs apps/mcp"
+    ],
     "*.{json,md,yml,yaml}": [
       "prettier --check"
     ]
