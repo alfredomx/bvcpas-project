@@ -289,6 +289,17 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
   )
 }
 
+/** Lee una cookie del header `Cookie` sin depender de cookie-parser. */
+function parseCookie(cookieHeader: string | undefined, name: string): string | undefined {
+  if (!cookieHeader) return undefined
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=')
+    if (eq === -1) continue
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim())
+  }
+  return undefined
+}
+
 /**
  * Monta bull-board en `/v1/admin/queues`, detrás de auth admin: requiere un JWT
  * válido vía `Authorization: Bearer <jwt>` o `?token=<jwt>` (cómodo desde el
@@ -305,17 +316,25 @@ function setupQueueDashboard(app: INestApplication): void {
   serverAdapter.setBasePath('/v1/admin/queues')
   createBullBoard({ queues: [new BullMQAdapter(bankQueue)], serverAdapter })
 
+  const COOKIE = 'bull_board_token'
   const requireAdminJwt = (req: Request, res: Response, next: NextFunction): void => {
     const header = req.headers.authorization
     const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined
     const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined
-    const token = bearer ?? queryToken
+    // Los assets/API de bull-board los pide el HTML sin el `?token=`. Por eso, al
+    // entrar con un token válido por query se fija una cookie; los requests del
+    // mismo origin (assets, /api) la llevan solos y autentican → la UI carga.
+    const cookieToken = parseCookie(req.headers.cookie, COOKIE)
+    const token = bearer ?? queryToken ?? cookieToken
     if (!token) {
       res.status(401).json({ message: 'Falta token (Authorization: Bearer o ?token=)' })
       return
     }
     try {
       jwt.verify(token)
+      if (queryToken && !cookieToken) {
+        res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', path: '/v1/admin/queues' })
+      }
       next()
     } catch {
       res.status(401).json({ message: 'Token inválido o expirado' })
