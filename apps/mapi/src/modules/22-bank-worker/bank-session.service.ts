@@ -26,6 +26,12 @@ const SESSION_POLL_ATTEMPTS = 5
 const SESSION_POLL_DELAY_MS = 2000
 
 /**
+ * Espera tras el click de "Sign out" antes de cerrar la pestaña: el logout
+ * dispara una navegación/request que se mataría si cerramos de inmediato.
+ */
+const LOGOUT_SETTLE_MS = 1500
+
+/**
  * Orquesta la sesión del banco para listar cuentas EN VIVO (v0.21.0, Fase 4).
  *
  * `listAccounts(clientId, credentialId)`:
@@ -175,6 +181,8 @@ export class BankSessionService {
       if (tabId === null) return // Pestaña ya cerrada: nada que desloguear.
 
       await this.bridge.send({ type: 'execute_dom', payload: { tabId, steps: recipe.steps } })
+      // Deja que el logout se procese (navegación/invalidación) antes de cerrar.
+      await this.sleep(LOGOUT_SETTLE_MS)
       await this.bridge.send({ type: 'close_tab', payload: { tabId } })
 
       await this.events.log(

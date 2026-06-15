@@ -241,14 +241,19 @@ describe('BankSessionService.endSession (v0.26.0)', () => {
     })
   }
 
-  it('CR-bw-sess-007: pestaña viva → execute_dom (logout) + close_tab + evento ended', async () => {
+  it('CR-bw-sess-007: pestaña viva → execute_dom (logout) + espera 1.5s + close_tab + evento', async () => {
     const m = makeMocks()
     m.bridge.send = bridgeWithPortalTab(7)
+    const svc = build(m)
+    const sleepSpy = jest.fn().mockResolvedValue(undefined)
+    svc.sleep = sleepSpy
 
-    await build(m).endSession(CLIENT_ID, CRED_ID, 'user-1')
+    await svc.endSession(CLIENT_ID, CRED_ID, 'user-1')
 
     const sent = m.bridge.send.mock.calls.map((c) => (c[0] as { type: string }).type)
     expect(sent).toEqual(['list_tabs', 'execute_dom', 'close_tab'])
+    // Espera 1.5s entre el click "Sign out" y el cierre de la pestaña.
+    expect(sleepSpy).toHaveBeenCalledWith(1500)
     const dom = m.bridge.send.mock.calls.find(
       (c) => (c[0] as { type: string }).type === 'execute_dom',
     )
