@@ -238,18 +238,31 @@ export const DownloadStatementsSchema = z
   .object({
     credentialId: z.string().uuid(),
     accountMasks: z.array(mask).min(1),
+    latest: z
+      .boolean()
+      .optional()
+      .describe('Baja SOLO el estado de cuenta más reciente. Alternativa a year/month.'),
     year: z
       .string()
       .regex(/^\d{4}$/, 'year debe ser YYYY')
-      .describe('Año de inicio (YYYY).'),
+      .optional()
+      .describe('Año de inicio (YYYY). Requerido si no se usa `latest`.'),
     month: z
       .string()
       .regex(/^([1-9]|1[0-2])$/, 'month 1-12')
       .optional()
-      .describe('Mes de inicio (1-12). Opcional.'),
+      .describe('Mes de inicio (1-12). Opcional (con `year`).'),
     save: z.boolean().optional().describe('Guarda los PDFs (YYYY-MM.pdf) en .downloads/.'),
   })
   .strict()
+  .superRefine((data, ctx) => {
+    if (data.latest && data.year) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `latest` O `year`, no ambos.' })
+    }
+    if (!data.latest && !data.year) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Falta `latest` o `year`.' })
+    }
+  })
 export class DownloadStatementsDto extends createZodDto(DownloadStatementsSchema) {}
 
 const StatementResultSchema = z.object({

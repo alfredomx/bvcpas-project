@@ -129,4 +129,4 @@ El moat (endpoints, CSRF, paginación) vive en mapi; el plugin nunca ve esa lóg
 | 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                                           | [v0.16.4.md](v0.16.4.md) |
 | 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo                                   | [v0.18.0.md](v0.18.0.md) |
 | 0.21.0  | 🚧     | Step-flow descarga: login en vivo + cuentas + checks/deposits/statements/transactions + PDF storage + presets | [v0.21.0.md](v0.21.0.md) |
-| 0.22.0  | 📅     | Adapters delgados (primitivas) + política en mapi + modo "latest" + smoke deuda                               | (pendiente)              |
+| 0.22.0  | 🚧     | Adapters delgados (primitivas) + política en mapi + modo "latest" (383 unit verdes)                           | [v0.22.0.md](v0.22.0.md) |

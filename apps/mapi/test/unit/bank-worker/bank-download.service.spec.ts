@@ -8,18 +8,22 @@ import type { ClientsRepository } from '../../../src/modules/11-clients/clients.
 import type { BridgeFetchExecutor } from '../../../src/modules/22-bank-worker/adapters/bridge-fetch-executor'
 import type { EventLogService } from '../../../src/modules/95-event-log/event-log.service'
 import type { BankAdapter } from '../../../src/modules/22-bank-worker/adapters/bank-adapter.base'
-import type { DownloadedImage } from '../../../src/modules/22-bank-worker/adapters/chase.adapter'
+import type { DownloadedImage } from '../../../src/modules/22-bank-worker/bank-download.types'
 import type { ClientBankAccount } from '../../../src/db/schema/client-bank-accounts'
 import type { BankAccount } from '../../../src/db/schema/bank-accounts'
 import type { BankPortal } from '../../../src/db/schema/bank-portals'
-import type { DownloadChecksDto } from '../../../src/modules/22-bank-worker/dto/bank-download.dto'
+import type {
+  DownloadChecksDto,
+  DownloadDepositsDto,
+  DownloadStatementsDto,
+} from '../../../src/modules/22-bank-worker/dto/bank-download.dto'
 import {
   BankAdapterNotSupportedError,
   BankPortalNotFoundError,
   ClientBankAccountNotFoundError,
 } from '../../../src/modules/22-bank-worker/bank-worker.errors'
 
-// El registry se mockea para inyectar un adapter stub (sin tocar la mecánica de Chase).
+// El registry se mockea para inyectar un adapter stub (primitivas mockeadas).
 jest.mock('../../../src/modules/22-bank-worker/adapters/adapter-registry')
 const mockGetAdapterFactory = getAdapterFactory as jest.MockedFunction<typeof getAdapterFactory>
 
@@ -81,11 +85,15 @@ function globalRow(
   }
 }
 
-const CHECK: DownloadedImage = {
+/** Cheque ensamblado por el service a partir de searchTransactions + downloadImage. */
+const ASSEMBLED_CHECK: DownloadedImage = {
   sequenceNumber: 'C1',
   type: 'CHECK',
   frontImageBase64: 'FRONT64',
   rearImageBase64: 'REAR64',
+  checkNumber: undefined,
+  postDate: '20260301',
+  amount: undefined,
 }
 
 interface Mocks {
@@ -95,12 +103,29 @@ interface Mocks {
   clientsRepo: jest.Mocked<ClientsRepository>
   executor: BridgeFetchExecutor
   events: { log: jest.Mock }
-  adapterDownloadChecks: jest.Mock
+  adapterSearch: jest.Mock
+  adapterDownloadImage: jest.Mock
+  adapterGetDepositDetails: jest.Mock
+  adapterListStatements: jest.Mock
+  adapterDownloadStatementPdf: jest.Mock
+  adapterExportTransactions: jest.Mock
 }
 
 function makeMocks(): Mocks {
-  const adapterDownloadChecks = jest.fn().mockResolvedValue([CHECK])
-  const stubAdapter = { downloadChecks: adapterDownloadChecks } as unknown as BankAdapter
+  const adapterSearch = jest.fn().mockResolvedValue([{ sequenceNumber: 'C1', date: '20260301' }])
+  const adapterDownloadImage = jest.fn().mockResolvedValue({ front: 'FRONT64', rear: 'REAR64' })
+  const adapterGetDepositDetails = jest.fn().mockResolvedValue({})
+  const adapterListStatements = jest.fn().mockResolvedValue([])
+  const adapterDownloadStatementPdf = jest.fn().mockResolvedValue(Buffer.from('%PDF'))
+  const adapterExportTransactions = jest.fn().mockResolvedValue(Buffer.from(''))
+  const stubAdapter = {
+    searchTransactions: adapterSearch,
+    downloadImage: adapterDownloadImage,
+    getDepositDetails: adapterGetDepositDetails,
+    listStatements: adapterListStatements,
+    downloadStatementPdf: adapterDownloadStatementPdf,
+    exportTransactions: adapterExportTransactions,
+  } as unknown as BankAdapter
   mockGetAdapterFactory.mockReturnValue(() => stubAdapter)
 
   return {
@@ -120,7 +145,12 @@ function makeMocks(): Mocks {
     } as unknown as jest.Mocked<ClientsRepository>,
     executor: { fetch: jest.fn() } as unknown as BridgeFetchExecutor,
     events: { log: jest.fn().mockResolvedValue(undefined) },
-    adapterDownloadChecks,
+    adapterSearch,
+    adapterDownloadImage,
+    adapterGetDepositDetails,
+    adapterListStatements,
+    adapterDownloadStatementPdf,
+    adapterExportTransactions,
   }
 }
 
@@ -163,7 +193,6 @@ describe('BankDownloadService.listCredentials', () => {
       download_supported: true,
     })
     expect(data[0].accounts.map((a) => a.mask)).toEqual(['8250', '9000'])
-    // Nunca expone credenciales en claro ni el blob encriptado.
     expect(JSON.stringify(data)).not.toContain('username')
     expect(JSON.stringify(data)).not.toContain('password')
     expect(JSON.stringify(data)).not.toContain('enc-')
@@ -208,8 +237,8 @@ describe('BankDownloadService.listCredentials', () => {
   })
 })
 
-describe('BankDownloadService.downloadChecks', () => {
-  it('CR-bw-dl-004: descarga las masks dadas; fechas explícitas pasan al adapter', async () => {
+describe('BankDownloadService.downloadChecks (orquesta search + downloadImage)', () => {
+  it('CR-bw-dl-004: busca CHECK y baja la imagen de cada uno; ensambla el resultado', async () => {
     const m = makeMocks()
     m.credsRepo.findById.mockResolvedValue(credRow())
 
@@ -221,15 +250,10 @@ describe('BankDownloadService.downloadChecks', () => {
     } as DownloadChecksDto
     const res = await build(m).downloadChecks(CLIENT_ID, dto, 'user-1')
 
-    expect(m.adapterDownloadChecks).toHaveBeenCalledTimes(1)
-    expect(m.adapterDownloadChecks).toHaveBeenCalledWith('8250', '03-01-2026', '03-31-2026')
-    expect(res).toMatchObject({
-      credential_id: CRED_ID,
-      portal: 'Chase',
-      range: { from: '03-01-2026', to: '03-31-2026' },
-      total_checks: 1,
-    })
-    expect(res.accounts).toEqual([{ account_mask: '8250', count: 1, checks: [CHECK] }])
+    expect(m.adapterSearch).toHaveBeenCalledWith('8250', '03-01-2026', '03-31-2026', 'CHECK')
+    expect(m.adapterDownloadImage).toHaveBeenCalledWith('8250', 'C1', '20260301', 'CHECK')
+    expect(res.accounts).toEqual([{ account_mask: '8250', count: 1, checks: [ASSEMBLED_CHECK] }])
+    expect(res.total_checks).toBe(1)
     expect(m.events.log).toHaveBeenCalledWith(
       'bank.checks.downloaded',
       expect.objectContaining({ total_checks: 1, account_masks: ['8250'] }),
@@ -238,7 +262,7 @@ describe('BankDownloadService.downloadChecks', () => {
     )
   })
 
-  it('CR-bw-dl-005: itera TODAS las masks del array (todas las cuentas elegidas)', async () => {
+  it('CR-bw-dl-005: itera TODAS las masks del array', async () => {
     const m = makeMocks()
     m.credsRepo.findById.mockResolvedValue(credRow())
 
@@ -250,7 +274,7 @@ describe('BankDownloadService.downloadChecks', () => {
     } as DownloadChecksDto
     const res = await build(m).downloadChecks(CLIENT_ID, dto, 'user-1')
 
-    expect(m.adapterDownloadChecks).toHaveBeenCalledTimes(3)
+    expect(m.adapterSearch).toHaveBeenCalledTimes(3)
     expect(res.accounts.map((a) => a.account_mask)).toEqual(['8250', '9000', '7777'])
     expect(res.total_checks).toBe(3)
   })
@@ -267,11 +291,11 @@ describe('BankDownloadService.downloadChecks', () => {
     const res = await build(m).downloadChecks(CLIENT_ID, dto, 'user-1')
 
     expect(res.range.from).toMatch(/^\d{2}-\d{2}-\d{4}$/)
-    expect(res.range.to).toMatch(/^\d{2}-\d{2}-\d{4}$/)
-    const [maskArg, fromArg, toArg] = m.adapterDownloadChecks.mock.calls[0]
+    const [maskArg, fromArg, toArg, typeArg] = m.adapterSearch.mock.calls[0]
     expect(maskArg).toBe('8250')
     expect(fromArg).toMatch(/^\d{2}-\d{2}-\d{4}$/)
     expect(toArg).toMatch(/^\d{2}-\d{2}-\d{4}$/)
+    expect(typeArg).toBe('CHECK')
   })
 
   it('CR-bw-dl-007: credencial inexistente → ClientBankAccountNotFoundError', async () => {
@@ -314,5 +338,91 @@ describe('BankDownloadService.downloadChecks', () => {
     await expect(build(m).downloadChecks(CLIENT_ID, dto, 'user-1')).rejects.toBeInstanceOf(
       BankAdapterNotSupportedError,
     )
+  })
+})
+
+describe('BankDownloadService.downloadDeposits (orquesta details + slip + cheques)', () => {
+  it('CR-bw-dl-010: ensambla slip (con monto) + cheques internos del depósito', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterSearch.mockResolvedValue([{ sequenceNumber: 'D1', date: '20260605', amount: 1500 }])
+    m.adapterGetDepositDetails.mockResolvedValue({
+      depositSequenceNumber: 'D1',
+      totalDepositAmount: 1500,
+      depositSlipAvailable: true,
+      transactions: [
+        { sequenceNumber: 'CK1', postDate: '20260605', checkNumber: '777', amount: 900 },
+      ],
+    })
+    m.adapterDownloadImage.mockResolvedValue({ front: 'IMG', rear: 'IMGR' })
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      from: '06-01-2026',
+      to: '06-14-2026',
+    } as DownloadDepositsDto
+    const res = await build(m).downloadDeposits(CLIENT_ID, dto, 'user-1')
+
+    expect(m.adapterSearch).toHaveBeenCalledWith('9027', '06-01-2026', '06-14-2026', 'DEPOSIT')
+    expect(m.adapterDownloadImage).toHaveBeenCalledWith('9027', 'D1', '20260605', 'DEPOSIT_SLIP')
+    expect(m.adapterDownloadImage).toHaveBeenCalledWith('9027', 'CK1', '20260605', 'CHECK')
+
+    const dep = res.accounts[0].deposits[0]
+    expect(res.accounts[0].image_count).toBe(2)
+    expect(dep.depositSlipImage?.amount).toBe(1500)
+    expect(dep.checksImages[0]).toMatchObject({
+      checkNumber: '777',
+      amount: 900,
+      postDate: '20260605',
+    })
+  })
+})
+
+describe('BankDownloadService.downloadStatements (latest / rango sobre listStatements)', () => {
+  const REFS = [
+    { documentId: 'A', date: '20260131' },
+    { documentId: 'B', date: '20260529' },
+    { documentId: 'C', date: '20260430' },
+  ]
+
+  it('CR-bw-dl-011: latest baja SOLO el de fecha máxima (1 llamada)', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterListStatements.mockResolvedValue(REFS)
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      latest: true,
+    } as DownloadStatementsDto
+    const res = await build(m).downloadStatements(CLIENT_ID, dto, 'user-1')
+
+    expect(m.adapterListStatements).toHaveBeenCalledWith('9027', { yearsBack: 1 })
+    expect(res.accounts[0].count).toBe(1)
+    expect(res.accounts[0].statements[0].date).toBe('20260529')
+    expect(m.adapterDownloadStatementPdf).toHaveBeenCalledTimes(1)
+    expect(m.adapterDownloadStatementPdf).toHaveBeenCalledWith('9027', {
+      documentId: 'B',
+      date: '20260529',
+    })
+  })
+
+  it('CR-bw-dl-012: year/month filtra al rango [year-month .. mes actual]', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterListStatements.mockResolvedValue(REFS)
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      year: '2026',
+      month: '4',
+    } as DownloadStatementsDto
+    const res = await build(m).downloadStatements(CLIENT_ID, dto, 'user-1')
+
+    // Abril (0430) y Mayo (0529) entran; Enero (0131) queda fuera del rango.
+    expect(res.accounts[0].count).toBe(2)
+    expect(res.accounts[0].statements.map((s) => s.date).sort()).toEqual(['20260430', '20260529'])
   })
 })

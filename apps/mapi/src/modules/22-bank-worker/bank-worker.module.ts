@@ -13,7 +13,6 @@ import { BankAccountsRepository } from './bank-accounts.repository'
 import { BankAccountsService } from './bank-accounts.service'
 import { BankCredentialsGlobalController } from './bank-credentials-global.controller'
 import { PluginBridgeModule } from '../23-plugin-bridge/plugin-bridge.module'
-import { ChaseController } from './chase.controller'
 import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
 import { BankDownloadController } from './bank-download.controller'
 import { BankDownloadService } from './bank-download.service'
@@ -26,7 +25,6 @@ import { BankSessionService } from './bank-session.service'
     ClientBankAccountsController,
     BankAccountsController,
     BankCredentialsGlobalController,
-    ChaseController,
     BankDownloadController,
   ],
   providers: [

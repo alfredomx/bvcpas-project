@@ -7,8 +7,8 @@ import { BankPortalsRepository } from './bank-portals.repository'
 import { ClientBankAccountsRepository } from './client-bank-accounts.repository'
 import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
 import { getAdapterFactory } from './adapters/adapter-registry'
-import type { BankAdapter } from './adapters/bank-adapter.base'
-import type { DepositResult, DownloadedImage, StatementResult } from './adapters/chase.adapter'
+import type { BankAdapter, StatementRef } from './adapters/bank-adapter.base'
+import type { DepositResult, DownloadedImage, StatementResult } from './bank-download.types'
 import { resolveDateRange } from './date-range.util'
 import {
   DEMO_DOWNLOADS_DIR,
@@ -38,24 +38,19 @@ import type {
   ListCredentialsResponse,
 } from './dto/bank-download.dto'
 
+/** Cadencia entre fetches de imágenes (anti rate-limit del banco). */
+const FETCH_PACE_MS = 300
+
 /**
- * Step-flow de descarga bancaria (v0.21.0).
+ * Step-flow de descarga bancaria — **orquestación** (D-mapi-BW-021).
  *
- * Bloques discretos del flujo "descarga de <cliente> de <banco> todos los
- * cheques" (el `resolve_client` ya lo cubre 11-clients):
+ * El adapter expone primitivas (`searchTransactions`, `downloadImage`,
+ * `getDepositDetails`, `listStatements`, `downloadStatementPdf`,
+ * `exportTransactions`); este service hace el trabajo pesado: itera cuentas,
+ * resuelve rango/`latest`, ensambla los resultados, marca la cadencia y guarda.
  *
- *  - `listCredentials(clientId, portal?)`: lista las credenciales del cliente
- *    (opcionalmente filtradas por portal), cada una con sus cuentas (masks).
- *    NUNCA expone username/password — es la vista para *elegir* credencial/cuenta.
- *
- *  - `downloadChecks(clientId, dto, userId)`: resuelve el rango (preset o
- *    explícito → MM-DD-YYYY), elige el adapter del portal de la credencial, y
- *    descarga cheques por cada cuenta (todas las activas, o solo la pedida).
- *
- * Design B (D-mapi-BW-012): la descarga corre sobre la **sesión viva** del banco
- * vía el bridge (`BridgeFetchExecutor` → kiro). El adapter NO recibe las
- * credenciales descifradas — operan en la pestaña ya logueada del operador. Por
- * eso este flujo no descifra `*_encrypted`.
+ * Design B (D-mapi-BW-012): corre sobre la **sesión viva** del banco vía el
+ * bridge (kiro). El adapter NO recibe credenciales para los *fetches*.
  */
 @Injectable()
 export class BankDownloadService {
@@ -100,10 +95,7 @@ export class BankDownloadService {
     return { data }
   }
 
-  /**
-   * Descarga cheques de la credencial en el rango dado. Si `accountMask` viene,
-   * solo esa cuenta; si se omite, todas las cuentas activas de la credencial.
-   */
+  /** Descarga cheques (imagen frontal) de cada mask en el rango. */
   async downloadChecks(
     clientId: string,
     dto: DownloadChecksDto,
@@ -116,13 +108,27 @@ export class BankDownloadService {
     const accounts: DownloadChecksResponse['accounts'] = []
     let totalChecks = 0
     for (const mask of masks) {
-      const checks = (await adapter.downloadChecks(mask, from, to)) as DownloadedImage[]
+      const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
+      const checks: DownloadedImage[] = []
+      for (let i = 0; i < txns.length; i++) {
+        const tx = txns[i]
+        if (!tx.sequenceNumber) continue
+        const img = await adapter.downloadImage(mask, tx.sequenceNumber, tx.date, 'CHECK')
+        checks.push({
+          sequenceNumber: tx.sequenceNumber,
+          type: 'CHECK',
+          frontImageBase64: img.front,
+          rearImageBase64: img.rear,
+          checkNumber: tx.checkNumber,
+          postDate: tx.date,
+          amount: tx.amount,
+        })
+        if (i < txns.length - 1) await this.pace()
+      }
       accounts.push({ account_mask: mask, count: checks.length, checks })
       totalChecks += checks.length
     }
 
-    // Demo: guardar a disco (D-mapi-BW-018). Si se guarda, se omite el base64 de
-    // la respuesta (las imágenes quedan en archivos). Destino real (Dropbox) → BACKLOG.
     let savedDir: string | null = null
     if (dto.save) {
       const { dir } = await saveChecksToDisk({
@@ -166,8 +172,7 @@ export class BankDownloadService {
 
   /**
    * Descarga depósitos: el slip + cada cheque del depósito, por cada cuenta. Si
-   * `save`, escribe PDFs con el nombre `MM-DD-YYYY - <checkNumber> (<amount>).pdf`
-   * (CON monto, como bankify).
+   * `save`, escribe PDFs `MM-DD-YYYY - <checkNumber> (<amount>).pdf` (CON monto).
    */
   async downloadDeposits(
     clientId: string,
@@ -181,7 +186,61 @@ export class BankDownloadService {
     const accounts: DownloadDepositsResponse['accounts'] = []
     let totalImages = 0
     for (const mask of masks) {
-      const deposits = (await adapter.downloadDeposits(mask, from, to)) as DepositResult[]
+      const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
+      const deposits: DepositResult[] = []
+      for (let di = 0; di < deps.length; di++) {
+        const dep = deps[di]
+        const details = await adapter.getDepositDetails(mask, dep)
+        const result: DepositResult = {
+          depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
+          totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
+          checksImages: [],
+        }
+
+        if (details.depositSlipAvailable) {
+          const slip = await adapter.downloadImage(
+            mask,
+            result.depositSequenceNumber,
+            dep.date,
+            'DEPOSIT_SLIP',
+          )
+          result.depositSlipImage = {
+            sequenceNumber: result.depositSequenceNumber,
+            type: 'DEPOSIT_SLIP',
+            frontImageBase64: slip.front,
+            rearImageBase64: slip.rear,
+            checkNumber: dep.checkNumber,
+            postDate: dep.date,
+            amount: result.totalAmount,
+          }
+          await this.pace()
+        }
+
+        const innerChecks = details.transactions ?? []
+        for (let ci = 0; ci < innerChecks.length; ci++) {
+          const chk = innerChecks[ci]
+          const img = await adapter.downloadImage(
+            mask,
+            chk.sequenceNumber,
+            chk.postDate ?? dep.date,
+            'CHECK',
+          )
+          result.checksImages.push({
+            sequenceNumber: chk.sequenceNumber,
+            type: 'CHECK',
+            frontImageBase64: img.front,
+            rearImageBase64: img.rear,
+            checkNumber: chk.checkNumber,
+            postDate: chk.postDate ?? dep.date,
+            amount: chk.amount,
+          })
+          if (ci < innerChecks.length - 1) await this.pace()
+        }
+
+        deposits.push(result)
+        if (di < deps.length - 1) await this.pace()
+      }
+
       const imageCount = deposits.reduce(
         (n, d) => n + (d.depositSlipImage ? 1 : 0) + d.checksImages.length,
         0,
@@ -243,8 +302,8 @@ export class BankDownloadService {
   }
 
   /**
-   * Descarga estados de cuenta (PDF) desde `year`/`month` al mes actual. Si
-   * `save`, los escribe como `YYYY-MM.pdf` (como bankify).
+   * Descarga estados de cuenta (PDF). `latest` baja solo el más reciente; si no,
+   * desde `year`/`month` al mes actual. Si `save`, los escribe como `YYYY-MM.pdf`.
    */
   async downloadStatements(
     clientId: string,
@@ -254,15 +313,25 @@ export class BankDownloadService {
     const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
     const masks = dto.accountMasks
     const client = await this.clientsRepo.findById(clientId)
+    const yearsBack = dto.latest
+      ? 1
+      : Math.max(0, new Date().getFullYear() - parseInt(dto.year ?? '', 10))
 
     const accounts: DownloadStatementsResponse['accounts'] = []
     let total = 0
     for (const mask of masks) {
-      const statements = (await adapter.downloadStatements(
-        mask,
-        dto.year,
-        dto.month ?? '1',
-      )) as StatementResult[]
+      const refs = await adapter.listStatements(mask, { yearsBack })
+      const selected = this.selectStatements(refs, dto)
+      const statements: StatementResult[] = []
+      for (let i = 0; i < selected.length; i++) {
+        const pdf = await adapter.downloadStatementPdf(mask, selected[i])
+        statements.push({
+          documentId: selected[i].documentId,
+          date: selected[i].date,
+          pdfBase64: pdf.toString('base64'),
+        })
+        if (i < selected.length - 1) await this.pace()
+      }
       accounts.push({ account_mask: mask, count: statements.length, statements })
       total += statements.length
     }
@@ -285,6 +354,7 @@ export class BankDownloadService {
         client_id: clientId,
         portal: portal.name,
         account_masks: masks,
+        latest: dto.latest === true,
         total_statements: total,
         saved: savedDir !== null,
       },
@@ -301,10 +371,7 @@ export class BankDownloadService {
     }
   }
 
-  /**
-   * Descarga el export de transacciones (CSV/QBO) por cuenta. Si `save`, escribe
-   * `<mask> (<from> to <to>).<csv|qbo>` (como bankify).
-   */
+  /** Descarga el export de transacciones (CSV/QBO) por cuenta. */
   async downloadTransactions(
     clientId: string,
     dto: DownloadTransactionsDto,
@@ -317,7 +384,7 @@ export class BankDownloadService {
     const accounts: DownloadTransactionsResponse['accounts'] = []
     let savedDir: string | null = null
     for (const mask of masks) {
-      const buffer = (await adapter.downloadTransactions(mask, from, to, dto.format)) as Buffer
+      const buffer = await adapter.exportTransactions(mask, from, to, dto.format)
       const content = buffer.toString('utf8')
       if (dto.save) {
         const { dir } = await saveTransactionFileToDisk({
@@ -361,6 +428,36 @@ export class BankDownloadService {
       accounts,
       saved_dir: savedDir,
     }
+  }
+
+  /**
+   * Elige qué statements bajar de la lista cruda: `latest` → solo el de fecha
+   * máxima; si no, filtra al rango [year/month .. mes actual].
+   */
+  private selectStatements(refs: StatementRef[], dto: DownloadStatementsDto): StatementRef[] {
+    if (dto.latest) {
+      if (refs.length === 0) return []
+      return [refs.reduce((a, b) => (a.date >= b.date ? a : b))]
+    }
+    const yearFrom = parseInt(dto.year ?? '', 10)
+    const monthFrom = parseInt(dto.month ?? '1', 10)
+    const now = new Date()
+    const low = new Date(yearFrom, monthFrom - 1, 1)
+    const high = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    return refs.filter((r) => {
+      if (!/^\d{8}$/.test(r.date)) return false
+      const dt = new Date(
+        parseInt(r.date.substring(0, 4), 10),
+        parseInt(r.date.substring(4, 6), 10) - 1,
+        parseInt(r.date.substring(6, 8), 10),
+      )
+      return dt >= low && dt <= high
+    })
+  }
+
+  /** Pausa anti rate-limit entre fetches de imágenes. */
+  private pace(): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, FETCH_PACE_MS))
   }
 
   /** Resuelve credencial → portal → adapter (errores 404/501). Compartido por las descargas. */
