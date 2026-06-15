@@ -410,3 +410,50 @@ export const ListStatementRefsResponseSchema = z.object({
 })
 export type ListStatementRefsResponse = z.infer<typeof ListStatementRefsResponseSchema>
 export class ListStatementRefsResponseDto extends createZodDto(ListStatementRefsResponseSchema) {}
+
+// ───── orquestación: 1 verbo de descarga (v0.27.0) ────────────────────────
+
+/** Tipos que el verbo único de descarga sabe orquestar. */
+export const ORCHESTRATE_WHATS = ['checks', 'deposits', 'statements', 'transactions'] as const
+
+/**
+ * Verbo único: resuelve cliente por nombre → credencial descargable → login →
+ * descarga → logout, en una sola llamada. `params` lleva lo específico del tipo
+ * (range/from/to/year/month/format/save) y se valida contra el schema de `what`.
+ */
+export const OrchestrateDownloadSchema = z
+  .object({
+    client: z.string().min(1).describe('Nombre (legal_name / alias / dba) o UUID del cliente.'),
+    what: z.enum(ORCHESTRATE_WHATS).describe('Qué descargar.'),
+    credentialId: z
+      .string()
+      .uuid()
+      .optional()
+      .describe('Forzar credencial (si el cliente tiene varias descargables).'),
+    accounts: z
+      .union([z.literal('all'), z.array(mask).min(1)])
+      .optional()
+      .describe('Cuentas a descargar. "all" (default) = todas las del login.'),
+    params: z
+      .record(z.string(), z.unknown())
+      .optional()
+      .describe(
+        'Parámetros del tipo (range/from/to/year/month/format/save). Validados según `what`.',
+      ),
+  })
+  .strict()
+export class OrchestrateDownloadDto extends createZodDto(OrchestrateDownloadSchema) {}
+
+export const OrchestrateDownloadResponseSchema = z.object({
+  client: z.object({ id: z.string().uuid(), legal_name: z.string() }),
+  credential_id: z.string().uuid(),
+  portal: z.string(),
+  what: z.enum(ORCHESTRATE_WHATS),
+  accounts_used: z.array(z.string()),
+  /** El resultado del download_* correspondiente (shape según `what`). */
+  result: z.unknown(),
+})
+export type OrchestrateDownloadResponse = z.infer<typeof OrchestrateDownloadResponseSchema>
+export class OrchestrateDownloadResponseDto extends createZodDto(
+  OrchestrateDownloadResponseSchema,
+) {}
