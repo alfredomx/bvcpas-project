@@ -16,6 +16,8 @@ import type {
   DownloadChecksDto,
   DownloadDepositsDto,
   DownloadStatementsDto,
+  ListActivityDto,
+  ListStatementRefsDto,
 } from '../../../src/modules/22-bank-worker/dto/bank-download.dto'
 import {
   BankAdapterNotSupportedError,
@@ -424,5 +426,77 @@ describe('BankDownloadService.downloadStatements (latest / rango sobre listState
     // Abril (0430) y Mayo (0529) entran; Enero (0131) queda fuera del rango.
     expect(res.accounts[0].count).toBe(2)
     expect(res.accounts[0].statements.map((s) => s.date).sort()).toEqual(['20260430', '20260529'])
+  })
+})
+
+describe('BankDownloadService read verbs (preview, sin imágenes/PDF)', () => {
+  it('CR-bw-dl-013: listChecks busca CHECK y devuelve items + count + total (sin downloadImage)', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterSearch.mockResolvedValue([
+      { sequenceNumber: 'C1', date: '20260301', amount: -50, checkNumber: '1001' },
+      { sequenceNumber: 'C2', date: '20260305', amount: -80, checkNumber: '1002' },
+    ])
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['8250'],
+      from: '03-01-2026',
+      to: '03-31-2026',
+    } as ListActivityDto
+    const res = await build(m).listChecks(CLIENT_ID, dto)
+
+    expect(m.adapterSearch).toHaveBeenCalledWith('8250', '03-01-2026', '03-31-2026', 'CHECK')
+    expect(m.adapterDownloadImage).not.toHaveBeenCalled()
+    expect(res.total).toBe(2)
+    expect(res.accounts[0]).toEqual({
+      account_mask: '8250',
+      count: 2,
+      items: [
+        { sequenceNumber: 'C1', date: '20260301', amount: -50, checkNumber: '1001' },
+        { sequenceNumber: 'C2', date: '20260305', amount: -80, checkNumber: '1002' },
+      ],
+    })
+  })
+
+  it('CR-bw-dl-014: listDeposits usa type DEPOSIT', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterSearch.mockResolvedValue([{ sequenceNumber: 'D1', date: '20260605', amount: 1500 }])
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      range: 'this_month',
+    } as ListActivityDto
+    const res = await build(m).listDeposits(CLIENT_ID, dto)
+
+    const [, , , typeArg] = m.adapterSearch.mock.calls[0]
+    expect(typeArg).toBe('DEPOSIT')
+    expect(res.total).toBe(1)
+  })
+
+  it('CR-bw-dl-015: listStatementRefs devuelve metadata (sin downloadStatementPdf); respeta yearsBack', async () => {
+    const m = makeMocks()
+    m.credsRepo.findById.mockResolvedValue(credRow())
+    m.adapterListStatements.mockResolvedValue([
+      { documentId: 'A', date: '20260131' },
+      { documentId: 'B', date: '20260529' },
+    ])
+
+    const dto = {
+      credentialId: CRED_ID,
+      accountMasks: ['9027'],
+      yearsBack: 2,
+    } as ListStatementRefsDto
+    const res = await build(m).listStatementRefs(CLIENT_ID, dto)
+
+    expect(m.adapterListStatements).toHaveBeenCalledWith('9027', { yearsBack: 2 })
+    expect(m.adapterDownloadStatementPdf).not.toHaveBeenCalled()
+    expect(res.total).toBe(2)
+    expect(res.accounts[0].items).toEqual([
+      { documentId: 'A', date: '20260131' },
+      { documentId: 'B', date: '20260529' },
+    ])
   })
 })

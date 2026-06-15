@@ -33,15 +33,23 @@ import {
   ListAccountsRequestDto,
   ListAccountsRequestSchema,
   ListAccountsResponseDto,
+  ListActivityDto,
+  ListActivityResponseDto,
+  ListActivitySchema,
   ListCredentialsQueryDto,
   ListCredentialsQuerySchema,
   ListCredentialsResponseDto,
+  ListStatementRefsDto,
+  ListStatementRefsResponseDto,
+  ListStatementRefsSchema,
   type DownloadChecksResponse,
   type DownloadDepositsResponse,
   type DownloadStatementsResponse,
   type DownloadTransactionsResponse,
   type ListAccountsResponse,
+  type ListActivityResponse,
   type ListCredentialsResponse,
+  type ListStatementRefsResponse,
 } from './dto/bank-download.dto'
 
 /**
@@ -209,5 +217,56 @@ export class BankDownloadController {
     @CurrentUser() actor: SessionContext,
   ): Promise<DownloadTransactionsResponse> {
     return this.service.downloadTransactions(clientId, body, actor.userId)
+  }
+
+  // ── Read verbs (preview, sin descargar imágenes) — v0.23.0 ────────────────
+
+  @Post('checks/list')
+  @HttpCode(200)
+  @RequirePermission('banking.read')
+  @ApiOperation({
+    summary: 'Cuenta/lista los cheques de un rango (preview, SIN descargar imágenes)',
+    description:
+      'Barato: solo lista la actividad (fecha, monto, número de cheque). Úsalo para "¿cuántos ' +
+      'cheques hay esta semana?" antes de descargar. `count` por cuenta + `total`.',
+  })
+  @ApiResponse({ status: 200, type: ListActivityResponseDto })
+  async listChecks(
+    @Param('id', ParseUUIDPipe) clientId: string,
+    @Body(new ZodValidationPipe(ListActivitySchema)) body: ListActivityDto,
+  ): Promise<ListActivityResponse> {
+    return this.service.listChecks(clientId, body)
+  }
+
+  @Post('deposits/list')
+  @HttpCode(200)
+  @RequirePermission('banking.read')
+  @ApiOperation({
+    summary: 'Cuenta/lista los depósitos de un rango (preview, SIN descargar imágenes)',
+    description: 'Como `checks/list` pero para depósitos. `count` por cuenta + `total`.',
+  })
+  @ApiResponse({ status: 200, type: ListActivityResponseDto })
+  async listDeposits(
+    @Param('id', ParseUUIDPipe) clientId: string,
+    @Body(new ZodValidationPipe(ListActivitySchema)) body: ListActivityDto,
+  ): Promise<ListActivityResponse> {
+    return this.service.listDeposits(clientId, body)
+  }
+
+  @Post('statements/list')
+  @HttpCode(200)
+  @RequirePermission('banking.read')
+  @ApiOperation({
+    summary: 'Lista los estados de cuenta disponibles (metadata, SIN descargar PDFs)',
+    description:
+      'Devuelve `{ documentId, date }` por cuenta. `yearsBack` controla cuántos años atrás (default ' +
+      '1). Úsalo para ver qué statements existen antes de bajarlos / saber cuál es el último.',
+  })
+  @ApiResponse({ status: 200, type: ListStatementRefsResponseDto })
+  async listStatementRefs(
+    @Param('id', ParseUUIDPipe) clientId: string,
+    @Body(new ZodValidationPipe(ListStatementRefsSchema)) body: ListStatementRefsDto,
+  ): Promise<ListStatementRefsResponse> {
+    return this.service.listStatementRefs(clientId, body)
   }
 }

@@ -35,7 +35,11 @@ import type {
   DownloadStatementsResponse,
   DownloadTransactionsDto,
   DownloadTransactionsResponse,
+  ListActivityDto,
+  ListActivityResponse,
   ListCredentialsResponse,
+  ListStatementRefsDto,
+  ListStatementRefsResponse,
 } from './dto/bank-download.dto'
 
 /** Cadencia entre fetches de imágenes (anti rate-limit del banco). */
@@ -428,6 +432,56 @@ export class BankDownloadService {
       accounts,
       saved_dir: savedDir,
     }
+  }
+
+  // ── Read verbs (preview, sin descargar imágenes) — v0.23.0 ────────────────
+
+  /** Cuenta/lista cheques por cuenta en el rango (sin bajar imágenes). */
+  async listChecks(clientId: string, dto: ListActivityDto): Promise<ListActivityResponse> {
+    return this.listActivity(clientId, dto, 'CHECK')
+  }
+
+  /** Cuenta/lista depósitos por cuenta en el rango (sin bajar imágenes). */
+  async listDeposits(clientId: string, dto: ListActivityDto): Promise<ListActivityResponse> {
+    return this.listActivity(clientId, dto, 'DEPOSIT')
+  }
+
+  private async listActivity(
+    clientId: string,
+    dto: ListActivityDto,
+    type: 'CHECK' | 'DEPOSIT',
+  ): Promise<ListActivityResponse> {
+    const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
+    const { from, to } = await this.resolveRange(clientId, dto)
+
+    const accounts: ListActivityResponse['accounts'] = []
+    let total = 0
+    for (const mask of dto.accountMasks) {
+      const txns = await adapter.searchTransactions(mask, from, to, type)
+      accounts.push({ account_mask: mask, count: txns.length, items: txns })
+      total += txns.length
+    }
+
+    return { credential_id: cred.id, portal: portal.name, range: { from, to }, accounts, total }
+  }
+
+  /** Lista los statements disponibles (metadata, sin bajar PDFs). */
+  async listStatementRefs(
+    clientId: string,
+    dto: ListStatementRefsDto,
+  ): Promise<ListStatementRefsResponse> {
+    const { cred, portal, adapter } = await this.resolveAdapter(clientId, dto.credentialId)
+    const yearsBack = dto.yearsBack ?? 1
+
+    const accounts: ListStatementRefsResponse['accounts'] = []
+    let total = 0
+    for (const mask of dto.accountMasks) {
+      const refs = await adapter.listStatements(mask, { yearsBack })
+      accounts.push({ account_mask: mask, count: refs.length, items: refs })
+      total += refs.length
+    }
+
+    return { credential_id: cred.id, portal: portal.name, accounts, total }
   }
 
   /**

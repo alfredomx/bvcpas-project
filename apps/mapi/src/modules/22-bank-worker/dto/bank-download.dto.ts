@@ -331,3 +331,82 @@ export type DownloadTransactionsResponse = z.infer<typeof DownloadTransactionsRe
 export class DownloadTransactionsResponseDto extends createZodDto(
   DownloadTransactionsResponseSchema,
 ) {}
+
+// ───── read verbs (preview, SIN descargar imágenes) — v0.23.0 ─────────────
+// Cuentan/listan la actividad o los statements disponibles. Baratos (sin
+// imágenes/PDF). El conector los usa para "¿cuántos cheques hay?" antes de bajar.
+
+export const ListActivitySchema = z
+  .object({
+    credentialId: z.string().uuid().describe('Credencial a usar (define portal/adapter).'),
+    accountMasks: z.array(mask).min(1).describe('Cuentas a listar.'),
+    range: z.enum(DATE_RANGE_PRESETS).optional(),
+    from: mmddyyyy.optional(),
+    to: mmddyyyy.optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasPreset = data.range !== undefined
+    const hasFrom = data.from !== undefined
+    const hasTo = data.to !== undefined
+    if (hasPreset && (hasFrom || hasTo)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Usa `range` O `from`+`to`, no ambos.' })
+    }
+    if (!hasPreset && !(hasFrom && hasTo)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Envía `range` o `from`+`to`.' })
+    }
+  })
+export class ListActivityDto extends createZodDto(ListActivitySchema) {}
+
+const ActivityItemSchema = z.object({
+  sequenceNumber: z.string(),
+  date: z.string().describe('Fecha de posteo (YYYYMMDD).'),
+  amount: z.number().optional(),
+  checkNumber: z.string().optional(),
+})
+
+export const ListActivityResponseSchema = z.object({
+  credential_id: z.string().uuid(),
+  portal: z.string(),
+  range: z.object({ from: z.string(), to: z.string() }),
+  accounts: z.array(
+    z.object({
+      account_mask: z.string(),
+      count: z.number(),
+      items: z.array(ActivityItemSchema),
+    }),
+  ),
+  total: z.number(),
+})
+export type ListActivityResponse = z.infer<typeof ListActivityResponseSchema>
+export class ListActivityResponseDto extends createZodDto(ListActivityResponseSchema) {}
+
+export const ListStatementRefsSchema = z
+  .object({
+    credentialId: z.string().uuid().describe('Credencial a usar (define portal/adapter).'),
+    accountMasks: z.array(mask).min(1).describe('Cuentas a listar.'),
+    yearsBack: z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(10)
+      .optional()
+      .describe('Años hacia atrás a listar (default 1 = año actual + anterior).'),
+  })
+  .strict()
+export class ListStatementRefsDto extends createZodDto(ListStatementRefsSchema) {}
+
+export const ListStatementRefsResponseSchema = z.object({
+  credential_id: z.string().uuid(),
+  portal: z.string(),
+  accounts: z.array(
+    z.object({
+      account_mask: z.string(),
+      count: z.number(),
+      items: z.array(z.object({ documentId: z.string(), date: z.string() })),
+    }),
+  ),
+  total: z.number(),
+})
+export type ListStatementRefsResponse = z.infer<typeof ListStatementRefsResponseSchema>
+export class ListStatementRefsResponseDto extends createZodDto(ListStatementRefsResponseSchema) {}
