@@ -9,7 +9,17 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprot
 import { MapiClient, MapiError } from './mapi-client.js'
 import { TOOLS, TOOLS_BY_NAME } from './tools.js'
 
+/** Carga apps/mcp/.env si existe (Node nativo, sin dep). No falla si no hay archivo. */
+function loadEnv(): void {
+  try {
+    process.loadEnvFile()
+  } catch {
+    // sin .env → se usan las env vars ya presentes en el entorno
+  }
+}
+
 function loadConfig(): { baseUrl: string; jwt: string } {
+  loadEnv()
   const baseUrl = process.env.MAPI_BASE_URL ?? 'http://localhost:4000'
   const jwt = process.env.MAPI_JWT
   if (!jwt) {
