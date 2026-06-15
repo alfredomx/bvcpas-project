@@ -200,4 +200,4 @@ Items diferidos del TDD del backend, agrupados por **trigger concreto** que los 
 
 Items que entraron y se cerraron (mover aquí cuando se complete el trabajo, con link a la versión que los cerró).
 
-(vacío — primera versión es v0.1.0)
+- **Adapters delgados** → cerrado en **v0.22.0** (primitivas en el adapter, política en `BankDownloadService`, modo "latest"). Smoke en vivo (Bilia/Chase, 2026-06-14): `download_transactions` CSV ✅ y depósitos con cheques internos ✅ (`01-07-2026 - 4141812 (20.71).pdf`).

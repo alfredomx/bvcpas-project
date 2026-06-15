@@ -6,9 +6,16 @@ import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
 import { cleanupOpenApiDoc } from 'nestjs-zod'
-import type { Express } from 'express'
+import type { Express, NextFunction, Request, Response, Router } from 'express'
+import { getQueueToken } from '@nestjs/bullmq'
+import type { Queue } from 'bullmq'
+import { createBullBoard } from '@bull-board/api'
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
+import { ExpressAdapter } from '@bull-board/express'
 import { AppModule } from './app.module'
 import { AppConfigService } from './core/config/config.service'
+import { JwtService } from './core/auth/jwt.service'
+import { BANK_DOWNLOAD_QUEUE } from './core/queue/queue.module'
 import { APP_NAME, APP_VERSION } from './common/version'
 
 /**
@@ -136,6 +143,38 @@ const TAG_ORDER: { name: string; displayName?: string; description?: string }[] 
     description: 'Plugin bridge: listar pestañas y ejecutar recetas DOM en la sesión del operador',
   },
 
+  // Banking — catálogo, credenciales, cuentas y descarga vía plugin.
+  {
+    name: 'Banking - Portals',
+    displayName: 'Portals',
+    description: 'Catálogo de portales bancarios',
+  },
+  {
+    name: 'Banking - Credentials',
+    displayName: 'Credentials',
+    description: 'Credenciales bancarias por cliente',
+  },
+  {
+    name: 'Banking - Credentials Global',
+    displayName: 'Credentials Global',
+    description: 'Vista global de todas las credenciales del despacho',
+  },
+  {
+    name: 'Banking - Accounts',
+    displayName: 'Accounts',
+    description: 'Cuentas individuales (mask + tipo) dentro de un login',
+  },
+  {
+    name: 'Banking - Chase',
+    displayName: 'Chase',
+    description: 'Adapter Chase (Design B) — descarga directa por endpoint',
+  },
+  {
+    name: 'Banking - Download',
+    displayName: 'Download',
+    description: 'Step-flow: elegir credencial/cuenta y descargar cheques por rango',
+  },
+
   // Utils
   { name: 'Public', description: 'Endpoints sin auth (acceso por token)' },
   { name: 'Health', description: 'Liveness check' },
@@ -177,6 +216,17 @@ const TAG_GROUPS: { name: string; tags: string[] }[] = [
   },
   { name: 'Merchants', tags: ['Merchants - Clover', 'Merchants - Square'] },
   { name: 'Providers', tags: ['Intuit API', 'Connections', 'Bridge'] },
+  {
+    name: 'Banking',
+    tags: [
+      'Banking - Portals',
+      'Banking - Credentials',
+      'Banking - Credentials Global',
+      'Banking - Accounts',
+      'Banking - Chase',
+      'Banking - Download',
+    ],
+  },
   { name: 'Utils', tags: ['Public', 'Health'] },
 ]
 
@@ -239,6 +289,62 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
   )
 }
 
+/** Lee una cookie del header `Cookie` sin depender de cookie-parser. */
+function parseCookie(cookieHeader: string | undefined, name: string): string | undefined {
+  if (!cookieHeader) return undefined
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=')
+    if (eq === -1) continue
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim())
+  }
+  return undefined
+}
+
+/**
+ * Monta bull-board en `/v1/admin/queues`, detrás de auth admin: requiere un JWT
+ * válido vía `Authorization: Bearer <jwt>` o `?token=<jwt>` (cómodo desde el
+ * browser). Muestra las colas BullMQ (jobs, progreso, reintentar, borrar) — por
+ * eso es admin-only. El JWT se valida con el mismo `JwtService` de la app (sin
+ * credencial nueva). Tighten a un permiso concreto es trivial a futuro.
+ */
+function setupQueueDashboard(app: INestApplication): void {
+  const expressApp = app.getHttpAdapter().getInstance() as Express
+  const jwt = app.get(JwtService, { strict: false })
+  const bankQueue = app.get<Queue>(getQueueToken(BANK_DOWNLOAD_QUEUE), { strict: false })
+
+  const serverAdapter = new ExpressAdapter()
+  serverAdapter.setBasePath('/v1/admin/queues')
+  createBullBoard({ queues: [new BullMQAdapter(bankQueue)], serverAdapter })
+
+  const COOKIE = 'bull_board_token'
+  const requireAdminJwt = (req: Request, res: Response, next: NextFunction): void => {
+    const header = req.headers.authorization
+    const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined
+    // Los assets/API de bull-board los pide el HTML sin el `?token=`. Por eso, al
+    // entrar con un token válido por query se fija una cookie; los requests del
+    // mismo origin (assets, /api) la llevan solos y autentican → la UI carga.
+    const cookieToken = parseCookie(req.headers.cookie, COOKIE)
+    const token = bearer ?? queryToken ?? cookieToken
+    if (!token) {
+      res.status(401).json({ message: 'Falta token (Authorization: Bearer o ?token=)' })
+      return
+    }
+    try {
+      jwt.verify(token)
+      if (queryToken && !cookieToken) {
+        res.cookie(COOKIE, token, { httpOnly: true, sameSite: 'lax', path: '/v1/admin/queues' })
+      }
+      next()
+    } catch {
+      res.status(401).json({ message: 'Token inválido o expirado' })
+    }
+  }
+
+  const dashboardRouter = serverAdapter.getRouter() as Router
+  expressApp.use('/v1/admin/queues', requireAdminJwt, dashboardRouter)
+}
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
   app.useLogger(app.get(PinoNestLogger))
@@ -253,6 +359,7 @@ async function bootstrap(): Promise<void> {
 
   const cfg = app.get(AppConfigService)
   setupApiDocs(app, cfg)
+  setupQueueDashboard(app)
 
   await app.listen(cfg.port)
 
@@ -265,6 +372,7 @@ async function bootstrap(): Promise<void> {
     `  Health     http://localhost:${cfg.port}/v1/healthz`,
     `  Metrics    http://localhost:${cfg.port}/metrics`,
     `  Docs       http://localhost:${cfg.port}/v1/docs`,
+    `  Queues     http://localhost:${cfg.port}/v1/admin/queues?token=<jwt>`,
     cfg.publicUrl ? `  PUBLIC_URL ${cfg.publicUrl}` : null,
     '════════════════════════════════════════',
   ]

@@ -6,6 +6,7 @@
  *   mapi→plugin:  { type:'execute_fetch', correlationId, payload:{ method,url,headers,body } }
  *   mapi→plugin:  { type:'check_session', correlationId, payload:{ bank } }
  *   mapi→plugin:  { type:'list_tabs', correlationId }   (sin payload; v0.19.0)
+ *   mapi→plugin:  { type:'open_tab', correlationId, payload:{ url } }   (abre pestaña + espera load)
  *   plugin→mapi:  { type:'result', correlationId, payload:{ ...resultado } }
  *
  * `correlationId` (transporte) === `requestId` del executor de kiro.
@@ -22,6 +23,17 @@ export interface ExecuteFetchPayload {
 /** Payload de un `check_session` (¿hay sesión viva del banco en una pestaña?). */
 export interface CheckSessionPayload {
   bank: string
+}
+
+/** Payload de un `open_tab` (abrir pestaña nueva en `url` y esperar su carga). */
+export interface OpenTabPayload {
+  url: string
+}
+
+/** Resultado de un `open_tab`: la pestaña creada (ya cargada). */
+export interface OpenTabResult {
+  tabId: number
+  url: string
 }
 
 /**
@@ -80,12 +92,13 @@ export type BridgeCommand =
   | { type: 'check_session'; payload: CheckSessionPayload }
   | { type: 'list_tabs'; payload?: undefined }
   | { type: 'execute_dom'; payload: ExecuteDomPayload }
+  | { type: 'open_tab'; payload: OpenTabPayload }
 
 /** Mensaje saliente (mapi→plugin) ya correlacionado. */
 export interface OutgoingCommandMessage {
   type: BridgeCommand['type']
   correlationId: string
-  payload?: ExecuteFetchPayload | CheckSessionPayload | ExecuteDomPayload
+  payload?: ExecuteFetchPayload | CheckSessionPayload | ExecuteDomPayload | OpenTabPayload
 }
 
 /** `hello` entrante del plugin (v0.19.0: JWT del operador, ya no shared secret). */

@@ -1,31 +1,27 @@
 import { randomUUID } from 'node:crypto'
 import { Logger } from '@nestjs/common'
-import { BankAdapter, type BankAccount } from './bank-adapter.base'
+import {
+  BankAdapter,
+  type BankAccount,
+  type BankDepositDetails,
+  type BankImage,
+  type BankLoginCredentials,
+  type BankLoginRecipe,
+  type BankTxn,
+  type StatementRef,
+} from './bank-adapter.base'
 import type { BankFetchExecutor, BankFetchRequest, FetchResult } from './bank-fetch.types'
 import { BankAdapterError, BankFetchError, ChaseAccountNotFoundError } from '../bank-worker.errors'
 
-// ── Resultados específicos de Chase (portados del proyecto original) ─────────
+/**
+ * URL del logonbox de Chase como pestaña top-level. El form de login queda en el
+ * documento (no en el iframe sandboxed), así que el fill+click corre directo.
+ * Validado en vivo 2026-06-14 (memoria `project_chase_login_automation`).
+ */
+const CHASE_LOGON_URL = 'https://secure.chase.com/web/auth/#/logon/logon/chaseOnline'
 
-export interface DownloadedImage {
-  sequenceNumber: string
-  type: 'CHECK' | 'DEPOSIT_SLIP'
-  frontImageBase64?: string
-  rearImageBase64?: string
-}
-
-export interface DepositResult {
-  depositSequenceNumber: string
-  totalAmount: number
-  depositSlipImage?: DownloadedImage
-  checksImages: DownloadedImage[]
-}
-
-export interface StatementResult {
-  documentId: string
-  date: string
-  /** PDF en base64 (Design B: el plugin devuelve binario como base64). */
-  pdfBase64: string
-}
+/** Cuántos años atrás soporta Chase en el filtro de statements. */
+const CHASE_MAX_YEARS_BACK = 10
 
 interface StatementDocKeyResponse {
   docURI?: string
@@ -39,15 +35,12 @@ interface ChaseAccountInfo {
 }
 
 /**
- * Adapter de Chase portado del proyecto original a Design B.
+ * Adapter de Chase (Design B) — **primitivas crudas**. Una operación de banco
+ * por método, cero política (D-mapi-BW-021). La orquestación (loops, rango,
+ * "latest", nombrado, cadencia) vive en `BankDownloadService`.
  *
- * Mecánica IDÉNTICA al original (endpoints, CSRF lifecycle, paginación) — solo
- * cambia el transporte: en vez de `page.request.fetch` (Playwright) usa un
- * `BankFetchExecutor` que despacha cada fetch al plugin vía el bridge.
- *
- * NOTA (el moat): el CSRF token se pide a `/svc/rl/.../csrf/token/list` y viaja
- * en la URL/body (`csrftoken=`), NUNCA en el header (header siempre
- * `x-jpmc-csrf-token: NONE`).
+ * El moat: CSRF token a `/svc/rl/.../csrf/token/list`, viaja en URL/body
+ * (`csrftoken=`), NUNCA en header (header siempre `x-jpmc-csrf-token: NONE`).
  */
 export class ChaseAdapter extends BankAdapter {
   private readonly logger = new Logger(ChaseAdapter.name)
@@ -55,6 +48,18 @@ export class ChaseAdapter extends BankAdapter {
 
   constructor(exec: BankFetchExecutor) {
     super(exec)
+  }
+
+  buildLoginRecipe(creds: BankLoginCredentials): BankLoginRecipe {
+    return {
+      url: CHASE_LOGON_URL,
+      steps: [
+        { op: 'waitFor', selector: '#userId-input-field-input' },
+        { op: 'fill', selector: '#userId-input-field-input', value: creds.username },
+        { op: 'fill', selector: '#password-input-field-input', value: creds.password },
+        { op: 'click', selector: '#signin-button' },
+      ],
+    }
   }
 
   async getAllAccounts(): Promise<BankAccount[]> {
@@ -76,105 +81,79 @@ export class ChaseAdapter extends BankAdapter {
     dateFrom: string,
     dateTo: string,
     type: 'CHECK' | 'DEPOSIT',
-  ): Promise<ChaseTxn[]> {
+  ): Promise<BankTxn[]> {
     const accountInfo = await this._getAccountInfoByMask(accountMask)
     const dLow = this._formatDate(dateFrom)
     const dHigh = this._formatDate(dateTo)
     return this._searchActivityRecursively(accountInfo.id, dLow, dHigh, type)
   }
 
-  async downloadChecks(
-    accountMask: string,
-    dateFrom: string,
-    dateTo: string,
-  ): Promise<DownloadedImage[]> {
+  async getDepositDetails(accountMask: string, deposit: BankTxn): Promise<BankDepositDetails> {
     const accountInfo = await this._getAccountInfoByMask(accountMask)
-    const txns = await this.searchTransactions(accountMask, dateFrom, dateTo, 'CHECK')
-
-    const downloaded: DownloadedImage[] = []
-    for (let i = 0; i < txns.length; i++) {
-      const tx = txns[i]
-      if (tx?.sequenceNumber) {
-        const image = await this._downloadImage(accountInfo.id, tx.sequenceNumber, tx.date, 'CHECK')
-        downloaded.push({
-          sequenceNumber: tx.sequenceNumber,
-          type: 'CHECK',
-          frontImageBase64: image.checkFrontImage,
-          rearImageBase64: image.checkRearImage,
-        })
-        if (i < txns.length - 1) await delay(300)
-      }
-    }
-    return downloaded
+    const payload = new URLSearchParams({
+      accountId: accountInfo.id,
+      amount: (deposit.amount ?? '').toString(),
+      sequenceNumber: deposit.sequenceNumber,
+      date: deposit.date,
+    })
+    return this._request<BankDepositDetails>(
+      '/svc/rr/accounts/secure/v1/account/activity/detail/deposit/list',
+      { method: 'POST', headers: { 'content-type': FORM }, body: payload.toString() },
+    )
   }
 
-  async downloadDeposits(
+  async downloadImage(
     accountMask: string,
-    dateFrom: string,
-    dateTo: string,
-  ): Promise<DepositResult[]> {
+    sequenceNumber: string,
+    postDateYYYYMMDD: string,
+    itemType: 'CHECK' | 'DEPOSIT_SLIP',
+  ): Promise<BankImage> {
     const accountInfo = await this._getAccountInfoByMask(accountMask)
-    const deps = await this.searchTransactions(accountMask, dateFrom, dateTo, 'DEPOSIT')
-
-    const results: DepositResult[] = []
-    for (let depIdx = 0; depIdx < deps.length; depIdx++) {
-      const dep = deps[depIdx]
-      const details = await this._getDepositDetails(
-        accountInfo.id,
-        (dep.amount ?? '').toString(),
-        dep.sequenceNumber,
-        dep.date,
+    const queryParams = new URLSearchParams({
+      'digital-account-identifier': accountInfo.id,
+      'sequence-number': sequenceNumber,
+      'transaction-posted-date': postDateYYYYMMDD,
+      'item-type-name': itemType,
+    })
+    const response = await this._request<ChaseImageResponse>(
+      `/svc/rr/accounts/secure/gateway/deposit-account/transactions/inquiry-maintenance/digital-checks/v1/images?${queryParams.toString()}`,
+      { method: 'GET' },
+    )
+    if (!response.checkFrontImage) {
+      throw new BankAdapterError(
+        `Sin imagen para ${itemType} ${sequenceNumber} en ${postDateYYYYMMDD}`,
       )
-
-      const depositResult: DepositResult = {
-        depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
-        totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
-        checksImages: [],
-      }
-
-      if (details.depositSlipAvailable) {
-        const slipImg = await this._downloadImage(
-          accountInfo.id,
-          depositResult.depositSequenceNumber,
-          dep.date,
-          'DEPOSIT_SLIP',
-        )
-        depositResult.depositSlipImage = {
-          sequenceNumber: depositResult.depositSequenceNumber,
-          type: 'DEPOSIT_SLIP',
-          frontImageBase64: slipImg.checkFrontImage,
-          rearImageBase64: slipImg.checkRearImage,
-        }
-        await delay(300)
-      }
-
-      if (details.transactions && details.transactions.length > 0) {
-        for (let checkIdx = 0; checkIdx < details.transactions.length; checkIdx++) {
-          const checkTx = details.transactions[checkIdx]
-          const checkImg = await this._downloadImage(
-            accountInfo.id,
-            checkTx.sequenceNumber,
-            checkTx.date ?? dep.date,
-            'CHECK',
-          )
-          depositResult.checksImages.push({
-            sequenceNumber: checkTx.sequenceNumber,
-            type: 'CHECK',
-            frontImageBase64: checkImg.checkFrontImage,
-            rearImageBase64: checkImg.checkRearImage,
-          })
-          if (checkIdx < details.transactions.length - 1) await delay(300)
-        }
-      }
-
-      results.push(depositResult)
-      if (depIdx < deps.length - 1) await delay(300)
     }
-    return results
+    return { front: response.checkFrontImage, rear: response.checkRearImage }
   }
 
-  /** Devuelve el archivo (CSV/QBO) como Buffer. El controller decide cómo serializarlo. */
-  async downloadTransactions(
+  async listStatements(
+    accountMask: string,
+    opts: { yearsBack?: number } = {},
+  ): Promise<StatementRef[]> {
+    const accountInfo = await this._getAccountInfoByMask(accountMask)
+    const yearsBack = Math.min(opts.yearsBack ?? 1, CHASE_MAX_YEARS_BACK)
+
+    const refs: StatementRef[] = []
+    for (let diff = 0; diff <= yearsBack; diff++) {
+      const yearFilter = diff === 0 ? 'CURRENT_YEAR' : `CURRENT_YEAR_MINUS_${diff}`
+      const statements = await this._getStatementList(accountInfo.id, yearFilter)
+      for (const stmt of statements) {
+        refs.push({ documentId: stmt.documentId, date: stmt.documentDate })
+      }
+    }
+    return refs
+  }
+
+  async downloadStatementPdf(accountMask: string, ref: StatementRef): Promise<Buffer> {
+    const accountInfo = await this._getAccountInfoByMask(accountMask)
+    const yearFilter = this._yearFilterForDate(ref.date)
+    const docKeyData = await this._getStatementDocKey(accountInfo.id, ref.documentId, yearFilter)
+    const csrfToken = await this._getCsrfToken()
+    return this._downloadPdf(docKeyData.docKey, csrfToken)
+  }
+
+  async exportTransactions(
     accountMask: string,
     dateFrom: string,
     dateTo: string,
@@ -186,62 +165,14 @@ export class ChaseAdapter extends BankAdapter {
     return this._exportData(accountInfo, dLow, dHigh, format.toUpperCase())
   }
 
-  /** Descarga statements (PDF) en el rango [year/month .. mes actual]. */
-  async downloadStatements(
-    accountMask: string,
-    year: string,
-    month: string,
-  ): Promise<StatementResult[]> {
-    const accountInfo = await this._getAccountInfoByMask(accountMask)
-    const yearFrom = parseInt(year, 10)
-    const monthFrom = parseInt(month, 10)
-
-    const now = new Date()
-    const yearTo = now.getFullYear()
-    const monthTo = now.getMonth() + 1
-
-    const results: StatementResult[] = []
-    const targetDateLow = new Date(yearFrom, monthFrom - 1, 1)
-    const targetDateHigh = new Date(yearTo, monthTo, 0)
-
-    for (let y = yearFrom; y <= yearTo; y++) {
-      const currentYear = new Date().getFullYear()
-      const diff = currentYear - y
-      let yearFilter = 'CURRENT_YEAR'
-      if (diff > 0) {
-        if (diff > 10) continue // Chase soporta 10 años atrás
-        yearFilter = `CURRENT_YEAR_MINUS_${diff}`
-      }
-
-      const allStatements = await this._getStatementList(accountInfo.id, yearFilter)
-
-      for (const stmt of allStatements) {
-        const dateStr = stmt.documentDate
-        const sYear = parseInt(dateStr.substring(0, 4), 10)
-        const sMonth = parseInt(dateStr.substring(4, 6), 10)
-        const sDay = parseInt(dateStr.substring(6, 8), 10)
-        const stmtDate = new Date(sYear, sMonth - 1, sDay)
-
-        if (stmtDate >= targetDateLow && stmtDate <= targetDateHigh) {
-          const docKeyData = await this._getStatementDocKey(
-            accountInfo.id,
-            stmt.documentId,
-            yearFilter,
-          )
-          const freshCsrfToken = await this._getCsrfToken()
-          const pdfBuffer = await this._downloadPdf(docKeyData.docKey, freshCsrfToken)
-          results.push({
-            documentId: stmt.documentId,
-            date: stmt.documentDate,
-            pdfBase64: pdfBuffer.toString('base64'),
-          })
-        }
-      }
-    }
-    return results
-  }
-
   // ── Privados (core + endpoints) ────────────────────────────────────────────
+
+  /** YYYYMMDD → filtro de año de Chase (CURRENT_YEAR / CURRENT_YEAR_MINUS_N). */
+  private _yearFilterForDate(dateYYYYMMDD: string): string {
+    const sYear = parseInt(dateYYYYMMDD.substring(0, 4), 10)
+    const diff = new Date().getFullYear() - sYear
+    return diff <= 0 ? 'CURRENT_YEAR' : `CURRENT_YEAR_MINUS_${diff}`
+  }
 
   /** Helper JSON: arma headers x-jpmc, hace el fetch vía executor, parsea JSON. */
   private async _request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
@@ -306,8 +237,8 @@ export class ChaseAdapter extends BankAdapter {
     dateHigh: string,
     type: 'CHECK' | 'DEPOSIT',
     currentPageId?: string,
-    accumulated: ChaseTxn[] = [],
-  ): Promise<ChaseTxn[]> {
+    accumulated: BankTxn[] = [],
+  ): Promise<BankTxn[]> {
     const payload = new URLSearchParams({
       accountId,
       transactionType: type === 'CHECK' ? 'CHECK_WITHDRAWS' : 'DEPOSITS',
@@ -316,7 +247,7 @@ export class ChaseAdapter extends BankAdapter {
     })
     if (currentPageId) payload.append('pageId', currentPageId)
 
-    const response = await this._request<{ result?: ChaseTxn[]; nextPageId?: string }>(
+    const response = await this._request<{ result?: BankTxn[]; nextPageId?: string }>(
       '/svc/rr/accounts/secure/v1/account/activity/dda/list',
       { method: 'POST', headers: { 'content-type': FORM }, body: payload.toString() },
     )
@@ -336,41 +267,6 @@ export class ChaseAdapter extends BankAdapter {
       )
     }
     return newAccumulated
-  }
-
-  private async _getDepositDetails(
-    accountId: string,
-    amount: string,
-    sequenceNumber: string,
-    dateYYYYMMDD: string,
-  ): Promise<ChaseDepositDetails> {
-    const payload = new URLSearchParams({ accountId, amount, sequenceNumber, date: dateYYYYMMDD })
-    return this._request<ChaseDepositDetails>(
-      '/svc/rr/accounts/secure/v1/account/activity/detail/deposit/list',
-      { method: 'POST', headers: { 'content-type': FORM }, body: payload.toString() },
-    )
-  }
-
-  private async _downloadImage(
-    accountId: string,
-    sequenceNumber: string,
-    dateYYYYMMDD: string,
-    itemType: 'CHECK' | 'DEPOSIT_SLIP',
-  ): Promise<ChaseImageResponse> {
-    const queryParams = new URLSearchParams({
-      'digital-account-identifier': accountId,
-      'sequence-number': sequenceNumber,
-      'transaction-posted-date': dateYYYYMMDD,
-      'item-type-name': itemType,
-    })
-    const response = await this._request<ChaseImageResponse>(
-      `/svc/rr/accounts/secure/gateway/deposit-account/transactions/inquiry-maintenance/digital-checks/v1/images?${queryParams.toString()}`,
-      { method: 'GET' },
-    )
-    if (!response.checkFrontImage) {
-      throw new BankAdapterError(`Sin imagen para ${itemType} ${sequenceNumber} en ${dateYYYYMMDD}`)
-    }
-    return response
   }
 
   private async _getStatementList(
@@ -520,19 +416,6 @@ interface ChaseMenuItem {
   nickname?: string
 }
 
-interface ChaseTxn {
-  sequenceNumber: string
-  date: string
-  amount?: number
-}
-
-interface ChaseDepositDetails {
-  depositSequenceNumber?: string
-  totalDepositAmount?: number
-  depositSlipAvailable?: boolean
-  transactions?: ChaseTxn[]
-}
-
 interface ChaseImageResponse {
   checkFrontImage?: string
   checkRearImage?: string
@@ -552,8 +435,4 @@ function bodyToBuffer(result: FetchResult): Buffer {
   return result.bodyEncoding === 'base64'
     ? Buffer.from(result.body, 'base64')
     : Buffer.from(result.body, 'utf8')
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

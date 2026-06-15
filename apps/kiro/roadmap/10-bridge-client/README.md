@@ -1,7 +1,7 @@
 # 10-bridge-client — WebSocket client + auth con mapi
 
 **App:** kiro
-**Status:** ✅ v0.2.0 (WS client + execute_fetch), v0.3.0 (login JWT en popup + list_tabs) y v0.3.1 (fix race keepalive/result) cerradas y verificadas en vivo.
+**Status:** ✅ v0.2.0 (WS client + execute_fetch), v0.3.0 (login JWT en popup + list_tabs) y v0.3.1 (fix race keepalive/result) cerradas y verificadas en vivo. 🚧 v0.5.0 (comando `open_tab`) listo para revisión.
 **Backend asociado:** [`apps/mapi/roadmap/23-plugin-bridge`](../../../mapi/roadmap/23-plugin-bridge/README.md)
 **Última revisión:** 2026-06-14
 
@@ -49,19 +49,20 @@ bancos vive en mapi (Design B); kiro solo transporta y ejecuta.
 
 ## Decisiones (D-kiro-NNN)
 
-| ID         | Decisión                                                                                                                                                     |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| D-kiro-B01 | Transporte WS, kiro es cliente; auth shared secret (JWT diferido)                                                                                            |
-| D-kiro-B02 | `<all_urls>` required; sin config de servicios en el plugin (mapi dueño)                                                                                     |
-| D-kiro-B03 | `execute_fetch` se rutea al content script (same-origin/cookies); `check_session` en el SW                                                                   |
-| D-kiro-B04 | Keepalive MV3 con `chrome.alarms` + reconnect backoff                                                                                                        |
-| D-kiro-B05 | `correlationId` (transporte) → `requestId` (`FetchInstruction`); kiro lo inyecta porque el payload de mapi no lo trae                                        |
-| D-kiro-B06 | `execute_fetch` se rutea por **origin** de la URL; sin pestaña same-origin → `result` con `{ error }` (no rompe socket)                                      |
-| D-kiro-B07 | Content script se compila aparte como IIFE auto-contenido (`vite.content.config.ts`); SW/popup quedan en el build ESM principal                              |
-| D-kiro-B08 | Comando desconocido/JSON inválido → `console.warn`, sin cerrar el socket ni responder                                                                        |
-| D-kiro-B09 | Mensaje interno SW→content `{ kind:'kiro:execute_fetch', correlationId, payload }`; content responde `FetchResult` por `sendResponse` (async, `return true`) |
-| D-kiro-B10 | `connect()` no-op si ya hay socket vivo (`CONNECTING`/`OPEN`); el keepalive de 30s no recicla conexiones sanas (v0.3.1)                                      |
-| D-kiro-B11 | El `result` se responde por el socket que recibió el comando (no `this.ws`), robusto ante reconexión durante el dispatch (v0.3.1)                            |
+| ID         | Decisión                                                                                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-kiro-B01 | Transporte WS, kiro es cliente; auth shared secret (JWT diferido)                                                                                                                            |
+| D-kiro-B02 | `<all_urls>` required; sin config de servicios en el plugin (mapi dueño)                                                                                                                     |
+| D-kiro-B03 | `execute_fetch` se rutea al content script (same-origin/cookies); `check_session` en el SW                                                                                                   |
+| D-kiro-B04 | Keepalive MV3 con `chrome.alarms` + reconnect backoff                                                                                                                                        |
+| D-kiro-B05 | `correlationId` (transporte) → `requestId` (`FetchInstruction`); kiro lo inyecta porque el payload de mapi no lo trae                                                                        |
+| D-kiro-B06 | `execute_fetch` se rutea por **origin** de la URL; sin pestaña same-origin → `result` con `{ error }` (no rompe socket)                                                                      |
+| D-kiro-B07 | Content script se compila aparte como IIFE auto-contenido (`vite.content.config.ts`); SW/popup quedan en el build ESM principal                                                              |
+| D-kiro-B08 | Comando desconocido/JSON inválido → `console.warn`, sin cerrar el socket ni responder                                                                                                        |
+| D-kiro-B09 | Mensaje interno SW→content `{ kind:'kiro:execute_fetch', correlationId, payload }`; content responde `FetchResult` por `sendResponse` (async, `return true`)                                 |
+| D-kiro-B10 | `connect()` no-op si ya hay socket vivo (`CONNECTING`/`OPEN`); el keepalive de 30s no recicla conexiones sanas (v0.3.1)                                                                      |
+| D-kiro-B11 | El `result` se responde por el socket que recibió el comando (no `this.ws`), robusto ante reconexión durante el dispatch (v0.3.1)                                                            |
+| D-kiro-B16 | `open_tab` corre en el SW (`chrome.tabs.create` + espera `onUpdated` complete), NO como op DOM (`location.href` mataría el content script → sin result → 504). Genérico, kiro tonto (v0.5.0) |
 
 ## Nota MV3 (riesgo conocido)
 
@@ -83,3 +84,4 @@ flujo real el usuario está presente (dispara desde Claude) → SW despierto. Do
 | 0.2.0   | ✅     | WS client + auth + reconnect/keepalive + dispatch a `21-fetch-executor` — verificado en vivo con mapi v0.17.0                                      |
 | 0.3.0   | ✅     | Login JWT en el popup (dos pantallas, inglés, logout) + `list_tabs` stateless — espejo de mapi v0.19.0                                             |
 | 0.3.1   | ✅     | Fix race keepalive/result (504 en mapi): reply en socket de origen + `connect()` no recicla socket sano — verificado con ChaseAdapter mapi v0.18.0 |
+| 0.5.0   | 🚧     | Comando `open_tab` (abrir pestaña + esperar load, en el SW) — para el auto-login bancario hands-off                                                |

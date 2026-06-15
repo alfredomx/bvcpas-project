@@ -1,6 +1,6 @@
 # 22-bank-worker — Worker de descarga bancaria (Chase, Wells Fargo, RBFCU, Broadway Bank, Frost)
 
-**Estado del módulo**: ✅ Vault (v0.16.x) + adapter Chase Design B (v0.18.0) cerrados.
+**Estado del módulo**: ✅ Vault (v0.16.x) + adapter Chase Design B (v0.18.0) cerrados. 🚧 Step-flow de descarga (v0.21.0: login en vivo + cuentas + checks/deposits/statements/transactions + PDF storage) listo para revisión. 📅 Adapters delgados (v0.22.0) en discusión.
 **Apertura**: 2026-06-12.
 
 > **⚠️ PIVOTE Design B (2026-06-13) — lo de abajo sobre Playwright/CDP está OBSOLETO.**
@@ -87,7 +87,9 @@ El operador exporta su Excel como 2 CSVs (`bank-portals.csv` y `bank-credentials
 - **v0.16.x** — Vault: 3 tablas (`bank_portals`, `client_bank_accounts`, `bank_accounts`) + CRUD admin + seed CSV + multi-credencial + credenciales descifradas en lectura. (D-mapi-BW-001..006, vigentes.)
 - **v0.17.0** — `23-plugin-bridge`: bridge WS mapi↔plugin (gateway + `BridgeCommandService`). Base de Design B.
 - **v0.18.0** — **Adapter Chase** portado a Design B (los 6 métodos). El adapter (lógica del banco) vive en mapi; kiro ejecuta los `fetch` en la sesión viva. Validado en vivo contra Chase real. (D-mapi-BW-007..010, ver [`v0.18.0.md`](v0.18.0.md).)
-- **Siguientes** — más adapters (Wells Fargo, RBFCU, Broadway, Frost), mismo patrón (port a Design B). Después: MCP `bank_download`, OTP inbound, destino Dropbox. Orden según necesidad real.
+- **v0.21.0** 🚧 — **Step-flow de descarga**: `list_credentials` (picker sin secretos) + `list_accounts` (auto-login en vivo + cuentas reales + ancla `today`) + `download_{checks,deposits,statements,transactions}` (preset de rango en inglés o `from`+`to` → MM-DD-YYYY en zona del cliente, array de masks) + **PDF storage** (formato del operador portado de `bankify`: checks `MM-DD-YYYY - <check>.pdf`, deposits `... (<amount>).pdf`, statements `YYYY-MM.pdf`, transactions `<mask> (<from> to <to>).csv|qbo`) + `client_aliases` (resolve_client persistente). Registry portal→adapter. Smoke en vivo parcial (Bilia/Chase). (D-mapi-BW-011..020, ver [`v0.21.0.md`](v0.21.0.md).)
+- **v0.22.0** 📅 — **Adapters delgados**: partir los `downloadX` gordos en primitivas (1 op de banco c/u) y subir la política (rango/latest/nombrado) al `BankDownloadService`. Resuelve el modo "latest" de statements y cubre el smoke en vivo pendiente (transactions + depósitos-con-cheques). Ver BACKLOG. TDD primero.
+- **Siguientes** — más adapters (Wells Fargo, RBFCU, Broadway, Frost), mismo patrón (port a Design B). Después: wrapper MCP de los step-tools, OTP inbound, destino Dropbox. Orden según necesidad real.
 
 ## Estructura física (Design B)
 
@@ -118,11 +120,13 @@ El moat (endpoints, CSRF, paginación) vive en mapi; el plugin nunca ve esa lóg
 
 ## Versiones
 
-| Versión | Estado | Tema                                                                        | Archivo                  |
-| ------- | ------ | --------------------------------------------------------------------------- | ------------------------ |
-| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)              | [v0.15.0.md](v0.15.0.md) |
-| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)                     | [v0.16.0.md](v0.16.0.md) |
-| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)         | [v0.16.2.md](v0.16.2.md) |
-| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)               | [v0.16.3.md](v0.16.3.md) |
-| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)         | [v0.16.4.md](v0.16.4.md) |
-| 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo | [v0.18.0.md](v0.18.0.md) |
+| Versión | Estado | Tema                                                                                                          | Archivo                  |
+| ------- | ------ | ------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| 0.15.0  | 📅     | Scaffold worker + tablas + CRUD admin + seed CSV (sin adapter)                                                | [v0.15.0.md](v0.15.0.md) |
+| 0.16.0  | ✅     | bank-worker módulo 22 (portales, credenciales, cuentas)                                                       | [v0.16.0.md](v0.16.0.md) |
+| 0.16.2  | ✅     | Response DTOs tipados en OpenAPI (SDK frontend deja de ser `never`)                                           | [v0.16.2.md](v0.16.2.md) |
+| 0.16.3  | ✅     | Credenciales descifradas en las respuestas de lectura (vault)                                                 | [v0.16.3.md](v0.16.3.md) |
+| 0.16.4  | ✅     | Multi-credencial por (cliente, portal) + re-seed (+101 recuperadas)                                           | [v0.16.4.md](v0.16.4.md) |
+| 0.18.0  | ✅     | Adapter Chase portado a Design B (6 métodos) + endpoints + validado en vivo                                   | [v0.18.0.md](v0.18.0.md) |
+| 0.21.0  | 🚧     | Step-flow descarga: login en vivo + cuentas + checks/deposits/statements/transactions + PDF storage + presets | [v0.21.0.md](v0.21.0.md) |
+| 0.22.0  | 🚧     | Adapters delgados (primitivas) + política en mapi + modo "latest" (383 unit verdes)                           | [v0.22.0.md](v0.22.0.md) |

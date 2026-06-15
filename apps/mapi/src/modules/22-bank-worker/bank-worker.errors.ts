@@ -70,3 +70,62 @@ export class BankAdapterError extends DomainError {
     super(`Adapter bancario: ${message}`)
   }
 }
+
+// ── Step-flow de descarga (v0.21.0) ─────────────────────────────────────────
+
+/**
+ * El portal del cliente no tiene un adapter de descarga implementado (ej.
+ * RBFCU aún no está portado a Design B). HTTP 501 (no implementado).
+ */
+export class BankAdapterNotSupportedError extends DomainError {
+  readonly code = 'BANK_ADAPTER_NOT_SUPPORTED'
+  constructor(portalName: string) {
+    super(`No hay adapter de descarga implementado para el portal "${portalName}"`)
+  }
+}
+
+/**
+ * La credencial no tiene cuentas activas registradas (`bank_accounts`) para
+ * descargar. El operador debe registrar los masks primero. HTTP 409.
+ */
+export class NoBankAccountsRegisteredError extends DomainError {
+  readonly code = 'NO_BANK_ACCOUNTS_REGISTERED'
+  constructor(credentialId: string) {
+    super(`La credencial ${credentialId} no tiene cuentas activas registradas para descargar`)
+  }
+}
+
+/**
+ * El `accountMask` pedido no es una cuenta registrada de esa credencial. HTTP 404.
+ */
+export class BankAccountMaskNotFoundError extends DomainError {
+  readonly code = 'BANK_ACCOUNT_MASK_NOT_FOUND'
+  constructor(mask: string) {
+    super(`No hay una cuenta registrada con terminación ${mask} en esa credencial`)
+  }
+}
+
+/**
+ * El portal no tiene login automatizado (el adapter no implementa
+ * `buildLoginRecipe`). HTTP 501.
+ */
+export class BankLoginNotSupportedError extends DomainError {
+  readonly code = 'BANK_LOGIN_NOT_SUPPORTED'
+  constructor(portalName: string) {
+    super(`El portal "${portalName}" no tiene login automatizado implementado`)
+  }
+}
+
+/**
+ * No se pudo establecer la sesión del banco tras el login (las credenciales
+ * fallaron, MFA/device-trust pendiente, o el banco no respondió). HTTP 502.
+ */
+export class BankSessionNotEstablishedError extends DomainError {
+  readonly code = 'BANK_SESSION_NOT_ESTABLISHED'
+  constructor(portalName: string) {
+    super(
+      `No se pudo establecer la sesión de "${portalName}" tras el login ` +
+        `(credenciales, MFA/device-trust, o el banco no respondió)`,
+    )
+  }
+}

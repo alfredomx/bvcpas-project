@@ -13,17 +13,21 @@ import { BankAccountsRepository } from './bank-accounts.repository'
 import { BankAccountsService } from './bank-accounts.service'
 import { BankCredentialsGlobalController } from './bank-credentials-global.controller'
 import { PluginBridgeModule } from '../23-plugin-bridge/plugin-bridge.module'
-import { ChaseController } from './chase.controller'
+import { QueueModule } from '../../core/queue/queue.module'
 import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
+import { BankDownloadController } from './bank-download.controller'
+import { BankDownloadService } from './bank-download.service'
+import { BankSessionService } from './bank-session.service'
+import { BankDownloadProcessor, BankDownloadQueueService } from './bank-download.queue'
 
 @Module({
-  imports: [ClientsModule, EventLogModule, EncryptionModule, PluginBridgeModule],
+  imports: [ClientsModule, EventLogModule, EncryptionModule, PluginBridgeModule, QueueModule],
   controllers: [
     BankPortalsController,
     ClientBankAccountsController,
     BankAccountsController,
     BankCredentialsGlobalController,
-    ChaseController,
+    BankDownloadController,
   ],
   providers: [
     BankPortalsRepository,
@@ -33,6 +37,10 @@ import { BridgeFetchExecutor } from './adapters/bridge-fetch-executor'
     BankAccountsRepository,
     BankAccountsService,
     BridgeFetchExecutor,
+    BankDownloadService,
+    BankSessionService,
+    BankDownloadProcessor,
+    BankDownloadQueueService,
   ],
 })
 export class BankWorkerModule {}
