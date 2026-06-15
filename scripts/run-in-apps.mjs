@@ -24,7 +24,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import { resolve } from 'node:path'
 
-const APPS = ['apps/mapi', 'apps/bvcpas', 'apps/kiro']
+const APPS = ['apps/mapi', 'apps/bvcpas', 'apps/kiro', 'apps/mcp']
 const scriptName = process.argv[2]
 
 if (!scriptName) {
