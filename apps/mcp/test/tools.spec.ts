@@ -5,6 +5,7 @@ import {
   listClientsTool,
   listPortalsTool,
   listClientAccountsTool,
+  listClientTransactionsTool,
 } from '../src/tools'
 
 /** fetch falso que registra la llamada y responde lo que se le configure. */
@@ -129,6 +130,40 @@ describe('tools de lectura', () => {
     await listClientAccountsTool.handler({ clientId: 'ad390fdb-1', portal: 'chase' }, client)
     expect(calls[0].url).toBe(
       'http://localhost:4000/v1/clients/ad390fdb-1/banking/credentials?portal=chase',
+    )
+  })
+
+  it('CR-mcp-010: list_client_transactions → GET /v1/clients/:id/transactions (id encodeado)', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { items: [], total: 0 })
+    const out = await listClientTransactionsTool.handler({ clientId: 'ad390fdb-1' }, client)
+    expect(calls[0].url).toBe('http://localhost:4000/v1/clients/ad390fdb-1/transactions')
+    expect(calls[0].init.method).toBe('GET')
+    expect(headersOf(calls[0].init).Authorization).toBe('Bearer JWT123')
+    expect(JSON.parse(out)).toEqual({ items: [], total: 0 })
+  })
+
+  it('CR-mcp-011: list_client_transactions con category=ask_my_accountant (AMAs) → ?category=', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { items: [], total: 0 })
+    await listClientTransactionsTool.handler(
+      { clientId: 'ad390fdb-1', category: 'ask_my_accountant' },
+      client,
+    )
+    expect(calls[0].url).toBe(
+      'http://localhost:4000/v1/clients/ad390fdb-1/transactions?category=ask_my_accountant',
+    )
+  })
+
+  it('CR-mcp-012: list_client_transactions con filter + rango de fechas → query string', async () => {
+    const calls: { url: string; init: RequestInit }[] = []
+    const client = clientWith(calls, 200, { items: [], total: 0 })
+    await listClientTransactionsTool.handler(
+      { clientId: 'ad390fdb-1', filter: 'expense', startDate: '2025-01-01', endDate: '2026-04-30' },
+      client,
+    )
+    expect(calls[0].url).toBe(
+      'http://localhost:4000/v1/clients/ad390fdb-1/transactions?filter=expense&startDate=2025-01-01&endDate=2026-04-30',
     )
   })
 })
