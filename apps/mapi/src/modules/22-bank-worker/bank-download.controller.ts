@@ -17,6 +17,7 @@ import { RequirePermission } from '../../core/permissions/decorators/require-per
 import type { SessionContext } from '../../core/auth/sessions.service'
 import { BankDownloadService } from './bank-download.service'
 import { BankSessionService } from './bank-session.service'
+import { BankDownloadQueueService } from './bank-download.queue'
 import {
   DownloadChecksDto,
   DownloadChecksResponseDto,
@@ -73,6 +74,7 @@ export class BankDownloadController {
   constructor(
     private readonly service: BankDownloadService,
     private readonly session: BankSessionService,
+    private readonly queue: BankDownloadQueueService,
   ) {}
 
   @Get('credentials')
@@ -150,7 +152,10 @@ export class BankDownloadController {
     @Body(new ZodValidationPipe(DownloadChecksSchema)) body: DownloadChecksDto,
     @CurrentUser() actor: SessionContext,
   ): Promise<DownloadChecksResponse> {
-    return this.service.downloadChecks(clientId, body, actor.userId)
+    return this.queue.runAndWait<DownloadChecksResponse>(
+      { kind: 'checks', clientId, userId: actor.userId, dto: body },
+      `checks ${body.accountMasks.join(',')}`,
+    )
   }
 
   @Post('deposits')
@@ -172,7 +177,10 @@ export class BankDownloadController {
     @Body(new ZodValidationPipe(DownloadDepositsSchema)) body: DownloadDepositsDto,
     @CurrentUser() actor: SessionContext,
   ): Promise<DownloadDepositsResponse> {
-    return this.service.downloadDeposits(clientId, body, actor.userId)
+    return this.queue.runAndWait<DownloadDepositsResponse>(
+      { kind: 'deposits', clientId, userId: actor.userId, dto: body },
+      `deposits ${body.accountMasks.join(',')}`,
+    )
   }
 
   @Post('statements')
@@ -194,7 +202,10 @@ export class BankDownloadController {
     @Body(new ZodValidationPipe(DownloadStatementsSchema)) body: DownloadStatementsDto,
     @CurrentUser() actor: SessionContext,
   ): Promise<DownloadStatementsResponse> {
-    return this.service.downloadStatements(clientId, body, actor.userId)
+    return this.queue.runAndWait<DownloadStatementsResponse>(
+      { kind: 'statements', clientId, userId: actor.userId, dto: body },
+      `statements ${body.accountMasks.join(',')}`,
+    )
   }
 
   @Post('transactions')
@@ -216,7 +227,10 @@ export class BankDownloadController {
     @Body(new ZodValidationPipe(DownloadTransactionsSchema)) body: DownloadTransactionsDto,
     @CurrentUser() actor: SessionContext,
   ): Promise<DownloadTransactionsResponse> {
-    return this.service.downloadTransactions(clientId, body, actor.userId)
+    return this.queue.runAndWait<DownloadTransactionsResponse>(
+      { kind: 'transactions', clientId, userId: actor.userId, dto: body },
+      `transactions ${body.accountMasks.join(',')}`,
+    )
   }
 
   // ── Read verbs (preview, sin descargar imágenes) — v0.23.0 ────────────────
