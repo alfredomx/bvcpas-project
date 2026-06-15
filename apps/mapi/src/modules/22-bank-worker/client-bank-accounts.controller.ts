@@ -8,9 +8,10 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe'
 import { CurrentUser } from '../../core/auth/decorators/current-user.decorator'
 import { ClientAccessGuard } from '../../core/auth/guards/client-access.guard'
@@ -21,6 +22,8 @@ import {
   ClientBankAccountResponseDto,
   CreateClientBankAccountDto,
   CreateClientBankAccountSchema,
+  ListClientCredentialsQueryDto,
+  ListClientCredentialsQuerySchema,
   UpdateClientBankAccountDto,
   UpdateClientBankAccountSchema,
   type ClientBankAccountResponse,
@@ -38,16 +41,28 @@ export class ClientBankAccountsController {
   @RequirePermission('banking.read')
   @ApiOperation({
     summary: 'GET /v1/clients/:id/banking/credentials — lista credenciales del cliente',
+    description:
+      'Devuelve las credenciales del cliente con el portal poblado (id, name, portal_url). ' +
+      'Filtro opcional `portal`: match parcial case-insensitive sobre el nombre del portal ' +
+      '(ej. `?portal=chase` para resolver la credencial de Chase de una sola llamada).',
+  })
+  @ApiQuery({
+    name: 'portal',
+    required: false,
+    description: 'Filtra por nombre de portal (match parcial, case-insensitive). Ej: `chase`.',
+    example: 'chase',
   })
   @ApiResponse({
     status: 200,
-    description: 'Credenciales (sin valores encriptados).',
+    description: 'Credenciales (con portal; sin valores encriptados ocultos).',
     type: ClientBankAccountListResponseDto,
   })
   async list(
     @Param('id', ParseUUIDPipe) clientId: string,
+    @Query(new ZodValidationPipe(ListClientCredentialsQuerySchema))
+    query: ListClientCredentialsQueryDto,
   ): Promise<{ data: ClientBankAccountResponse[] }> {
-    const data = await this.service.list(clientId)
+    const data = await this.service.list(clientId, query.portal)
     return { data }
   }
 

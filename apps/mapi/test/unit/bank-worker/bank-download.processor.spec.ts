@@ -72,12 +72,41 @@ describe('BankDownloadProcessor', () => {
     expect(session.listAccounts).toHaveBeenCalledWith('c1', credId, 'u1')
     expect(service.downloadStatements).toHaveBeenCalledWith(
       'c1',
-      expect.objectContaining({ credentialId: credId, accountMasks: ['7011'], latest: true }),
+      // D-mapi-BW-033: el verbo guarda por default (save:true) sin pedirlo.
+      expect.objectContaining({
+        credentialId: credId,
+        accountMasks: ['7011'],
+        latest: true,
+        save: true,
+      }),
       'u1',
       expect.any(Function),
     )
     expect(session.endSession).toHaveBeenCalledWith('c1', credId, 'u1')
     expect(res).toEqual({ ok: 'statements' })
+  })
+
+  it('CR-bw-q-006: client-download respeta save:false explícito (modo preview)', async () => {
+    const { service, proc } = build()
+    const credId = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb'
+    const job = fakeJob({
+      kind: 'client-download',
+      what: 'statements',
+      clientId: 'c1',
+      credentialId: credId,
+      userId: 'u1',
+      accounts: 'all',
+      params: { latest: true, save: false },
+    } as never)
+
+    await proc.process(job)
+
+    expect(service.downloadStatements).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({ save: false }),
+      'u1',
+      expect.any(Function),
+    )
   })
 
   it('CR-bw-q-004: endSession corre aunque la descarga falle (finally), sin tapar el error', async () => {

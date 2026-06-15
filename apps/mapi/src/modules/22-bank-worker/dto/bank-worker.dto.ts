@@ -83,6 +83,13 @@ export const ClientBankAccountResponseSchema = z.object({
   id: z.string().uuid(),
   client_id: z.string().uuid(),
   bank_portal_id: z.string().uuid(),
+  // v0.28.1 (D-mapi-BW-031): portal anidado vía join, igual al endpoint global.
+  // `portal.id` === `bank_portal_id` (este se conserva por compat).
+  portal: z.object({
+    id: z.string().uuid(),
+    name: z.string(),
+    portal_url: z.string().nullable(),
+  }),
   nickname: z.string().nullable(),
   username: z.string().nullable(),
   password: z.string().nullable(),
@@ -100,6 +107,15 @@ export class ClientBankAccountResponseDto extends createZodDto(ClientBankAccount
 export class ClientBankAccountListResponseDto extends createZodDto(
   z.object({ data: z.array(ClientBankAccountResponseSchema) }),
 ) {}
+
+// v0.28.1 (D-mapi-BW-032): filtro opcional por nombre de portal en el listado per-cliente.
+export const ListClientCredentialsQuerySchema = z
+  .object({
+    portal: z.string().min(1).max(200).optional(),
+  })
+  .strict()
+
+export class ListClientCredentialsQueryDto extends createZodDto(ListClientCredentialsQuerySchema) {}
 
 // ───── Global Credentials (v0.16.1) ───────────────────────────────────────
 
