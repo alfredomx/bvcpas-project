@@ -4,6 +4,7 @@ import { AppConfigModule } from './core/config/config.module'
 import { LoggerModule } from './core/logger/logger.module'
 import { DbModule } from './core/db/db.module'
 import { MetricsModule } from './core/metrics/metrics.module'
+import { QueueModule } from './core/queue/queue.module'
 import { CorrelationIdMiddleware } from './common/correlation/correlation-id.middleware'
 import { DomainErrorFilter } from './common/errors/domain-error.filter'
 import { HealthModule } from './modules/health/health.module'
@@ -30,6 +31,7 @@ import { PluginBridgeModule } from './modules/23-plugin-bridge/plugin-bridge.mod
     LoggerModule,
     DbModule,
     MetricsModule,
+    QueueModule,
     AuthCoreModule,
     PermissionsModule,
     EncryptionModule,

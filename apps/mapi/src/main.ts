@@ -6,9 +6,16 @@ import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 import { apiReference } from '@scalar/nestjs-api-reference'
 import { cleanupOpenApiDoc } from 'nestjs-zod'
-import type { Express } from 'express'
+import type { Express, NextFunction, Request, Response, Router } from 'express'
+import { getQueueToken } from '@nestjs/bullmq'
+import type { Queue } from 'bullmq'
+import { createBullBoard } from '@bull-board/api'
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter'
+import { ExpressAdapter } from '@bull-board/express'
 import { AppModule } from './app.module'
 import { AppConfigService } from './core/config/config.service'
+import { JwtService } from './core/auth/jwt.service'
+import { BANK_DOWNLOAD_QUEUE } from './core/queue/queue.module'
 import { APP_NAME, APP_VERSION } from './common/version'
 
 /**
@@ -282,6 +289,43 @@ function setupApiDocs(app: INestApplication, cfg: AppConfigService): void {
   )
 }
 
+/**
+ * Monta bull-board en `/v1/admin/queues`, detrás de auth admin: requiere un JWT
+ * válido vía `Authorization: Bearer <jwt>` o `?token=<jwt>` (cómodo desde el
+ * browser). Muestra las colas BullMQ (jobs, progreso, reintentar, borrar) — por
+ * eso es admin-only. El JWT se valida con el mismo `JwtService` de la app (sin
+ * credencial nueva). Tighten a un permiso concreto es trivial a futuro.
+ */
+function setupQueueDashboard(app: INestApplication): void {
+  const expressApp = app.getHttpAdapter().getInstance() as Express
+  const jwt = app.get(JwtService, { strict: false })
+  const bankQueue = app.get<Queue>(getQueueToken(BANK_DOWNLOAD_QUEUE), { strict: false })
+
+  const serverAdapter = new ExpressAdapter()
+  serverAdapter.setBasePath('/v1/admin/queues')
+  createBullBoard({ queues: [new BullMQAdapter(bankQueue)], serverAdapter })
+
+  const requireAdminJwt = (req: Request, res: Response, next: NextFunction): void => {
+    const header = req.headers.authorization
+    const bearer = header?.startsWith('Bearer ') ? header.slice(7) : undefined
+    const queryToken = typeof req.query.token === 'string' ? req.query.token : undefined
+    const token = bearer ?? queryToken
+    if (!token) {
+      res.status(401).json({ message: 'Falta token (Authorization: Bearer o ?token=)' })
+      return
+    }
+    try {
+      jwt.verify(token)
+      next()
+    } catch {
+      res.status(401).json({ message: 'Token inválido o expirado' })
+    }
+  }
+
+  const dashboardRouter = serverAdapter.getRouter() as Router
+  expressApp.use('/v1/admin/queues', requireAdminJwt, dashboardRouter)
+}
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
   app.useLogger(app.get(PinoNestLogger))
@@ -296,6 +340,7 @@ async function bootstrap(): Promise<void> {
 
   const cfg = app.get(AppConfigService)
   setupApiDocs(app, cfg)
+  setupQueueDashboard(app)
 
   await app.listen(cfg.port)
 
@@ -308,6 +353,7 @@ async function bootstrap(): Promise<void> {
     `  Health     http://localhost:${cfg.port}/v1/healthz`,
     `  Metrics    http://localhost:${cfg.port}/metrics`,
     `  Docs       http://localhost:${cfg.port}/v1/docs`,
+    `  Queues     http://localhost:${cfg.port}/v1/admin/queues?token=<jwt>`,
     cfg.publicUrl ? `  PUBLIC_URL ${cfg.publicUrl}` : null,
     '════════════════════════════════════════',
   ]
