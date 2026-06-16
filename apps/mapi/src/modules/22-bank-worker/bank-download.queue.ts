@@ -53,8 +53,22 @@ export class BankDownloadProcessor extends WorkerHost {
   constructor(
     private readonly service: BankDownloadService,
     private readonly session: BankSessionService,
+    @InjectQueue(BANK_DOWNLOAD_QUEUE) private readonly queue: Queue,
   ) {
     super()
+  }
+
+  /**
+   * ¿Algún job pendiente (waiting/delayed/prioritized) usa la MISMA sesión de
+   * banco (misma credencial = mismo login)? Si sí, dejamos la sesión viva para
+   * que el siguiente job la reuse por fast-path (`getAllAccounts()`) sin re-loguear.
+   * Si no, se cierra. Evita el ciclo login→cierre→login entre jobs de la misma
+   * cuenta (ej. `deposits` + `checks`). Trade-off (opción A): si el job pendiente
+   * nunca corre, la sesión queda viva hasta que otro run la reuse/cierre.
+   */
+  private async sessionNeededByPending(credentialId: string): Promise<boolean> {
+    const pending = await this.queue.getJobs(['waiting', 'delayed', 'prioritized'])
+    return pending.some((j) => credentialIdOf(j.data as BankDownloadJob) === credentialId)
   }
 
   async process(job: Job<BankDownloadJob>): Promise<unknown> {
@@ -76,10 +90,14 @@ export class BankDownloadProcessor extends WorkerHost {
         case 'transactions':
           return await this.service.downloadTransactions(d.clientId, d.dto, d.userId, onProgress)
       }
+      return undefined // union de kinds exhausta; satisface noImplicitReturns
     } finally {
-      // Tras CADA extracción: desloguear el portal + cerrar la pestaña (v0.26.0).
-      // Best-effort: endSession nunca lanza, no altera el resultado del job.
-      await this.session.endSession(d.clientId, d.dto.credentialId, d.userId)
+      // Desloguear + cerrar pestaña SOLO si ningún job pendiente usa la misma
+      // sesión (misma credencial). Si otro la necesita, se deja viva para que la
+      // reuse por fast-path y no re-loguee. Best-effort: endSession nunca lanza.
+      if (!(await this.sessionNeededByPending(d.dto.credentialId))) {
+        await this.session.endSession(d.clientId, d.dto.credentialId, d.userId)
+      }
     }
   }
 
@@ -128,10 +146,19 @@ export class BankDownloadProcessor extends WorkerHost {
             onProgress,
           )
       }
+      return undefined // union de `what` exhausta; satisface noImplicitReturns
     } finally {
-      await this.session.endSession(d.clientId, d.credentialId, d.userId)
+      // Cierre condicional: solo si ningún job pendiente reusa la misma sesión.
+      if (!(await this.sessionNeededByPending(d.credentialId))) {
+        await this.session.endSession(d.clientId, d.credentialId, d.userId)
+      }
     }
   }
+}
+
+/** Credencial (= sesión de banco) que usa un job, sin importar su `kind`. */
+function credentialIdOf(d: BankDownloadJob): string {
+  return d.kind === 'client-download' ? d.credentialId : d.dto.credentialId
 }
 
 /**

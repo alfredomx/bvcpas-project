@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { Injectable } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ClientsRepository } from '../11-clients/clients.repository'
 import { EventLogService } from '../95-event-log/event-log.service'
 import { BankAccountsRepository } from './bank-accounts.repository'
@@ -64,6 +64,8 @@ const FETCH_PACE_MS = 300
  */
 @Injectable()
 export class BankDownloadService {
+  private readonly logger = new Logger(BankDownloadService.name)
+
   constructor(
     private readonly credsRepo: ClientBankAccountsRepository,
     private readonly accountsRepo: BankAccountsRepository,
@@ -120,27 +122,36 @@ export class BankDownloadService {
     let totalChecks = 0
     for (let mi = 0; mi < masks.length; mi++) {
       const mask = masks[mi]
-      const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
-      await this.report(onProgress, 'checks', mask, mi, masks.length, 0, txns.length)
-      const checks: DownloadedImage[] = []
-      for (let i = 0; i < txns.length; i++) {
-        const tx = txns[i]
-        if (!tx.sequenceNumber) continue
-        const img = await adapter.downloadImage(mask, tx.sequenceNumber, tx.date, 'CHECK')
-        checks.push({
-          sequenceNumber: tx.sequenceNumber,
-          type: 'CHECK',
-          frontImageBase64: img.front,
-          rearImageBase64: img.rear,
-          checkNumber: tx.checkNumber,
-          postDate: tx.date,
-          amount: tx.amount,
-        })
-        await this.report(onProgress, 'checks', mask, mi, masks.length, i + 1, txns.length)
-        if (i < txns.length - 1) await this.pace()
+      try {
+        const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
+        await this.report(onProgress, 'checks', mask, mi, masks.length, 0, txns.length)
+        const checks: DownloadedImage[] = []
+        for (let i = 0; i < txns.length; i++) {
+          const tx = txns[i]
+          if (!tx.sequenceNumber) continue
+          const img = await adapter.downloadImage(mask, tx.sequenceNumber, tx.date, 'CHECK')
+          checks.push({
+            sequenceNumber: tx.sequenceNumber,
+            type: 'CHECK',
+            frontImageBase64: img.front,
+            rearImageBase64: img.rear,
+            checkNumber: tx.checkNumber,
+            postDate: tx.date,
+            amount: tx.amount,
+          })
+          await this.report(onProgress, 'checks', mask, mi, masks.length, i + 1, txns.length)
+          if (i < txns.length - 1) await this.pace()
+        }
+        accounts.push({ account_mask: mask, count: checks.length, checks })
+        totalChecks += checks.length
+      } catch (err) {
+        // Aislar por cuenta: un fallo en una mask no bota las demás ni descarta
+        // lo ya bajado. Se registra y se sigue. D-mapi-BW-036.
+        this.logger.warn(
+          `checks: mask ${mask} falló, se salta: ${err instanceof Error ? err.message : String(err)}`,
+        )
+        accounts.push({ account_mask: mask, count: 0, checks: [] })
       }
-      accounts.push({ account_mask: mask, count: checks.length, checks })
-      totalChecks += checks.length
     }
 
     let savedDir: string | null = null
@@ -202,74 +213,82 @@ export class BankDownloadService {
     let totalImages = 0
     for (let mi = 0; mi < masks.length; mi++) {
       const mask = masks[mi]
-      const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
-      await this.report(onProgress, 'deposits', mask, mi, masks.length, 0, deps.length)
-      const deposits: DepositResult[] = []
-      for (let di = 0; di < deps.length; di++) {
-        const dep = deps[di]
-        const details = await adapter.getDepositDetails(mask, dep)
-        const result: DepositResult = {
-          depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
-          totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
-          checksImages: [],
-        }
-
-        if (details.depositSlipAvailable) {
-          const slip = await adapter.downloadImage(
-            mask,
-            result.depositSequenceNumber,
-            dep.date,
-            'DEPOSIT_SLIP',
-          )
-          result.depositSlipImage = {
-            sequenceNumber: result.depositSequenceNumber,
-            type: 'DEPOSIT_SLIP',
-            frontImageBase64: slip.front,
-            rearImageBase64: slip.rear,
-            checkNumber: dep.checkNumber,
-            postDate: dep.date,
-            amount: result.totalAmount,
+      try {
+        const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
+        await this.report(onProgress, 'deposits', mask, mi, masks.length, 0, deps.length)
+        const deposits: DepositResult[] = []
+        for (let di = 0; di < deps.length; di++) {
+          const dep = deps[di]
+          const details = await adapter.getDepositDetails(mask, dep)
+          const result: DepositResult = {
+            depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
+            totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
+            checksImages: [],
           }
-          await this.pace()
+
+          if (details.depositSlipAvailable) {
+            const slip = await adapter.downloadImage(
+              mask,
+              result.depositSequenceNumber,
+              dep.date,
+              'DEPOSIT_SLIP',
+            )
+            result.depositSlipImage = {
+              sequenceNumber: result.depositSequenceNumber,
+              type: 'DEPOSIT_SLIP',
+              frontImageBase64: slip.front,
+              rearImageBase64: slip.rear,
+              checkNumber: dep.checkNumber,
+              postDate: dep.date,
+              amount: result.totalAmount,
+            }
+            await this.pace()
+          }
+
+          const innerChecks = details.transactions ?? []
+          for (let ci = 0; ci < innerChecks.length; ci++) {
+            const chk = innerChecks[ci]
+            const img = await adapter.downloadImage(
+              mask,
+              chk.sequenceNumber,
+              chk.postDate ?? dep.date,
+              'CHECK',
+            )
+            result.checksImages.push({
+              sequenceNumber: chk.sequenceNumber,
+              type: 'CHECK',
+              frontImageBase64: img.front,
+              rearImageBase64: img.rear,
+              checkNumber: chk.checkNumber,
+              postDate: chk.postDate ?? dep.date,
+              amount: chk.amount,
+            })
+            if (ci < innerChecks.length - 1) await this.pace()
+          }
+
+          deposits.push(result)
+          await this.report(onProgress, 'deposits', mask, mi, masks.length, di + 1, deps.length)
+          if (di < deps.length - 1) await this.pace()
         }
 
-        const innerChecks = details.transactions ?? []
-        for (let ci = 0; ci < innerChecks.length; ci++) {
-          const chk = innerChecks[ci]
-          const img = await adapter.downloadImage(
-            mask,
-            chk.sequenceNumber,
-            chk.postDate ?? dep.date,
-            'CHECK',
-          )
-          result.checksImages.push({
-            sequenceNumber: chk.sequenceNumber,
-            type: 'CHECK',
-            frontImageBase64: img.front,
-            rearImageBase64: img.rear,
-            checkNumber: chk.checkNumber,
-            postDate: chk.postDate ?? dep.date,
-            amount: chk.amount,
-          })
-          if (ci < innerChecks.length - 1) await this.pace()
-        }
-
-        deposits.push(result)
-        await this.report(onProgress, 'deposits', mask, mi, masks.length, di + 1, deps.length)
-        if (di < deps.length - 1) await this.pace()
+        const imageCount = deposits.reduce(
+          (n, d) => n + (d.depositSlipImage ? 1 : 0) + d.checksImages.length,
+          0,
+        )
+        accounts.push({
+          account_mask: mask,
+          deposit_count: deposits.length,
+          image_count: imageCount,
+          deposits,
+        })
+        totalImages += imageCount
+      } catch (err) {
+        // Aislar por cuenta: un fallo en una mask no bota las demás. D-mapi-BW-036.
+        this.logger.warn(
+          `deposits: mask ${mask} falló, se salta: ${err instanceof Error ? err.message : String(err)}`,
+        )
+        accounts.push({ account_mask: mask, deposit_count: 0, image_count: 0, deposits: [] })
       }
-
-      const imageCount = deposits.reduce(
-        (n, d) => n + (d.depositSlipImage ? 1 : 0) + d.checksImages.length,
-        0,
-      )
-      accounts.push({
-        account_mask: mask,
-        deposit_count: deposits.length,
-        image_count: imageCount,
-        deposits,
-      })
-      totalImages += imageCount
     }
 
     let savedDir: string | null = null

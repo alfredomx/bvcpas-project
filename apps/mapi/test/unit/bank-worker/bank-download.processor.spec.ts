@@ -2,7 +2,7 @@ import { BankDownloadProcessor } from '../../../src/modules/22-bank-worker/bank-
 import type { BankDownloadService } from '../../../src/modules/22-bank-worker/bank-download.service'
 import type { BankSessionService } from '../../../src/modules/22-bank-worker/bank-session.service'
 import type { BankDownloadJob } from '../../../src/modules/22-bank-worker/bank-download.queue'
-import type { Job } from 'bullmq'
+import type { Job, Queue } from 'bullmq'
 
 /**
  * Tests Tipo A para el worker de descarga. Verifica que enruta el job al método
@@ -37,7 +37,11 @@ function build() {
       ],
     }),
   } as unknown as jest.Mocked<BankSessionService>
-  return { service, session, proc: new BankDownloadProcessor(service, session) }
+  // Por default no hay jobs pendientes → la sesión se cierra al terminar.
+  const queue = {
+    getJobs: jest.fn().mockResolvedValue([]),
+  } as unknown as jest.Mocked<Queue>
+  return { service, session, queue, proc: new BankDownloadProcessor(service, session, queue) }
 }
 
 describe('BankDownloadProcessor', () => {
@@ -141,6 +145,49 @@ describe('BankDownloadProcessor', () => {
     await proc.process(job)
 
     expect(job.updateProgress).toHaveBeenCalledWith(progress)
+  })
+
+  it('CR-bw-q-007: NO cierra sesión si un job pendiente usa la misma credencial', async () => {
+    const { session, queue, proc } = build()
+    const credId = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb'
+    // Job pendiente de la misma credencial → se deja la sesión viva para reuso.
+    ;(queue.getJobs as jest.Mock).mockResolvedValue([
+      { data: { kind: 'client-download', credentialId: credId } },
+    ])
+    const job = fakeJob({
+      kind: 'client-download',
+      what: 'statements',
+      clientId: 'c1',
+      credentialId: credId,
+      userId: 'u1',
+      accounts: 'all',
+      params: { latest: true },
+    } as never)
+
+    await proc.process(job)
+
+    expect(session.endSession).not.toHaveBeenCalled()
+  })
+
+  it('CR-bw-q-008: cierra sesión si el job pendiente usa OTRA credencial', async () => {
+    const { session, queue, proc } = build()
+    const credId = 'bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb'
+    ;(queue.getJobs as jest.Mock).mockResolvedValue([
+      { data: { kind: 'checks', dto: { credentialId: 'otra-cred' } } },
+    ])
+    const job = fakeJob({
+      kind: 'client-download',
+      what: 'statements',
+      clientId: 'c1',
+      credentialId: credId,
+      userId: 'u1',
+      accounts: 'all',
+      params: { latest: true },
+    } as never)
+
+    await proc.process(job)
+
+    expect(session.endSession).toHaveBeenCalledWith('c1', credId, 'u1')
   })
 
   it('CR-bw-q-002: enruta deposits / statements / transactions por kind', async () => {

@@ -99,6 +99,11 @@ describe('ChaseAdapter — cuentas / actividad', () => {
     expect(activityCall.body).toContain('transactionType=CHECK_WITHDRAWS')
     expect(activityCall.body).toContain('dateHi=20260330')
     expect(activityCall.body).toContain('dateLo=20260301')
+    // bankify: headers mínimos, SIN csrftoken ni x-jpmc-channel/client-request-id.
+    expect(activityCall.body).not.toContain('csrftoken')
+    expect(activityCall.headers?.['x-jpmc-channel']).toBeUndefined()
+    expect(activityCall.headers?.['x-jpmc-client-request-id']).toBeUndefined()
+    expect(activityCall.headers?.['x-jpmc-csrf-token']).toBe('NONE')
   })
 
   it('searchTransactions pagina recursivamente con nextPageId/pageId', async () => {
@@ -148,6 +153,8 @@ describe('ChaseAdapter — primitivas de imagen / depósito', () => {
     expect(imgCall.url).toContain('sequence-number=SEQ1')
     expect(imgCall.url).toContain('item-type-name=CHECK')
     expect(imgCall.url).toContain('digital-account-identifier=123')
+    expect(imgCall.url).not.toContain('csrftoken')
+    expect(imgCall.headers?.['x-jpmc-channel']).toBeUndefined()
   })
 
   it('downloadImage sin checkFrontImage → BankAdapterError', async () => {

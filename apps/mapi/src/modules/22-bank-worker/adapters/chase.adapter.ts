@@ -114,7 +114,12 @@ export class ChaseAdapter extends BankAdapter {
     })
     return this._request<BankDepositDetails>(
       '/svc/rr/accounts/secure/v1/account/activity/detail/deposit/list',
-      { method: 'POST', headers: { 'content-type': FORM }, body: payload.toString() },
+      {
+        method: 'POST',
+        minimal: true,
+        headers: { 'content-type': FORM },
+        body: payload.toString(),
+      },
     )
   }
 
@@ -133,7 +138,7 @@ export class ChaseAdapter extends BankAdapter {
     })
     const response = await this._request<ChaseImageResponse>(
       `/svc/rr/accounts/secure/gateway/deposit-account/transactions/inquiry-maintenance/digital-checks/v1/images?${queryParams.toString()}`,
-      { method: 'GET' },
+      { method: 'GET', minimal: true, headers: { 'content-type': FORM } },
     )
     if (!response.checkFrontImage) {
       throw new BankAdapterError(
@@ -193,13 +198,18 @@ export class ChaseAdapter extends BankAdapter {
   /** Helper JSON: arma headers x-jpmc, hace el fetch vía executor, parsea JSON. */
   private async _request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    const headers: Record<string, string> = {
-      accept: 'application/json, text/plain, */*',
-      'x-jpmc-csrf-token': 'NONE',
-      'x-jpmc-channel': 'id=C30',
-      'x-jpmc-client-request-id': randomUUID(),
-      ...(options.headers ?? {}),
-    }
+    // `minimal`: solo los headers que manda bankify (x-jpmc-csrf-token + content-type).
+    // Las llamadas de actividad (dda/list, deposit, images) lo usan: los headers
+    // extra (accept, x-jpmc-channel, x-jpmc-client-request-id) disparan 403 ahí.
+    const headers: Record<string, string> = options.minimal
+      ? { 'x-jpmc-csrf-token': 'NONE', ...(options.headers ?? {}) }
+      : {
+          accept: 'application/json, text/plain, */*',
+          'x-jpmc-csrf-token': 'NONE',
+          'x-jpmc-channel': 'id=C30',
+          'x-jpmc-client-request-id': randomUUID(),
+          ...(options.headers ?? {}),
+        }
 
     const result = await this.exec.fetch({
       method: options.method ?? 'POST',
@@ -255,17 +265,26 @@ export class ChaseAdapter extends BankAdapter {
     currentPageId?: string,
     accumulated: BankTxn[] = [],
   ): Promise<BankTxn[]> {
+    // Payload y headers idénticos a bankify (referencia que SÍ funciona):
+    // {accountId, dateLo, dateHi, transactionType}, headers mínimos, SIN
+    // csrftoken ni x-jpmc-channel/x-jpmc-client-request-id — esos disparan 403
+    // en `accounts/secure/activity`. D-mapi-BW-034.
     const payload = new URLSearchParams({
       accountId,
-      transactionType: type === 'CHECK' ? 'CHECK_WITHDRAWS' : 'DEPOSITS',
-      dateHi: dateHigh,
       dateLo: dateLow,
+      dateHi: dateHigh,
+      transactionType: type === 'CHECK' ? 'CHECK_WITHDRAWS' : 'DEPOSITS',
     })
     if (currentPageId) payload.append('pageId', currentPageId)
 
     const response = await this._request<{ result?: BankTxn[]; nextPageId?: string }>(
       '/svc/rr/accounts/secure/v1/account/activity/dda/list',
-      { method: 'POST', headers: { 'content-type': FORM }, body: payload.toString() },
+      {
+        method: 'POST',
+        minimal: true,
+        headers: { 'content-type': FORM },
+        body: payload.toString(),
+      },
     )
 
     const current = response.result ?? []
@@ -423,6 +442,8 @@ interface RequestOptions {
   method?: BankFetchRequest['method']
   headers?: Record<string, string>
   body?: string
+  /** Solo headers mínimos (como bankify): sin accept/x-jpmc-channel/client-request-id. */
+  minimal?: boolean
 }
 
 interface ChaseMenuItem {
