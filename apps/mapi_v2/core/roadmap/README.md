@@ -16,7 +16,7 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 - `00-foundation` 🚧 (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim).
 
-Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`) + infra de tests (jest). Falta: jwt-verify slim.
+Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`), infra de tests (jest) y auth slim (`AdminGuard` global + `@Public`). **Listo para cerrar v0.1.0** (bump + merge + tag).
 
 **Próximo (cuando cierre la fundación):** `plugins/intuit` — **primer plugin** (qbo-client + tokens + clients + config `INTUIT_*`). Todo lo de QuickBooks vive en el plugin, no en el core.
 
@@ -96,3 +96,4 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | D-core-017 | Dev runner tsc-watch (no nest start): el layout multi-carpeta no permite nest start limpio. Fuera @nestjs/cli, @nestjs/schematics, nest-cli.json, tsx, tsconfig-paths; dentro tsc-watch                                                                                                                                                                             | 0.1.0   | —       |
 | D-core-018 | Plugins se importan en el registro por barrel `@plugins/<plugin>/src` (alias `@plugins/*` → `./plugins/*`, wildcard al final). tsc-alias solo reescribe wildcards finales: con `./plugins/*/src` dejaba `@plugins/...` sin tocar → MODULE_NOT_FOUND en runtime, enmascarado por el moduleNameMapper de jest                                                         | 0.1.0   | —       |
 | D-core-019 | Infra de tests (jest@30 + ts-jest@29 + supertest) levantada en el paso 5, espejo de mapi. Tests en `test/unit` y `test/e2e` (fuera de `core/src` para no romper el typecheck); `tsconfig.spec.json` aporta tipos de jest                                                                                                                                            | 0.1.0   | —       |
+| D-core-020 | Auth slim: `AdminGuard` global (`APP_GUARD`) valida `Bearer <jwt>` contra `JWT_SECRET` (jsonwebtoken); default todo-protegido, `@Public()` la excepción (healthz). Sin sesiones/DB/identidad. Guard exportado también para `@UseGuards` (migrar A→B = borrar 1 línea). `ADMIN_JWT_SECRET` = JWT admin para curl                                                     | 0.1.0   | —       |

@@ -9,6 +9,7 @@ describe('configSchema (core)', () => {
     const result = configSchema.safeParse({
       DATABASE_URL: 'postgresql://u:p@localhost:5433/db',
       REDIS_URL: 'redis://localhost:6379/3',
+      JWT_SECRET: 'x'.repeat(32),
     })
 
     expect(result.success).toBe(true)

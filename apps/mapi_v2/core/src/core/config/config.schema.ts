@@ -21,6 +21,7 @@ export const configSchema = z.object({
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

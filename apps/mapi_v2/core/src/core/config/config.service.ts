@@ -34,6 +34,10 @@ export class AppConfigService {
     return this.cfg.REDIS_URL
   }
 
+  get jwtSecret(): string {
+    return this.cfg.JWT_SECRET
+  }
+
   get isLocal(): boolean {
     return this.cfg.NODE_ENV === 'local'
   }

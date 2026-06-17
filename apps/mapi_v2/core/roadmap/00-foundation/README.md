@@ -19,7 +19,7 @@ Que un chat fresco pueda arrancar el core de `mapi_v2`, conectarse a su DB/Redis
 | validation | `common/pipes`                       | ZodValidationPipe (por-ruta) ✅                                                                     |
 | logger     | `nestjs-pino` + `common/correlation` | Pino + correlation_id (en logs y en errores) ✅                                                     |
 | registro   | `core/registry`                      | contrato `ModuleDef` (manifiesto uniforme) + registro que valida config al boot y monta la lista ✅ |
-| jwt-verify | `10-core-auth` (slim)                | guard que protege endpoints con el token admin 📅                                                   |
+| jwt-verify | `common/auth` (slim)                 | `AdminGuard` global (`APP_GUARD`) + `@Public()`; protege endpoints con el token admin ✅            |
 
 ## Lo que NO va en el core (se mudó a plugin)
 
