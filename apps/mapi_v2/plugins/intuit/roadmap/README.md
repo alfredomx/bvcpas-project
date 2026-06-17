@@ -1,0 +1,50 @@
+# Roadmap — `plugins/intuit`
+
+Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi_v2`. Integración de dominio: se monta en el core por el registro, consume `clients` + `EncryptionService` del core, y es dueño de sus tablas, config y errores.
+
+> **Arquitectura del sistema:** [`../../../README.md`](../../../README.md) — léela primero. · **Cara pública del plugin:** [`../README.md`](../README.md).
+
+> **Decisiones del core** (D-core-NNN): [`../../../core/roadmap/README.md`](../../../core/roadmap/README.md). Aquí van las del plugin (**D-intuit-NNN**).
+
+---
+
+## Estado actual
+
+**Versión `package.json` del host: compartida** (el plugin no tiene package.json propio; vive en el host). El plugin versiona con tags `intuit-vX.Y.Z`.
+
+- `20-intuit-oauth` 🚧 (intuit v0.1.0 — OAuth client-first + `intuit_tokens` + refresh + `IntuitApiService`).
+
+**Próximo (después de v0.1.0):** `intuit v0.2.0` — migración de clientes + tokens reales del prod viejo (desencripta con la `ENCRYPTION_KEY` de mapi). Luego connectors/CDC (`intuit v0.3.0+`).
+
+## Versionado y estados
+
+SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mismos estados que el core (✅ / 🚧 / 🔬 / 📅). Una versión `🚧` a la vez en el plugin.
+
+## Reglas de proceso (heredadas del core)
+
+1. **TDD aprobado por el operador antes de codear.**
+2. **No bumpear nada hasta cerrar**; al cerrar: merge `--no-ff` a main + tag `intuit-vX.Y.Z`.
+3. **Cero reach:** el plugin usa SOLO la API pública del core (servicios inyectados) + sus propios archivos. Nunca toca entrañas del core ni de otro plugin.
+4. **El plugin es dueño de sus tablas** (llaveadas por `client_id`), su config (Zod propio), sus errores (`DomainError` con `code` + `status`), sus rutas bajo `/v1`.
+5. Tags git con prefijo `intuit-`.
+
+## Índice de módulos del plugin
+
+| Carpeta         | Status | TDD                                    | Versiones                           |
+| --------------- | ------ | -------------------------------------- | ----------------------------------- |
+| 20-intuit-oauth | 🚧     | [README.md](20-intuit-oauth/README.md) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+
+## Versiones (orden cronológico)
+
+| Versión | Módulo          | Estado | Tema                                           | Tag         | Archivo                             |
+| ------- | --------------- | ------ | ---------------------------------------------- | ----------- | ----------------------------------- |
+| 0.1.0   | 20-intuit-oauth | 🚧     | OAuth client-first + tokens + IntuitApiService | (pendiente) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+
+## Decisiones acumuladas (`D-intuit-NNN`)
+
+| ID           | Decisión                                                                                                                                                                       | Versión | Diverge |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------- |
+| D-intuit-001 | OAuth **client-first**: el `client` se crea antes en el core (`POST /v1/clients`); `connect` recibe `clientId` y el callback solo adjunta los tokens                           | 0.1.0   | Sí      |
+| D-intuit-002 | El plugin es dueño de `intuit_tokens` (`client_id` FK → core clients, `realm_id` único, tokens encriptados con el `EncryptionService` del core)                                | 0.1.0   | —       |
+| D-intuit-003 | 1 client = 1 compañía QBO (`client_id` único). Varias compañías de una persona se agrupan por `owner` (tabla futura en core, aditiva, trigger W9/cruce), no se fusionan realms | 0.1.0   | —       |
+| D-intuit-004 | El callback no sobreescribe; `GET company-info` expone la info de QBO mapeada para que el frontend ofrezca overwrite → `PATCH /v1/clients/:id`. mapi nunca sobreescribe solo   | 0.1.0   | Sí      |

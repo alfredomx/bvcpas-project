@@ -19,6 +19,10 @@ Cosas diferidas a propósito. Cuando llegue el trigger, se retoman y se mueven a
 
 - [ ] Identidad/tenancy (usuarios, sesiones, multi-cuenta, gateway externo). Hoy: un operador único + token admin. Ver [`../../README.md`](../../README.md) — frontera motor/identidad.
 
+## Bloqueado por: W9 / cruce de info entre compañías de un mismo dueño
+
+- [ ] **Agrupación por `owner` en `clients`.** Tabla `owners` (o `clients.owner_id`) para agrupar varias compañías QBO de una misma persona/dueño. Aditiva — no rompe el modelo 1 client = 1 realm (D-intuit-003). Trigger: features que cruzan compañías (W9, reportes por dueño). Las queries van owner → sus clients → agregan.
+
 ## Bloqueado por: necesidad de auditoría formal
 
 - [ ] **`event_log` en el core.** Tabla + servicio de auditoría ("quién creó/editó/dio de baja qué", con `actor` cuando haya identidad). Hoy los cambios solo se loguean por Pino con `correlation_id`. mapi viejo sí tenía `event_log`. Trigger: cuando se necesite rastrear cambios de forma consultable (típico: ediciones/bajas de `clients`, acciones que escriben a QBO). Diferido en core v0.2.0 (clients).
