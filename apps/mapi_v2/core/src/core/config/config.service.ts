@@ -30,6 +30,10 @@ export class AppConfigService {
     return this.cfg.DATABASE_URL
   }
 
+  get redisUrl(): string {
+    return this.cfg.REDIS_URL
+  }
+
   get isLocal(): boolean {
     return this.cfg.NODE_ENV === 'local'
   }

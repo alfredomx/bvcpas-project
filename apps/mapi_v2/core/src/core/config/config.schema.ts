@@ -20,6 +20,7 @@ export const configSchema = z.object({
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   PUBLIC_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
   DATABASE_URL: z.string().url(),
+  REDIS_URL: z.string().url(),
 })
 
 export type AppConfig = z.infer<typeof configSchema>
