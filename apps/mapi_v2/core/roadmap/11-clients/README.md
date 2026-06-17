@@ -42,4 +42,4 @@ NO se usa una tabla `client_meta` genérica (estilo `postmeta`) por ahora — ta
 
 | Versión | Estado | Tema                                        |
 | ------- | ------ | ------------------------------------------- |
-| v0.2.0  | 🔬     | Entidad `clients` en el core: schema + CRUD |
+| v0.2.0  | ✅     | Entidad `clients` en el core: schema + CRUD |

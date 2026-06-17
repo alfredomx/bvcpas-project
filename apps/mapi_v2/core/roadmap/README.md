@@ -12,13 +12,12 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 ## Estado actual
 
-**Versión `package.json`: `0.1.0`.**
+**Versión `package.json`: `0.2.0`.**
 
-- `00-foundation` ✅ (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim). **Cerrado 2026-06-17**, tag `core-v0.1.0`.
+- `00-foundation` ✅ (v0.1.0 — substrato: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim). Tag `core-v0.1.0`.
+- `11-clients` ✅ (v0.2.0 — entidad central `clients` en el core: schema + CRUD `/v1/clients`. Modelo WordPress: el core es dueño de la entidad, los plugins la extienden). **Cerrado 2026-06-17**, tag `core-v0.2.0`.
 
-Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`), infra de tests (jest) y auth slim (`AdminGuard` global + `@Public`).
-
-**Próximo (cuando cierre la fundación):** `plugins/intuit` — **primer plugin** (qbo-client + tokens + clients + config `INTUIT_*`). Todo lo de QuickBooks vive en el plugin, no en el core.
+**Próximo:** `plugins/intuit` — **primer plugin**. Consume `clients` del core y es dueño de `intuit_tokens` (`client_id` + `realm_id` + tokens) + OAuth + `IntuitApiService` + config `INTUIT_*`. Todo lo de QuickBooks vive en el plugin.
 
 ## Estructura de `roadmap/`
 
@@ -66,12 +65,14 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | Carpeta       | Status | TDD                                  | Versiones                         |
 | ------------- | ------ | ------------------------------------ | --------------------------------- |
 | 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+| 11-clients    | ✅     | [README.md](11-clients/README.md)    | [v0.2.0](11-clients/v0.2.0.md)    |
 
 ## Versiones (orden cronológico)
 
 | Versión | Módulo        | Estado | Tema                                                   | Tag         | Archivo                                            |
 | ------- | ------------- | ------ | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
 | 0.1.0   | 00-foundation | ✅     | Core substrato: infra + registro explícito + auth slim | core-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
+| 0.2.0   | 11-clients    | ✅     | Entidad central `clients` en el core: schema + CRUD    | core-v0.2.0 | [11-clients/v0.2.0.md](11-clients/v0.2.0.md)       |
 
 ## Decisiones acumuladas (`D-core-NNN`)
 
@@ -97,3 +98,8 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | D-core-018 | Plugins se importan en el registro por barrel `@plugins/<plugin>/src` (alias `@plugins/*` → `./plugins/*`, wildcard al final). tsc-alias solo reescribe wildcards finales: con `./plugins/*/src` dejaba `@plugins/...` sin tocar → MODULE_NOT_FOUND en runtime, enmascarado por el moduleNameMapper de jest                                                         | 0.1.0   | —       |
 | D-core-019 | Infra de tests (jest@30 + ts-jest@29 + supertest) levantada en el paso 5, espejo de mapi. Tests en `test/unit` y `test/e2e` (fuera de `core/src` para no romper el typecheck); `tsconfig.spec.json` aporta tipos de jest                                                                                                                                            | 0.1.0   | —       |
 | D-core-020 | Auth slim: `AdminGuard` global (`APP_GUARD`) valida `Bearer <jwt>` contra `JWT_SECRET` (jsonwebtoken); default todo-protegido, `@Public()` la excepción (healthz). Sin sesiones/DB/identidad. Guard exportado también para `@UseGuards` (migrar A→B = borrar 1 línea). `ADMIN_JWT_SECRET` = JWT admin para curl                                                     | 0.1.0   | —       |
+| D-core-021 | `clients` vive en el CORE (modelo WordPress: core dueño de la entidad central, plugins la extienden). Revisa D-core-013 (core sin dominio) y D-core-015 (clients en intuit): `clients` es transversal (intuit/uncats/dashboards cuelgan de él)                                                                                                                      | 0.2.0   | Sí      |
+| D-core-022 | Los plugins extienden `clients` con tabla propia llaveada por `client_id` (patrón WooCommerce), NO con `client_meta` genérica (postmeta). Tipado fuerte, FKs, migraciones propias                                                                                                                                                                                   | 0.2.0   | —       |
+| D-core-023 | Sin `tier` en `clients` (al vender todos son el mismo tier; no especular). `status` (active/paused/offboarded) sí; baja = soft (`offboarded`), sin DELETE físico                                                                                                                                                                                                    | 0.2.0   | —       |
+| D-core-024 | `event_log`/auditoría diferido (BACKLOG); en v0.2.0 los cambios solo se loguean por Pino + correlation_id                                                                                                                                                                                                                                                           | 0.2.0   | —       |
+| D-core-025 | Una sola DB local por ahora (`mapi_v2_local`); e2e corren contra ella limpiando sus filas. `mapi_v2_test` dedicada (con globalSetup) diferida a CI / cuando estorbe                                                                                                                                                                                                 | 0.2.0   | —       |

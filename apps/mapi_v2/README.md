@@ -67,7 +67,7 @@ Build/run: `node dist/core/src/main.js` (el host compila todo a `dist/`). Dev: `
 
 1. **Cero reach.** Un plugin/pipe usa la API pública del core + sus propios archivos. NUNCA importa las entrañas del core ni de otro plugin. Lo común se promueve al core **a propósito** (cuando 2 lo necesitan).
 2. **Se hablan por cola + contrato**, no por código.
-3. **Core flaco.** Solo substrato. Dominio (Intuit, bancos, tokens, clientes) NUNCA va al core.
+3. **Core flaco.** Substrato + la **entidad central `clients`** (modelo WordPress: el core es dueño de la entidad de la que todo cuelga). El **dominio de cada plugin** (Intuit, bancos, tokens, sus tablas) NUNCA va al core; los plugins extienden `clients` con su propia tabla llaveada por `client_id`.
 4. **Tests scoped.** En desarrollo corres solo los tests de tu unidad. Cambias el **core** → core + lo que toca esa superficie. Antes de deploy: corrida completa.
 5. **Estado cerrado.** Plugin cerrado = congelado. Su `README.md` (cara pública) es lo único que se lee. Se reabre solo para correcciones.
 
@@ -81,12 +81,12 @@ NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino (reusado de mapi, p
 
 ## Unidades (índice)
 
-| Unidad           | Tipo   | Estado | Roadmap                                                                   |
-| ---------------- | ------ | ------ | ------------------------------------------------------------------------- |
-| `core`           | core   | 🚧     | [core/roadmap/](core/roadmap/README.md)                                   |
-| `plugins/intuit` | plugin | 📅     | (primer plugin — lleva qbo-client + tokens + clients + config INTUIT\_\*) |
-| `plugins/bank`   | plugin | 📅     | (descarga de banco vía bridge)                                            |
-| `plugins/uncats` | plugin | 📅     | (snapshot uncats + respuestas cliente)                                    |
+| Unidad           | Tipo   | Estado | Roadmap                                                                                            |
+| ---------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
+| `core`           | core   | 🚧     | [core/roadmap/](core/roadmap/README.md)                                                            |
+| `plugins/intuit` | plugin | 📅     | (primer plugin — consume `clients` del core; dueño de `intuit_tokens` + OAuth + config INTUIT\_\*) |
+| `plugins/bank`   | plugin | 📅     | (descarga de banco vía bridge)                                                                     |
+| `plugins/uncats` | plugin | 📅     | (snapshot uncats + respuestas cliente)                                                             |
 
 ## Cómo arranca un chat por unidad
 
