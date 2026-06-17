@@ -3,16 +3,18 @@ import 'dotenv/config'
 import { NestFactory } from '@nestjs/core'
 import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { AppModule } from './app.module'
+import { AppConfigService } from '@/core/config/config.service'
 import { APP_NAME, APP_VERSION } from './common/version'
 
 /**
  * Bootstrap del CORE (host de plugins). Reducido a propósito en este corte:
+ * - Config validado por Zod (falla el boot si el env está mal).
+ * - DB (Drizzle) — el healthz la checa.
  * - Pino como logger.
- * - Prefijo global `/v1`.
- * - Shutdown hooks (para cuando entren db/queue y haya que cerrar pools).
+ * - Prefijo global `/v1` + shutdown hooks (cierra el pool de Postgres).
  *
- * El plugin-loader, Scalar, bull-board y el WS adapter se agregan cuando
- * el core/plugins que los necesitan entren en sus propios commits.
+ * El plugin-loader, queue, Scalar, bull-board y el WS adapter se agregan
+ * cuando el core/plugins que los necesitan entren en sus propios commits.
  */
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
@@ -22,15 +24,15 @@ async function bootstrap(): Promise<void> {
   app.enableCors()
   app.enableShutdownHooks()
 
-  const port = Number(process.env.PORT ?? 4200)
-  await app.listen(port)
+  const cfg = app.get(AppConfigService)
+  await app.listen(cfg.port)
 
   const lines = [
     '════════════════════════════════════════',
     `  ${APP_NAME}@${APP_VERSION}`,
-    `  NODE_ENV   ${process.env.NODE_ENV ?? 'local'}`,
-    `  PORT       ${port}`,
-    `  Health     http://localhost:${port}/v1/healthz`,
+    `  NODE_ENV   ${cfg.nodeEnv}`,
+    `  PORT       ${cfg.port}`,
+    `  Health     http://localhost:${cfg.port}/v1/healthz`,
     `  Plugins    0 (core booteable solo)`,
     '════════════════════════════════════════',
   ].join('\n')

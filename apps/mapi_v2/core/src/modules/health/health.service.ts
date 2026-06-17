@@ -1,29 +1,52 @@
-import { Injectable } from '@nestjs/common'
+import { Inject, Injectable } from '@nestjs/common'
+import type { Sql } from 'postgres'
+import { DB_CLIENT } from '@/core/db/db.module'
 import { APP_VERSION } from '@/common/version'
 
-/** Shape del liveness check. Crece (db, redis, plugins cargados) cuando el core los integre. */
+export interface ComponentStatus {
+  status: 'up' | 'down'
+  latency_ms: number
+}
+
+/** Shape del liveness check. Crece (redis, plugins cargados) cuando el core los integre. */
 export interface HealthStatus {
-  status: 'up'
+  status: 'up' | 'degraded'
   version: string
   env: string
   uptime_s: number
   timestamp: string
+  components: {
+    db: ComponentStatus
+  }
 }
 
 @Injectable()
 export class HealthService {
+  constructor(@Inject(DB_CLIENT) private readonly db: Sql) {}
+
   /**
-   * Liveness básico: confirma que el core arrancó y responde — SIN ningún
-   * plugin. Es la prueba de la propiedad #1 del sistema: el core bootea solo.
-   * db/redis/plugins se agregan a la respuesta cuando el core los integre.
+   * Liveness del core: confirma que arrancó y que la DB responde. Redis y
+   * plugins cargados se agregan a `components` cuando esas piezas entren.
    */
-  check(): HealthStatus {
+  async check(): Promise<HealthStatus> {
+    const db = await this.pingDb()
     return {
-      status: 'up',
+      status: db.status === 'up' ? 'up' : 'degraded',
       version: APP_VERSION,
       env: process.env.NODE_ENV ?? 'local',
       uptime_s: Math.floor(process.uptime()),
       timestamp: new Date().toISOString(),
+      components: { db },
+    }
+  }
+
+  private async pingDb(): Promise<ComponentStatus> {
+    const start = Date.now()
+    try {
+      await this.db`select 1`
+      return { status: 'up', latency_ms: Date.now() - start }
+    } catch {
+      return { status: 'down', latency_ms: Date.now() - start }
     }
   }
 }

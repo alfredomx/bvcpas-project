@@ -1,0 +1,44 @@
+import { Injectable } from '@nestjs/common'
+import type { AppConfig } from './config.schema'
+
+/**
+ * Wrapper tipado sobre las env vars validadas. Inyectable en cualquier
+ * módulo. Las propiedades son de solo lectura. Crece con getters nuevos
+ * conforme cada pieza de infra agrega sus vars.
+ */
+@Injectable()
+export class AppConfigService {
+  constructor(private readonly cfg: AppConfig) {}
+
+  get nodeEnv(): AppConfig['NODE_ENV'] {
+    return this.cfg.NODE_ENV
+  }
+
+  get port(): number {
+    return this.cfg.PORT
+  }
+
+  get logLevel(): AppConfig['LOG_LEVEL'] {
+    return this.cfg.LOG_LEVEL
+  }
+
+  get publicUrl(): string | undefined {
+    return this.cfg.PUBLIC_URL
+  }
+
+  get databaseUrl(): string {
+    return this.cfg.DATABASE_URL
+  }
+
+  get isLocal(): boolean {
+    return this.cfg.NODE_ENV === 'local'
+  }
+
+  get isProduction(): boolean {
+    return this.cfg.NODE_ENV === 'production'
+  }
+
+  get isTest(): boolean {
+    return this.cfg.NODE_ENV === 'test'
+  }
+}

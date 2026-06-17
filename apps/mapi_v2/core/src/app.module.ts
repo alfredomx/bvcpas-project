@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common'
 import { LoggerModule } from 'nestjs-pino'
+import { AppConfigModule } from '@/core/config/config.module'
+import { DbModule } from '@/core/db/db.module'
 import { HealthModule } from '@/modules/health/health.module'
 
 /**
  * Módulo raíz del CORE (host de plugins).
  *
- * En este corte (scaffold) sólo monta el logger (Pino) y el health — el core
- * bootea SOLO, sin ningún plugin. La infra (config, db, queue, qbo-client,
- * plugin-bridge, jwt-verify) y el plugin-loader se agregan pieza por pieza en
- * commits siguientes.
+ * Infra montada: config (env validado por Zod) + db (Drizzle) + logger (Pino).
+ * El core bootea SOLO, sin ningún plugin. Queue, qbo-client, plugin-bridge,
+ * jwt-verify y el plugin-loader se agregan pieza por pieza en commits siguientes.
  *
  * REGLA DE ORO: este módulo NUNCA importa un plugin por nombre. Cuando entre
  * el plugin-loader, los plugins se montan por registro/manifiesto — el core
@@ -16,6 +17,8 @@ import { HealthModule } from '@/modules/health/health.module'
  */
 @Module({
   imports: [
+    AppConfigModule,
+    DbModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport:

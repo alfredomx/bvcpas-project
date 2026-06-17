@@ -6,7 +6,7 @@ export class HealthController {
   constructor(private readonly health: HealthService) {}
 
   @Get()
-  check(): HealthStatus {
+  check(): Promise<HealthStatus> {
     return this.health.check()
   }
 }
