@@ -1,16 +1,19 @@
-import { Module } from '@nestjs/common'
+import { Module, type MiddlewareConsumer, type NestModule } from '@nestjs/common'
 import { LoggerModule } from 'nestjs-pino'
 import { AppConfigModule } from '@/core/config/config.module'
 import { DbModule } from '@/core/db/db.module'
 import { RedisModule } from '@/core/redis/redis.module'
 import { QueueModule } from '@/core/queue/queue.module'
+import { CorrelationIdMiddleware } from '@/common/correlation/correlation-id.middleware'
+import { getCorrelationId } from '@/common/correlation/correlation.context'
 import { HealthModule } from '@/modules/health/health.module'
 
 /**
  * Módulo raíz del CORE (host de plugins).
  *
  * Infra montada: config (env validado por Zod) + db (Drizzle) + redis (ioredis)
- * + queue (BullMQ root) + logger (Pino). El core bootea SOLO, sin ningún plugin.
+ * + queue (BullMQ root) + errores/validación (DomainErrorFilter, ZodPipe) +
+ * logger (Pino con correlation_id). El core bootea SOLO, sin ningún plugin.
  * qbo-client, plugin-bridge, jwt-verify y el plugin-loader se agregan pieza por
  * pieza en commits siguientes.
  *
@@ -31,9 +34,17 @@ import { HealthModule } from '@/modules/health/health.module'
             ? undefined
             : { target: 'pino-pretty', options: { singleLine: true } },
         customLogLevel: (_req, res) => (res.statusCode >= 500 ? 'error' : 'info'),
+        customProps: () => {
+          const correlationId = getCorrelationId()
+          return correlationId ? { correlation_id: correlationId } : {}
+        },
       },
     }),
     HealthModule,
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(CorrelationIdMiddleware).forRoutes('*')
+  }
+}

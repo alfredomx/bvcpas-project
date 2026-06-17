@@ -7,6 +7,7 @@ Cosas diferidas a propósito. Cuando llegue el trigger, se retoman y se mueven a
 ## Bloqueado por: primer plugin real (`bank`)
 
 - [ ] Validar el plugin-loader (registro) y la API pública del core end-to-end con un plugin que produzca/consuma de verdad.
+- [ ] **Errores de plugin:** verificar que el primer plugin declara sus `DomainError` con `code` + `status` propio (D-core-011) y que el `DomainErrorFilter` los homogeniza bien (status correcto, `correlation_id` en el body). No hay registro central de códigos — cada plugin es dueño de los suyos.
 
 ## Bloqueado por: financiamiento de multiusuario
 
@@ -14,4 +15,4 @@ Cosas diferidas a propósito. Cuando llegue el trigger, se retoman y se mueven a
 
 ## Por triggear con un evento concreto
 
-- [ ] (vacío — agregar conforme aparezcan)
+- [ ] **Validación automática (nestjs-zod):** hoy la validación es por-ruta con `new ZodValidationPipe(schema)`; si un endpoint la olvida, el body inválido pasa sin validar y puede explotar en 500 (mismo bug que cazó a mapi). Trigger: cuando un plugin tenga muchos DTOs y queramos `ZodValidationPipe` global automático (patrón `createZodDto` de nestjs-zod).

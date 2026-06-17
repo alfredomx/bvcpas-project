@@ -4,13 +4,15 @@ import { NestFactory } from '@nestjs/core'
 import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { AppConfigService } from '@/core/config/config.service'
+import { DomainErrorFilter } from '@/common/errors/domain-error.filter'
 import { APP_NAME, APP_VERSION } from './common/version'
 
 /**
  * Bootstrap del CORE (host de plugins). Reducido a propósito en este corte:
  * - Config validado por Zod (falla el boot si el env está mal).
  * - DB (Drizzle) — el healthz la checa.
- * - Pino como logger.
+ * - Pino como logger (con correlation_id por request).
+ * - DomainErrorFilter global (formato de error JSON homogéneo).
  * - Prefijo global `/v1` + shutdown hooks (cierra el pool de Postgres).
  *
  * El plugin-loader, queue, Scalar, bull-board y el WS adapter se agregan
@@ -22,6 +24,7 @@ async function bootstrap(): Promise<void> {
 
   app.setGlobalPrefix('v1')
   app.enableCors()
+  app.useGlobalFilters(new DomainErrorFilter())
   app.enableShutdownHooks()
 
   const cfg = app.get(AppConfigService)
