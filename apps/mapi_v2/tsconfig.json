@@ -4,7 +4,7 @@
     "moduleResolution": "bundler",
     "target": "ES2023",
     "lib": ["ES2023"],
-    "rootDir": "./src",
+    "rootDir": ".",
     "outDir": "./dist",
     "declaration": true,
     "sourceMap": true,
@@ -30,10 +30,11 @@
     "useUnknownInCatchVariables": true,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./core/src/*"],
+      "@plugins/*": ["./plugins/*/src"]
     },
     "types": ["node"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "scripts"]
+  "include": ["core/src/**/*", "plugins/*/src/**/*", "pipes/*/src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

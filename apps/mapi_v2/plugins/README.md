@@ -9,7 +9,7 @@ Cada plugin es su propio proyecto y **dueño de lo suyo**:
 ```
 plugins/<plugin>/
 ├── src/           ← su código (API pública del core vía servicios inyectados); SUS tablas + SUS migraciones + SU config Zod + SUS errores
-├── CONTRACT.md    ← la cara pública: qué hace, in/out, endpoints. NO el cómo.
+├── README.md      ← la cara pública: qué hace, in/out, endpoints. NO el cómo.
 └── roadmap/       ← versiones + TDD del plugin
 ```
 

@@ -12,7 +12,7 @@ Cada pipe es un NestModule que se monta en el core como un plugin (misma lista d
 ```
 pipes/<pipe>/
 ├── src/           ← su worker + su cola (BullMQ); usa el core vía servicios inyectados
-├── CONTRACT.md    ← qué cola consume/produce y el shape del payload. NO el cómo.
+├── README.md      ← la cara pública: qué cola consume/produce y el shape del payload. NO el cómo.
 └── roadmap/       ← versiones + TDD del pipe
 ```
 

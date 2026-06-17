@@ -32,22 +32,27 @@ Tres propiedades que lo definen:
 ## Estructura
 
 ```
-apps/mapi_v2/
-├── README.md              ← este archivo (arquitectura, reglas, cómo agregar un plugin/pipe)
-├── core/                  ← substrato. Proyecto propio (package.json, src, roadmap).
+apps/mapi_v2/                 ← el HOST. Aquí viven las deps compartidas + el build.
+├── package.json              ← UN solo install / build / start para core + plugins + pipes
+├── tsconfig*.json            ← compila core/src + plugins/*/src + pipes/*/src (alias @/ y @plugins/)
+├── .env / .prettierrc / eslint.config.mjs
+├── node_modules/  dist/      ← (gitignored; un solo node_modules, no uno por módulo)
+├── README.md                 ← este archivo (arquitectura, reglas, cómo agregar un plugin/pipe)
+├── core/                     ← substrato. Solo código + roadmap (SIN package.json propio).
 │   ├── src/
-│   │   ├── core/          ← config, db, redis, queue
-│   │   ├── common/        ← errores, validación, correlation, auth slim
-│   │   └── registry/      ← monta la lista explícita de plugins/pipes
-│   └── roadmap/           ← versiones + TDD del core
-├── plugins/
-│   └── <plugin>/          ← una integración de dominio. Proyecto propio.
-│       ├── src/           ← su código (usa el core vía servicios inyectados); SUS tablas + SUS migraciones + SU config Zod
-│       ├── CONTRACT.md    ← la cara pública: qué hace, in/out, endpoints. NO el cómo.
-│       └── roadmap/       ← versiones + TDD del plugin
-└── pipes/
-    └── <pipe>/            ← un worker sobre BullMQ. Mismo formato que un plugin.
+│   │   ├── core/             ← config, db, redis, queue
+│   │   ├── common/           ← errores, validación, correlation, auth slim
+│   │   ├── registry/         ← monta la lista explícita de units (plugins/pipes)
+│   │   └── modules/          ← health
+│   └── roadmap/              ← versiones + TDD del core
+├── plugins/<plugin>/         ← integración de dominio. Solo código + README + roadmap.
+│   ├── src/                  ← su código (core vía servicios inyectados); SUS tablas + SUS migraciones + SU config Zod
+│   ├── README.md             ← cara pública: qué hace, in/out, endpoints. NO el cómo.
+│   └── roadmap/
+└── pipes/<pipe>/             ← worker sobre BullMQ. Mismo formato que un plugin.
 ```
+
+Build/run: `node dist/core/src/main.js` (el host compila todo a `dist/`). Dev: `npm run start:dev` (tsc-watch).
 
 ## Cómo un plugin/pipe se inserta en el core
 
@@ -64,12 +69,13 @@ apps/mapi_v2/
 2. **Se hablan por cola + contrato**, no por código.
 3. **Core flaco.** Solo substrato. Dominio (Intuit, bancos, tokens, clientes) NUNCA va al core.
 4. **Tests scoped.** En desarrollo corres solo los tests de tu unidad. Cambias el **core** → core + lo que toca esa superficie. Antes de deploy: corrida completa.
-5. **Estado cerrado.** Plugin cerrado = congelado. Su `CONTRACT.md` es lo único que se lee. Se reabre solo para correcciones.
+5. **Estado cerrado.** Plugin cerrado = congelado. Su `README.md` (cara pública) es lo único que se lee. Se reabre solo para correcciones.
 
 ## Stack y DB
 
-NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino (reusado de mapi, probado). Mismo tooling.
+NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino (reusado de mapi, probado).
 
+- **Deps compartidas:** un solo `package.json` + `node_modules` en `apps/mapi_v2/` (sin npm workspaces). El host compila y corre core + plugins + pipes en un solo build. Dev runner: `tsc-watch` (no `nest start` — el layout multi-carpeta no lo permite limpio).
 - **El core es dueño de la conexión** a su Postgres propio (`mapi_v2_local` / `mapi_v2_prod`) y de la `DATABASE_URL`.
 - **Cada plugin es dueño de SUS tablas, SUS migraciones y SU seed.** El core no define tablas de dominio. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se define con el primer plugin.)
 
@@ -89,18 +95,20 @@ Trabajo en apps/mapi_v2/. Lee:
   1. apps/mapi_v2/README.md                          — esta arquitectura (siempre)
   2. apps/mapi_v2/<core|plugins/X>/roadmap/README.md — proceso + índice + decisiones de la unidad
   3. su vX.Y.Z.md activo (si hay)
-Si trabajo un plugin: + apps/mapi_v2/plugins/X/CONTRACT.md.
+Si trabajo un plugin: + apps/mapi_v2/plugins/X/README.md (su cara pública).
 NO leas el resto.
 ```
 
 ---
 
-## Plantilla `CONTRACT.md` (cara pública de un plugin/pipe)
+## Plantilla `README.md` (cara pública de un plugin/pipe)
 
-> Al abrir un plugin nuevo, copia esto a `plugins/<plugin>/CONTRACT.md`. Es la **cara pública**: qué hace y cómo se consume. **NO el cómo interno.** Quien consume el plugin lee SOLO este archivo.
+> Al abrir un plugin nuevo, copia esto a `plugins/<plugin>/README.md`. Es la **cara pública**: qué hace y cómo se consume. **NO el cómo interno.** Quien consume el plugin lee SOLO este archivo.
+>
+> Solo documenta lo que el código NO dice por sí mismo (semántica, in/out, errores). **De qué depende lo dicen los `import` + el `package.json` compartido** — no se lista a mano aquí (mentiría con el tiempo).
 
 ```markdown
-# <plugin> — CONTRACT
+# <plugin>
 
 ## Qué hace (1-2 frases, en términos de talacha)
 
@@ -135,13 +143,9 @@ banco vía el bridge, y los deja en la DB.">
 | -------------- | ------ | ----- |
 | `<ERROR_CODE>` | `4xx`  | <...> |
 
-## Depende del core
+## Usa del core (coarse)
 
-<Qué piezas del core usa: db, redis, queue, errores, validación, auth slim.>
-
-## Suyo (no del core)
-
-<Sus tablas, su config (env vars + Zod), sus migraciones.>
+<Piezas del core que consume: db, queue, redis, errores. Intención arquitectónica, no lista de paquetes.>
 
 ## NO hace (límites)
 

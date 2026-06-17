@@ -1,7 +1,7 @@
 {
-  "name": "mapi_v2-core",
+  "name": "mapi_v2",
   "version": "0.1.0",
-  "description": "mapi_v2 - sistema base (host de plugins)",
+  "description": "mapi_v2 - host (core + plugins + pipes). Deps compartidas; el core compila y monta las units del registro.",
   "private": true,
   "license": "UNLICENSED",
   "engines": {
@@ -10,13 +10,14 @@
   "scripts": {
     "clean": "node -e \"const{rmSync}=require('node:fs');['dist','tsconfig.tsbuildinfo','tsconfig.build.tsbuildinfo'].forEach(p=>rmSync(p,{recursive:true,force:true}))\"",
     "build": "npm run clean && tsc -p tsconfig.build.json && tsc-alias -p tsconfig.build.json",
-    "start": "node dist/main.js",
-    "start:dev": "npm run clean && nest start --watch",
-    "start:prod": "node dist/main.js",
-    "lint": "eslint \"src/**/*.ts\"",
-    "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "format": "prettier --write --no-error-on-unmatched-pattern \"src/**/*.ts\"",
-    "format:check": "prettier --check --no-error-on-unmatched-pattern \"src/**/*.ts\"",
+    "start": "node dist/core/src/main.js",
+    "start:prod": "node dist/core/src/main.js",
+    "dev:serve": "tsc-alias -p tsconfig.build.json && node dist/core/src/main.js",
+    "start:dev": "npm run clean && tsc-watch -p tsconfig.build.json --onSuccess \"npm run dev:serve\"",
+    "lint": "eslint \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\" --no-error-on-unmatched-pattern",
+    "lint:fix": "eslint \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\" --no-error-on-unmatched-pattern --fix",
+    "format": "prettier --write --no-error-on-unmatched-pattern \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\"",
+    "format:check": "prettier --check --no-error-on-unmatched-pattern \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.eslint.json"
   },
   "dependencies": {
@@ -38,8 +39,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "^11.0.0",
-    "@nestjs/schematics": "^11.0.0",
+    "@eslint/js": "^9.0.0",
     "@types/express": "^5.0.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
@@ -49,8 +49,7 @@
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
     "tsc-alias": "^1.8.0",
-    "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.0.0",
+    "tsc-watch": "^6.2.0",
     "typescript": "^6.0.0",
     "typescript-eslint": "^8.0.0"
   }
