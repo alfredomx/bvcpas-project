@@ -42,7 +42,7 @@ import { REGISTRY, registryModules } from '@/registry/registry'
       },
     }),
     HealthModule,
-    // Units (plugins/pipes) del registro. Vacío hoy → el core arranca solo.
+    // Plugins/pipes del registro.
     ...registryModules(REGISTRY),
   ],
 })

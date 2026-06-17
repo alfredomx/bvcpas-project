@@ -1,7 +1,7 @@
 {
   "name": "mapi_v2",
   "version": "0.1.0",
-  "description": "mapi_v2 - host (core + plugins + pipes). Deps compartidas; el core compila y monta las units del registro.",
+  "description": "mapi_v2 - host (core + plugins + pipes). Deps compartidas; el core compila y monta los plugins/pipes del registro.",
   "private": true,
   "license": "UNLICENSED",
   "engines": {

@@ -3,8 +3,8 @@ import request from 'supertest'
 import { setupTestApp } from '../_setup/test-app'
 
 /**
- * E2E de la unit de ejemplo: prueba que el registro montó el plugin y que su
- * config propia se inyectó (el greeting viene de `EXAMPLE_GREETING`).
+ * E2E del plugin de ejemplo: prueba que el registro lo montó y que su config
+ * propia se inyectó (el greeting viene de `EXAMPLE_GREETING`).
  *
  * Levanta el AppModule completo, así que requiere la infra local viva
  * (redis para BullMQ). No toca DB.
@@ -20,11 +20,11 @@ describe('_example plugin (e2e)', () => {
     await app.close()
   })
 
-  it('GET /v1/_example/ping monta la unit y devuelve su config inyectada', async () => {
+  it('GET /v1/_example/ping monta el plugin y devuelve su config inyectada', async () => {
     const res = await request(app.getHttpServer()).get('/v1/_example/ping')
 
     expect(res.status).toBe(200)
-    expect(res.body.unit).toBe('_example')
+    expect(res.body.plugin).toBe('_example')
     expect(typeof res.body.greeting).toBe('string')
     expect(res.body.greeting.length).toBeGreaterThan(0)
   })

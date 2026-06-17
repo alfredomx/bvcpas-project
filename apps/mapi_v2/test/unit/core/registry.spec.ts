@@ -9,20 +9,20 @@ function def(partial: Partial<ModuleDef> = {}): ModuleDef {
 }
 
 describe('assertRegistryConfig', () => {
-  it('no lanza cuando no hay units', () => {
+  it('no lanza cuando no hay plugins/pipes', () => {
     expect(() => assertRegistryConfig([], {})).not.toThrow()
   })
 
-  it('no lanza cuando las units no declaran config', () => {
+  it('no lanza cuando los plugins/pipes no declaran config', () => {
     expect(() => assertRegistryConfig([def(), def({ name: 'otra' })], {})).not.toThrow()
   })
 
-  it('lanza listando la var faltante con el nombre de la unit', () => {
-    const unit = def({ name: 'intuit', config: z.object({ INTUIT_CLIENT_ID: z.string() }) })
-    expect(() => assertRegistryConfig([unit], {})).toThrow(/\[intuit\].*INTUIT_CLIENT_ID/s)
+  it('lanza listando la var faltante con el nombre del plugin', () => {
+    const plugin = def({ name: 'intuit', config: z.object({ INTUIT_CLIENT_ID: z.string() }) })
+    expect(() => assertRegistryConfig([plugin], {})).toThrow(/\[intuit\].*INTUIT_CLIENT_ID/s)
   })
 
-  it('agrega violaciones de varias units en un solo error', () => {
+  it('agrega violaciones de varios plugins/pipes en un solo error', () => {
     const a = def({ name: 'a', config: z.object({ A_VAR: z.string() }) })
     const b = def({ name: 'b', config: z.object({ B_VAR: z.string() }) })
 
@@ -40,13 +40,13 @@ describe('assertRegistryConfig', () => {
   })
 
   it('pasa cuando la config se satisface', () => {
-    const unit = def({ name: 'ok', config: z.object({ OK_VAR: z.string() }) })
-    expect(() => assertRegistryConfig([unit], { OK_VAR: 'x' })).not.toThrow()
+    const plugin = def({ name: 'ok', config: z.object({ OK_VAR: z.string() }) })
+    expect(() => assertRegistryConfig([plugin], { OK_VAR: 'x' })).not.toThrow()
   })
 })
 
 describe('registryModules', () => {
-  it('mapea cada unit a su módulo, en orden', () => {
+  it('mapea cada plugin/pipe a su módulo, en orden', () => {
     class M1 {}
     class M2 {}
     const mods = registryModules([def({ module: M1 }), def({ module: M2 })])

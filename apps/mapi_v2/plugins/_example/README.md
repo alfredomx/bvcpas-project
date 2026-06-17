@@ -2,7 +2,7 @@
 
 ## Qué hace
 
-Unit de **ejemplo / referencia**: la prueba viva de que el registro del core monta un plugin y le inyecta su propia config. No tiene dominio real. Se reemplaza cuando entre `plugins/intuit` (el primer plugin de verdad); sirve como plantilla mínima de cómo se ve un `ModuleDef`.
+Plugin de **ejemplo / referencia**: la prueba viva de que el registro del core monta un plugin y le inyecta su propia config. No tiene dominio real. Se reemplaza cuando entre `plugins/intuit` (el primer plugin de verdad); sirve como plantilla mínima de cómo se ve un `ModuleDef`.
 
 ## Estado
 
@@ -12,9 +12,9 @@ Unit de **ejemplo / referencia**: la prueba viva de que el registro del core mon
 
 ### Endpoints
 
-| Método | Ruta                | Qué hace                                             | Auth |
-| ------ | ------------------- | ---------------------------------------------------- | ---- |
-| `GET`  | `/v1/_example/ping` | Devuelve `{ unit, greeting }` (greeting = su config) | —    |
+| Método | Ruta                | Qué hace                                               | Auth |
+| ------ | ------------------- | ------------------------------------------------------ | ---- |
+| `GET`  | `/v1/_example/ping` | Devuelve `{ plugin, greeting }` (greeting = su config) | —    |
 
 ## Config (env vars)
 

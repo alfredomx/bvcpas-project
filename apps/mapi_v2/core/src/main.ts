@@ -20,8 +20,8 @@ import { APP_NAME, APP_VERSION } from './common/version'
  * cuando el core/plugins que los necesitan entren en sus propios commits.
  */
 async function bootstrap(): Promise<void> {
-  // Fail-fast: valida la config (Zod) de cada unit del registro contra el env
-  // antes de levantar Nest. Si falta una var, muere aquí con error claro.
+  // Fail-fast: valida la config (Zod) de cada plugin/pipe del registro contra
+  // el env antes de levantar Nest. Si falta una var, muere aquí con error claro.
   assertRegistryConfig(REGISTRY, process.env)
 
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
@@ -41,7 +41,7 @@ async function bootstrap(): Promise<void> {
     `  NODE_ENV   ${cfg.nodeEnv}`,
     `  PORT       ${cfg.port}`,
     `  Health     http://localhost:${cfg.port}/v1/healthz`,
-    `  Units      ${REGISTRY.length} (${REGISTRY.map((u) => u.name).join(', ') || 'core booteable solo'})`,
+    `  Registro   ${REGISTRY.length} (${REGISTRY.map((d) => d.name).join(', ') || 'core booteable solo'})`,
     '════════════════════════════════════════',
   ].join('\n')
 

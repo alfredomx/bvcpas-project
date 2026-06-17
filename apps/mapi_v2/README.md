@@ -20,7 +20,7 @@ Tres propiedades que lo definen:
 
 **El core NUNCA importa un plugin/pipe por nombre, ni conoce sus tablas, su config ni sus entrañas.** (Eso es lo que rompía `mapi`: `app.module.ts` hardcodeaba cada módulo → todo acoplado.) El core los monta por un **registro**: una lista de **manifiestos uniformes**. El core no sabe qué hace cada uno, solo lo monta y valida.
 
-> **Manifiesto uniforme + validación al boot** (idea robada de [c9/architect](https://github.com/c9/architect)). Cada plugin/pipe exporta un `ModuleDef` con la misma forma: `{ name, type, module, config }`. El registro es una **lista explícita** (`const REGISTRY: ModuleDef[] = [intuitUnit, ...]`) que al arranque valida la config de cada uno (Zod contra `process.env`) y monta sus módulos. Si falta una env var, **revienta al boot con error claro** (no un 500 misterioso después). NestJS ya da el wiring + fail-fast de dependencias entre servicios; el registro añade la validación de config y la forma común.
+> **Manifiesto uniforme + validación al boot** (idea robada de [c9/architect](https://github.com/c9/architect)). Cada plugin/pipe exporta un `ModuleDef` con la misma forma: `{ name, type, module, config }`. El registro es una **lista explícita** (`const REGISTRY: ModuleDef[] = [intuitPlugin, ...]`) que al arranque valida la config de cada uno (Zod contra `process.env`) y monta sus módulos. Si falta una env var, **revienta al boot con error claro** (no un 500 misterioso después). NestJS ya da el wiring + fail-fast de dependencias entre servicios; el registro añade la validación de config y la forma común.
 >
 > **Por qué lista explícita y no auto-discovery (todavía):** el valor está en el **manifiesto uniforme**, no en cómo se descubre. La lista es seguible con ctrl-click y mantiene el core chico. Como el manifiesto ya es uniforme, prender auto-discovery (escanear `plugins/*/` e importar sus `ModuleDef`) después es un cambio de pocas líneas — se hace **cuando un 2º plugin real lo exija**, no antes (mismo principio que el `Connector<T>` de mapi: diferido hasta tener 2 conectores).
 
@@ -42,7 +42,7 @@ apps/mapi_v2/                 ← el HOST. Aquí viven las deps compartidas + el
 │   ├── src/
 │   │   ├── core/             ← config, db, redis, queue
 │   │   ├── common/           ← errores, validación, correlation, auth slim
-│   │   ├── registry/         ← monta la lista explícita de units (plugins/pipes)
+│   │   ├── registry/         ← monta la lista explícita de plugins/pipes
 │   │   └── modules/          ← health
 │   └── roadmap/              ← versiones + TDD del core
 ├── plugins/<plugin>/         ← integración de dominio. Solo código + README + roadmap.
@@ -60,7 +60,7 @@ Build/run: `node dist/core/src/main.js` (el host compila todo a `dist/`). Dev: `
   - `module` = un **NestModule** que importa la **API pública del core** (servicios inyectables / tokens DI), nunca el core internals ni otro plugin.
   - `config` = el **Zod de SUS env vars** (el core lo valida al boot; si falta algo, revienta claro).
 - El `module` trae **lo suyo**: sus tablas (schema Drizzle + migraciones propias), sus errores (`DomainError` con su `code` + `status`), sus rutas bajo `/v1`, sus colas (`BullModule.registerQueue`).
-- El core lo monta agregando el `ModuleDef` a la **lista del registro** (una línea: `import { xUnit } from '@plugins/<plugin>/src'`). El core no sabe qué hace; solo valida su config y lo monta.
+- El core lo monta agregando el `ModuleDef` a la **lista del registro** (una línea: `import { xPlugin } from '@plugins/<plugin>/src'`). El core no sabe qué hace; solo valida su config y lo monta.
 - Plugins/pipes se comunican entre sí **por cola + contrato** (BullMQ), nunca importándose código.
 
 ## Reglas duras (las 5)

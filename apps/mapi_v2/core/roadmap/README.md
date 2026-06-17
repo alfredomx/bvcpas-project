@@ -16,7 +16,7 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 - `00-foundation` 🚧 (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim).
 
-Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + unit `_example`) + infra de tests (jest). Falta: jwt-verify slim.
+Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`) + infra de tests (jest). Falta: jwt-verify slim.
 
 **Próximo (cuando cierre la fundación):** `plugins/intuit` — **primer plugin** (qbo-client + tokens + clients + config `INTUIT_*`). Todo lo de QuickBooks vive en el plugin, no en el core.
 
