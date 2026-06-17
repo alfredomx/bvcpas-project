@@ -7,7 +7,9 @@ if (!process.env.DATABASE_URL) {
 
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './core/src/core/db/schema/index.ts',
+  // Core + tablas de plugins (cada plugin es dueño de su `*.schema.ts`).
+  // Un solo historial de migraciones para un solo Postgres (D-intuit-005).
+  schema: ['./core/src/core/db/schema/index.ts', './plugins/*/src/**/*.schema.ts'],
   out: './drizzle/migrations',
   dbCredentials: {
     url: process.env.DATABASE_URL,

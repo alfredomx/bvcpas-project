@@ -1,5 +1,5 @@
 import type { DynamicModule, Type } from '@nestjs/common'
-import { examplePlugin } from '@plugins/_example/src'
+import { intuitPlugin } from '@plugins/intuit/src'
 import type { ModuleDef } from './module-def'
 
 /**
@@ -10,9 +10,9 @@ import type { ModuleDef } from './module-def'
  * fuera de esta lista (regla de oro — ver README raíz). Auto-discovery
  * (escanear `plugins/*`) está diferido al 2º plugin.
  *
- * `_example` es el plugin de prueba (se reemplaza cuando entre `plugins/intuit`).
+ * `intuit` es el primer plugin real (reemplazó al `_example` de la fundación).
  */
-export const REGISTRY: ModuleDef[] = [examplePlugin]
+export const REGISTRY: ModuleDef[] = [intuitPlugin]
 
 /**
  * Valida al boot la config (Zod) de cada plugin/pipe contra el env. Junta
