@@ -18,7 +18,11 @@
     "lint:fix": "eslint \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\" --no-error-on-unmatched-pattern --fix",
     "format": "prettier --write --no-error-on-unmatched-pattern \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\"",
     "format:check": "prettier --check --no-error-on-unmatched-pattern \"core/src/**/*.ts\" \"plugins/**/src/**/*.ts\" \"pipes/**/src/**/*.ts\"",
-    "typecheck": "tsc --noEmit -p tsconfig.eslint.json"
+    "typecheck": "tsc --noEmit -p tsconfig.eslint.json",
+    "test": "jest --config ./test/_setup/jest.config.ts",
+    "test:watch": "jest --config ./test/_setup/jest.config.ts --watch",
+    "test:cov": "jest --config ./test/_setup/jest.config.ts --coverage",
+    "test:e2e": "jest --config ./test/_setup/jest-e2e.json --runInBand --forceExit"
   },
   "dependencies": {
     "@nestjs/bullmq": "^11.0.4",
@@ -40,14 +44,20 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@nestjs/testing": "^11.0.0",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.0.0",
+    "@types/supertest": "^7.2.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^30.0.0",
     "prettier": "^3.0.0",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.0.0",
     "tsc-alias": "^1.8.0",
     "tsc-watch": "^6.2.0",
     "typescript": "^6.0.0",
