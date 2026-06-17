@@ -18,8 +18,9 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 - `23-uncat-amas` ✅ (intuit v0.4.0 — report derivado uncats + AMA sobre `TransactionList`, read-through GET-only). **Cerrado 2026-06-17**, tag `intuit-v0.4.0` · smoke en vivo 51 filas.
 - `24-list-pagination` ✅ (intuit v0.5.0 — auto-paginado de los list + tope; arregla el truncado silencioso a 1000 de v0.3.0). **Cerrado 2026-06-17**, tag `intuit-v0.5.0` · smoke en vivo purchases 1000→12 847.
 - `25-token-health` ✅ (intuit v0.6.0 — salud de tokens (`/tokens` enriquecido + `needs_reauth`) + auto-refresh semanal, sin Prometheus). **Cerrado 2026-06-17**, tag `intuit-v0.6.0` · smoke 76 conexiones ok.
+- `26-dev-oauth` ✅ (intuit v0.7.0 — shortcut dev `GET /_dev/oauth/intuit?clientId` → 302 a Intuit, solo no-production). **Cerrado 2026-06-17**, tag `intuit-v0.7.0` · smoke 302 ok.
 
-**Próximo (después de v0.6.0):** dev-oauth shortcut (v0.7.0) · reconnect/disconnect por cliente (v0.8.0) · luego connectors/persistencia/CDC · snapshot de uncats para notas del cliente. Mutaciones a pedido.
+**Próximo (después de v0.7.0):** reconnect/disconnect por cliente (v0.8.0) · luego connectors/persistencia/CDC · snapshot de uncats para notas del cliente. Mutaciones a pedido.
 
 ## Versionado y estados
 
@@ -43,6 +44,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 23-uncat-amas      | ✅     | [README.md](23-uncat-amas/README.md)      | [v0.4.0](23-uncat-amas/v0.4.0.md)      |
 | 24-list-pagination | ✅     | [README.md](24-list-pagination/README.md) | [v0.5.0](24-list-pagination/v0.5.0.md) |
 | 25-token-health    | ✅     | [README.md](25-token-health/README.md)    | [v0.6.0](25-token-health/v0.6.0.md)    |
+| 26-dev-oauth       | ✅     | [README.md](26-dev-oauth/README.md)       | [v0.7.0](26-dev-oauth/v0.7.0.md)       |
 
 ## Versiones (orden cronológico)
 
@@ -54,6 +56,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 0.4.0   | 23-uncat-amas      | ✅     | report derivado uncats + AMA                   | intuit-v0.4.0 | [v0.4.0](23-uncat-amas/v0.4.0.md)      |
 | 0.5.0   | 24-list-pagination | ✅     | auto-paginado de los list + tope               | intuit-v0.5.0 | [v0.5.0](24-list-pagination/v0.5.0.md) |
 | 0.6.0   | 25-token-health    | ✅     | salud de tokens + auto-refresh                 | intuit-v0.6.0 | [v0.6.0](25-token-health/v0.6.0.md)    |
+| 0.7.0   | 26-dev-oauth       | ✅     | shortcut dev-oauth (1 click)                   | intuit-v0.7.0 | [v0.7.0](26-dev-oauth/v0.7.0.md)       |
 
 ## Decisiones acumuladas (`D-intuit-NNN`)
 
@@ -85,3 +88,4 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | D-intuit-024 | **Auto-refresh semanal** (cron) para mantener vivos los refresh tokens; no corre en boot (evita rotación en dev); requiere dueño único de los tokens                                  | 0.6.0   | —       |
 | D-intuit-025 | Flag **`needs_reauth`** (no solo la fecha): la prende un refresh fallido (detecta revocaciones), la limpia un refresh exitoso                                                         | 0.6.0   | —       |
 | D-intuit-026 | `ScheduleModule` importado en el module del plugin (self-contained), no en el core — sin reach al host                                                                                | 0.6.0   | —       |
+| D-intuit-027 | Shortcut **dev-only** `/_dev/oauth/intuit?clientId` (302 a Intuit), montado condicional por `NODE_ENV` (en prod no existe), `@Public()`, reutiliza el `connect` client-first          | 0.7.0   | —       |
