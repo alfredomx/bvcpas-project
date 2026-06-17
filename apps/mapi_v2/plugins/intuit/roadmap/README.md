@@ -23,6 +23,8 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 
 **Próximo (después de v0.8.0):** connectors / persistencia / backfill / CDC · snapshot de uncats para notas del cliente. Mutaciones (POST/PATCH/DELETE contra QBO) a pedido.
 
+**Diferidos:** ver [BACKLOG.md](BACKLOG.md) (writeback de memo a QBO, revoke en QBO al desconectar, persistencia/CDC).
+
 ## Versionado y estados
 
 SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mismos estados que el core (✅ / 🚧 / 🔬 / 📅). Una versión `🚧` a la vez en el plugin.
