@@ -7,6 +7,7 @@ import { QueueModule } from '@/core/queue/queue.module'
 import { CorrelationIdMiddleware } from '@/common/correlation/correlation-id.middleware'
 import { getCorrelationId } from '@/common/correlation/correlation.context'
 import { HealthModule } from '@/modules/health/health.module'
+import { REGISTRY, registryModules } from '@/registry/registry'
 
 /**
  * Módulo raíz del CORE (host de plugins).
@@ -17,9 +18,9 @@ import { HealthModule } from '@/modules/health/health.module'
  * qbo-client, plugin-bridge, jwt-verify y el plugin-loader se agregan pieza por
  * pieza en commits siguientes.
  *
- * REGLA DE ORO: este módulo NUNCA importa un plugin por nombre. Cuando entre
- * el plugin-loader, los plugins se montan por registro/manifiesto — el core
- * no conoce sus nombres ni sus entrañas.
+ * REGLA DE ORO: este módulo NUNCA importa un plugin por nombre. Los plugins y
+ * pipes se montan expandiendo `registryModules(REGISTRY)` — el core no conoce
+ * sus nombres ni sus entrañas, solo monta la lista de manifiestos.
  */
 @Module({
   imports: [
@@ -41,6 +42,8 @@ import { HealthModule } from '@/modules/health/health.module'
       },
     }),
     HealthModule,
+    // Units (plugins/pipes) del registro. Vacío hoy → el core arranca solo.
+    ...registryModules(REGISTRY),
   ],
 })
 export class AppModule implements NestModule {

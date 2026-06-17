@@ -5,6 +5,7 @@ import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { AppConfigService } from '@/core/config/config.service'
 import { DomainErrorFilter } from '@/common/errors/domain-error.filter'
+import { REGISTRY, assertRegistryConfig } from '@/registry/registry'
 import { APP_NAME, APP_VERSION } from './common/version'
 
 /**
@@ -19,6 +20,10 @@ import { APP_NAME, APP_VERSION } from './common/version'
  * cuando el core/plugins que los necesitan entren en sus propios commits.
  */
 async function bootstrap(): Promise<void> {
+  // Fail-fast: valida la config (Zod) de cada unit del registro contra el env
+  // antes de levantar Nest. Si falta una var, muere aquí con error claro.
+  assertRegistryConfig(REGISTRY, process.env)
+
   const app = await NestFactory.create(AppModule, { bufferLogs: true })
   app.useLogger(app.get(PinoNestLogger))
 
