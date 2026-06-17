@@ -38,6 +38,22 @@ export class IntuitRealmConflictError extends DomainError {
   }
 }
 
+/**
+ * En un reconnect, la compañía QBO autorizada NO coincide con la que el cliente
+ * ya tiene ligada. Anti-mixup: no se cambia el realm en silencio. Para mover un
+ * cliente a otra compañía, primero desconéctalo (DELETE connection) y reconecta.
+ */
+export class IntuitRealmMismatchError extends DomainError {
+  readonly code = 'INTUIT_REALM_MISMATCH'
+  readonly status = 409
+  constructor(expectedRealm: string, gotRealm: string) {
+    super(
+      `La compañía autorizada (${gotRealm}) no coincide con la del cliente (${expectedRealm}); desconecta primero para cambiar de compañía.`,
+      { expectedRealm, gotRealm },
+    )
+  }
+}
+
 /** Falló el exchange/refresh contra Intuit (no es culpa del request del usuario). */
 export class IntuitAuthError extends DomainError {
   readonly code = 'INTUIT_AUTH_ERROR'

@@ -9,6 +9,7 @@ import { IntuitReadService } from './intuit-read.service'
 import { IntuitDerivedReportsService } from './intuit-derived-reports.service'
 import { IntuitOauthService } from './intuit-oauth.service'
 import { IntuitOauthController } from './intuit-oauth.controller'
+import { IntuitClientController } from './intuit-client.controller'
 import { IntuitAdminController } from './intuit-admin.controller'
 import { IntuitEntitiesController } from './intuit-entities.controller'
 import { IntuitReportsController } from './intuit-reports.controller'
@@ -29,6 +30,7 @@ const devControllers = process.env.NODE_ENV === 'production' ? [] : [IntuitDevOa
   imports: [ScheduleModule.forRoot()],
   controllers: [
     IntuitOauthController,
+    IntuitClientController,
     IntuitAdminController,
     IntuitEntitiesController,
     IntuitReportsController,
