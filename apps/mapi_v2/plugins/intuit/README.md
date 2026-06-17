@@ -6,7 +6,7 @@ Conecta la cuenta de QuickBooks Online de un cliente (OAuth) y deja que mapi_v2 
 
 ## Estado
 
-`✅ v0.1.0` — OAuth + tokens + proxy V3. · `✅ v0.2.0` — migración de clients + tokens del prod viejo. · `✅ v0.3.0` — endpoints GET tipados por type de QBO (entidades + reports), read-through, GET-only. (Connectors/persistencia/CDC en versiones futuras.)
+`✅ v0.1.0` — OAuth + tokens + proxy V3. · `✅ v0.2.0` — migración de clients + tokens del prod viejo. · `✅ v0.3.0` — endpoints GET tipados por type de QBO (entidades + reports), read-through, GET-only. · `✅ v0.4.0` — report derivado uncats + AMA. (Connectors/persistencia/CDC en versiones futuras.)
 
 ## Entradas / Salidas
 
@@ -26,6 +26,9 @@ Conecta la cuenta de QuickBooks Online de un cliente (OAuth) y deja que mapi_v2 
 | `GET`    | `/v1/intuit/:clientId/<entidad>/:id`        | una entidad QBO por su `Id`                       | token admin |
 | `GET`    | `/v1/intuit/:clientId/exchange-rate`        | tipo de cambio (`sourcecurrencycode` req.)        | token admin |
 | `GET`    | `/v1/intuit/:clientId/reports/<r>`          | un report QBO (args por query string)             | token admin |
+| `GET`    | `/v1/intuit/:clientId/reports/uncat-amas`   | report derivado: uncats + AMA (lista plana)       | token admin |
+
+**Report derivado (v0.4.0, GET-only):** `uncat-amas` arma sobre `TransactionList` la lista de transacciones sin categorizar (expense/income) + "Ask My Accountant" — ver [roadmap del módulo](roadmap/23-uncat-amas/README.md). Query: `start_date`, `end_date`, `accounting_method`, `category` (opcional).
 
 **Lecturas tipadas (v0.3.0, GET-only, read-through):** 30 entidades (`accounts`, `bills`, `invoices`, `customers`, `vendors`, … — ver [roadmap del módulo](roadmap/22-typed-reads/README.md)) con list + by-id, y 20 reports (`profit-and-loss`, `balance-sheet`, `general-ledger`, …). Listas paginan con `startPosition`/`maxResults`. No hay POST/PATCH/DELETE: las mutaciones se agregan a pedido.
 
