@@ -6,7 +6,7 @@ Primera lectura de cualquier chat sobre `mapi_v2`. Alta señal, bajo contexto. E
 
 `mapi_v2` se organiza en **tres categorías**:
 
-- **`core/`** — el **substrato mínimo**. Bootea y funciona solo (`GET /v1/healthz`). Provee SOLO lo que plugins y pipes necesitan para interactuar: config (vars del core), db (conexión Postgres compartida), redis, queue (BullMQ), errores/validación/logger, auth slim (token admin) y el **registro** (cómo algo se monta). Nada de dominio.
+- **`core/`** — el **substrato mínimo** + la **entidad central `clients`** (modelo WordPress). Bootea y funciona solo (`GET /v1/healthz`). Provee lo que plugins y pipes necesitan: config (vars del core), db (conexión Postgres compartida), redis, queue (BullMQ), errores/validación/logger, auth slim (token admin), el **registro** (cómo algo se monta) y `clients` (la entidad de la que todo cuelga). El dominio de cada plugin no entra al core.
 - **`plugins/<plugin>/`** — una **integración de dominio** (Intuit, banco, uncats, etc.). Cada plugin es **dueño de sus tablas, su config, sus errores, sus rutas y sus migraciones**, y se **inserta** en el core. Le agrega capacidades sin tocarlo.
 - **`pipes/<pipe>/`** — un **proceso de fondo sobre BullMQ** (worker que consume/produce una cola). Corre sobre el queue del core. Un pipe puede vivir solo o dentro de un plugin.
 
@@ -43,7 +43,7 @@ apps/mapi_v2/                 ← el HOST. Aquí viven las deps compartidas + el
 │   │   ├── core/             ← config, db, redis, queue
 │   │   ├── common/           ← errores, validación, correlation, auth slim
 │   │   ├── registry/         ← monta la lista explícita de plugins/pipes
-│   │   └── modules/          ← health
+│   │   └── modules/          ← health, 11-clients (entidad central)
 │   └── roadmap/              ← versiones + TDD del core
 ├── plugins/<plugin>/         ← integración de dominio. Solo código + README + roadmap.
 │   ├── src/                  ← su código (core vía servicios inyectados); SUS tablas + SUS migraciones + SU config Zod
@@ -77,7 +77,7 @@ NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino (reusado de mapi, p
 
 - **Deps compartidas:** un solo `package.json` + `node_modules` en `apps/mapi_v2/` (sin npm workspaces). El host compila y corre core + plugins + pipes en un solo build. Dev runner: `tsc-watch` (no `nest start` — el layout multi-carpeta no lo permite limpio).
 - **El core es dueño de la conexión** a su Postgres propio (`mapi_v2_local` / `mapi_v2_prod`) y de la `DATABASE_URL`.
-- **Cada plugin es dueño de SUS tablas, SUS migraciones y SU seed.** El core no define tablas de dominio. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se define con el primer plugin.)
+- **El core define SOLO la tabla central `clients`** (con su migración). **Cada plugin es dueño de SUS tablas, SUS migraciones y SU seed**, llaveadas por `client_id`. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se define con el primer plugin.)
 
 ## Unidades (índice)
 
