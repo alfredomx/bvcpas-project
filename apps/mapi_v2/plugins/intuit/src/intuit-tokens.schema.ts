@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, boolean } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 import { clients } from '@/core/db/schema/clients'
 
@@ -19,6 +19,9 @@ export const intuitTokens = pgTable('intuit_tokens', {
   refreshTokenEncrypted: text('refresh_token_encrypted').notNull(),
   accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }).notNull(),
   refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }).notNull(),
+  // true cuando el último refresh falló (refresh vencido o Intuit lo rechazó):
+  // la conexión necesita re-OAuth. Se limpia (false) en cada save/refresh exitoso.
+  needsReauth: boolean('needs_reauth').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true })
     .notNull()
     .default(sql`now()`),

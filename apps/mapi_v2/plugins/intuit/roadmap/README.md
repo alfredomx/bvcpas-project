@@ -17,8 +17,9 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 - `22-typed-reads` ✅ (intuit v0.3.0 — endpoints GET tipados por type de QBO: 30 entidades list+by-id, exchange-rate, 20 reports. Read-through, GET-only, rutas `/v1/intuit/:clientId/...`). **Cerrado 2026-06-17**, tag `intuit-v0.3.0` · smoke en vivo 49/51.
 - `23-uncat-amas` ✅ (intuit v0.4.0 — report derivado uncats + AMA sobre `TransactionList`, read-through GET-only). **Cerrado 2026-06-17**, tag `intuit-v0.4.0` · smoke en vivo 51 filas.
 - `24-list-pagination` ✅ (intuit v0.5.0 — auto-paginado de los list + tope; arregla el truncado silencioso a 1000 de v0.3.0). **Cerrado 2026-06-17**, tag `intuit-v0.5.0` · smoke en vivo purchases 1000→12 847.
+- `25-token-health` ✅ (intuit v0.6.0 — salud de tokens (`/tokens` enriquecido + `needs_reauth`) + auto-refresh semanal, sin Prometheus). **Cerrado 2026-06-17**, tag `intuit-v0.6.0` · smoke 76 conexiones ok.
 
-**Próximo (después de v0.5.0):** connectors / persistencia / backfill / CDC · snapshot de uncats para notas del cliente. Mutaciones (POST/PATCH/DELETE) a pedido, una por una.
+**Próximo (después de v0.6.0):** dev-oauth shortcut (v0.7.0) · reconnect/disconnect por cliente (v0.8.0) · luego connectors/persistencia/CDC · snapshot de uncats para notas del cliente. Mutaciones a pedido.
 
 ## Versionado y estados
 
@@ -41,6 +42,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 22-typed-reads     | ✅     | [README.md](22-typed-reads/README.md)     | [v0.3.0](22-typed-reads/v0.3.0.md)     |
 | 23-uncat-amas      | ✅     | [README.md](23-uncat-amas/README.md)      | [v0.4.0](23-uncat-amas/v0.4.0.md)      |
 | 24-list-pagination | ✅     | [README.md](24-list-pagination/README.md) | [v0.5.0](24-list-pagination/v0.5.0.md) |
+| 25-token-health    | ✅     | [README.md](25-token-health/README.md)    | [v0.6.0](25-token-health/v0.6.0.md)    |
 
 ## Versiones (orden cronológico)
 
@@ -51,6 +53,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 0.3.0   | 22-typed-reads     | ✅     | endpoints GET tipados (entidades + reports)    | intuit-v0.3.0 | [v0.3.0](22-typed-reads/v0.3.0.md)     |
 | 0.4.0   | 23-uncat-amas      | ✅     | report derivado uncats + AMA                   | intuit-v0.4.0 | [v0.4.0](23-uncat-amas/v0.4.0.md)      |
 | 0.5.0   | 24-list-pagination | ✅     | auto-paginado de los list + tope               | intuit-v0.5.0 | [v0.5.0](24-list-pagination/v0.5.0.md) |
+| 0.6.0   | 25-token-health    | ✅     | salud de tokens + auto-refresh                 | intuit-v0.6.0 | [v0.6.0](25-token-health/v0.6.0.md)    |
 
 ## Decisiones acumuladas (`D-intuit-NNN`)
 
@@ -78,3 +81,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | D-intuit-020 | Aplanado defensivo de filas del report (`collectLeafRows`): recoge hojas con `ColData`, soporta report plano o agrupado por secciones                                                 | 0.4.0   | —       |
 | D-intuit-021 | Los list **auto-paginan** (loop) y devuelven todo por default; arregla el truncado silencioso a 1000 de v0.3.0. `startPosition`/`maxResults` = override de una página (UI)            | 0.5.0   | Sí      |
 | D-intuit-022 | **Tope** de 20 páginas (20 000) en el auto-paginado → `INTUIT_TOO_MANY_RECORDS` (400); nunca trunca callado. Bulk de entidades enormes = backfill/jobs futuro                         | 0.5.0   | —       |
+| D-intuit-023 | Salud de tokens como **endpoint JSON** (`/tokens` enriquecido con `status`/`daysUntilRefreshExpiry`/`needsReauth`), **no Prometheus**; el frontend arma su dashboard                  | 0.6.0   | —       |
+| D-intuit-024 | **Auto-refresh semanal** (cron) para mantener vivos los refresh tokens; no corre en boot (evita rotación en dev); requiere dueño único de los tokens                                  | 0.6.0   | —       |
+| D-intuit-025 | Flag **`needs_reauth`** (no solo la fecha): la prende un refresh fallido (detecta revocaciones), la limpia un refresh exitoso                                                         | 0.6.0   | —       |
+| D-intuit-026 | `ScheduleModule` importado en el module del plugin (self-contained), no en el core — sin reach al host                                                                                | 0.6.0   | —       |
