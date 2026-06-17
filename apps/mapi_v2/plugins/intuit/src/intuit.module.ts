@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common'
+import { ScheduleModule } from '@nestjs/schedule'
 import { IntuitConfigService } from './intuit.config'
 import { IntuitTokensRepository } from './intuit-tokens.repository'
 import { IntuitTokensService } from './intuit-tokens.service'
+import { IntuitTokensRefreshCron } from './intuit-tokens.cron'
 import { IntuitApiService } from './intuit-api.service'
 import { IntuitReadService } from './intuit-read.service'
 import { IntuitDerivedReportsService } from './intuit-derived-reports.service'
@@ -17,6 +19,7 @@ import { IntuitDerivedReportsController } from './intuit-derived-reports.control
  * `DB`, `EncryptionService`, `REDIS_CLIENT`, `ClientsService`.
  */
 @Module({
+  imports: [ScheduleModule.forRoot()],
   controllers: [
     IntuitOauthController,
     IntuitAdminController,
@@ -32,6 +35,7 @@ import { IntuitDerivedReportsController } from './intuit-derived-reports.control
     IntuitReadService,
     IntuitDerivedReportsService,
     IntuitOauthService,
+    IntuitTokensRefreshCron,
   ],
   exports: [
     IntuitConfigService,

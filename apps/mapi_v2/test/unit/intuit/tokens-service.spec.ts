@@ -25,6 +25,7 @@ function row(over: Partial<IntuitTokens> = {}): IntuitTokens {
     refreshTokenEncrypted: 'refresh-1',
     accessTokenExpiresAt: new Date(Date.now() + 3600_000),
     refreshTokenExpiresAt: new Date(Date.now() + 8640_000_00),
+    needsReauth: false,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...over,
@@ -75,12 +76,16 @@ describe('IntuitTokensService', () => {
   it('refresh lanza REFRESH_EXPIRED si el refresh venció', async () => {
     const repo = {
       findByClientId: jest.fn().mockResolvedValue(row({ refreshTokenExpiresAt: new Date(Date.now() - 1000) })),
+      setNeedsReauth: jest.fn().mockResolvedValue(undefined),
     }
     await expect(svc(repo).refresh('c1')).rejects.toBeInstanceOf(IntuitRefreshExpiredError)
   })
 
   it('refresh lanza AUTH_ERROR si el token endpoint falla', async () => {
-    const repo = { findByClientId: jest.fn().mockResolvedValue(row()) }
+    const repo = {
+      findByClientId: jest.fn().mockResolvedValue(row()),
+      setNeedsReauth: jest.fn().mockResolvedValue(undefined),
+    }
     global.fetch = fakeFetch(400, { error: 'invalid_grant' })
     await expect(svc(repo).refresh('c1')).rejects.toBeInstanceOf(IntuitAuthError)
   })

@@ -24,11 +24,20 @@ export class IntuitTokensRepository {
           refreshTokenEncrypted: data.refreshTokenEncrypted,
           accessTokenExpiresAt: data.accessTokenExpiresAt,
           refreshTokenExpiresAt: data.refreshTokenExpiresAt,
+          needsReauth: data.needsReauth ?? false,
           updatedAt: new Date(),
         },
       })
       .returning()
     return row
+  }
+
+  /** Marca/limpia el flag `needs_reauth` de una conexión. */
+  async setNeedsReauth(clientId: string, value: boolean): Promise<void> {
+    await this.db
+      .update(intuitTokens)
+      .set({ needsReauth: value, updatedAt: new Date() })
+      .where(eq(intuitTokens.clientId, clientId))
   }
 
   async findByClientId(clientId: string): Promise<IntuitTokens | null> {

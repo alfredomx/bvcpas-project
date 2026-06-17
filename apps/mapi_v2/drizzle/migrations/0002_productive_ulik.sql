@@ -1,0 +1,1 @@
+ALTER TABLE "intuit_tokens" ADD COLUMN "needs_reauth" boolean DEFAULT false NOT NULL;

@@ -19,6 +19,21 @@ export interface IntuitBearerResponse {
 
 /** Refresca si el access vence dentro de este margen (segundos). */
 const EXPIRY_SKEW_MS = 60_000
+const MS_PER_DAY = 24 * 60 * 60 * 1000
+/** Umbral para marcar `expiring_soon` en el estado de conexión. */
+const EXPIRING_SOON_DAYS = 14
+
+/** Estado de salud de una conexión QBO (para dashboard). */
+export interface IntuitTokenStatus {
+  clientId: string
+  realmId: string
+  accessTokenExpiresAt: Date
+  refreshTokenExpiresAt: Date
+  daysUntilRefreshExpiry: number
+  refreshExpired: boolean
+  needsReauth: boolean
+  status: 'ok' | 'expiring_soon' | 'needs_reauth'
+}
 
 /**
  * Maneja los tokens QBO de un cliente: cifra/descifra (con el `EncryptionService`
@@ -58,18 +73,49 @@ export class IntuitTokensService {
     return this.refresh(clientId)
   }
 
-  /** Fuerza un refresh (se usa también tras un 401 de la API). */
+  /**
+   * Fuerza un refresh (se usa también tras un 401 de la API). Si falla porque el
+   * refresh venció o Intuit lo rechaza, marca `needs_reauth=true` antes de lanzar.
+   * Un refresh exitoso limpia el flag (vía `save`).
+   */
   async refresh(clientId: string): Promise<{ accessToken: string; realmId: string }> {
     const row = await this.requireRow(clientId)
     if (row.refreshTokenExpiresAt.getTime() <= Date.now()) {
+      await this.repo.setNeedsReauth(clientId, true)
       throw new IntuitRefreshExpiredError(clientId)
     }
     const refreshToken = this.encryption.decrypt(row.refreshTokenEncrypted)
-    const raw = await this.requestBearer(
-      new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
-    )
+    let raw: IntuitBearerResponse
+    try {
+      raw = await this.requestBearer(
+        new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
+      )
+    } catch (err) {
+      if (err instanceof IntuitAuthError) await this.repo.setNeedsReauth(clientId, true)
+      throw err
+    }
     await this.save(clientId, row.realmId, raw)
     return { accessToken: raw.access_token, realmId: row.realmId }
+  }
+
+  /**
+   * Refresca TODAS las conexiones (lo corre el cron para mantenerlas vivas).
+   * Cada fallo deja la conexión marcada `needs_reauth` (vía `refresh`). No lanza:
+   * devuelve el conteo para loguear.
+   */
+  async refreshAll(): Promise<{ total: number; refreshed: number; failed: number }> {
+    const rows = await this.repo.listAll()
+    let refreshed = 0
+    let failed = 0
+    for (const r of rows) {
+      try {
+        await this.refresh(r.clientId)
+        refreshed++
+      } catch {
+        failed++ // refresh() ya marcó needs_reauth
+      }
+    }
+    return { total: rows.length, refreshed, failed }
   }
 
   /** Intercambia el `code` del callback por tokens y los guarda (grant inicial). */
@@ -91,25 +137,32 @@ export class IntuitTokensService {
     return row.clientId
   }
 
-  /** Estado de conexión por cliente (sin exponer los tokens). */
-  async listStatus(): Promise<
-    {
-      clientId: string
-      realmId: string
-      accessTokenExpiresAt: Date
-      refreshTokenExpiresAt: Date
-      refreshExpired: boolean
-    }[]
-  > {
+  /** Estado de salud de cada conexión (sin exponer tokens) — para dashboard. */
+  async listStatus(): Promise<IntuitTokenStatus[]> {
     const rows = await this.repo.listAll()
     const now = Date.now()
-    return rows.map((r) => ({
-      clientId: r.clientId,
-      realmId: r.realmId,
-      accessTokenExpiresAt: r.accessTokenExpiresAt,
-      refreshTokenExpiresAt: r.refreshTokenExpiresAt,
-      refreshExpired: r.refreshTokenExpiresAt.getTime() <= now,
-    }))
+    return rows.map((r) => {
+      const daysUntilRefreshExpiry = Math.floor(
+        (r.refreshTokenExpiresAt.getTime() - now) / MS_PER_DAY,
+      )
+      const refreshExpired = r.refreshTokenExpiresAt.getTime() <= now
+      const status: IntuitTokenStatus['status'] =
+        r.needsReauth || refreshExpired
+          ? 'needs_reauth'
+          : daysUntilRefreshExpiry < EXPIRING_SOON_DAYS
+            ? 'expiring_soon'
+            : 'ok'
+      return {
+        clientId: r.clientId,
+        realmId: r.realmId,
+        accessTokenExpiresAt: r.accessTokenExpiresAt,
+        refreshTokenExpiresAt: r.refreshTokenExpiresAt,
+        daysUntilRefreshExpiry,
+        refreshExpired,
+        needsReauth: r.needsReauth,
+        status,
+      }
+    })
   }
 
   deleteByClientId(clientId: string): Promise<boolean> {
