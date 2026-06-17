@@ -1,16 +1,17 @@
 import { Module } from '@nestjs/common'
 import { IntuitConfigService } from './intuit.config'
+import { IntuitTokensRepository } from './intuit-tokens.repository'
+import { IntuitTokensService } from './intuit-tokens.service'
+import { IntuitApiService } from './intuit-api.service'
 
 /**
- * NestModule del plugin Intuit. Por ahora (setup) solo provee la config.
- * El repo de tokens, IntuitApiService, OAuth service y controllers entran en
- * los siguientes commits de v0.1.0.
+ * NestModule del plugin Intuit. Consume del core (vía DI, son `@Global`):
+ * `DB`, `EncryptionService`, y más adelante `ClientsService` / `REDIS_CLIENT`.
  *
- * Consume del core (vía DI): ClientsService, EncryptionService, REDIS_CLIENT,
- * AppConfigService. Nunca toca entrañas del core ni de otro plugin.
+ * OAuth service + controllers entran en el commit 3 de v0.1.0.
  */
 @Module({
-  providers: [IntuitConfigService],
-  exports: [IntuitConfigService],
+  providers: [IntuitConfigService, IntuitTokensRepository, IntuitTokensService, IntuitApiService],
+  exports: [IntuitConfigService, IntuitTokensService, IntuitApiService],
 })
 export class IntuitModule {}
