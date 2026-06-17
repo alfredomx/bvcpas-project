@@ -13,3 +13,10 @@ export const callDtoSchema = z.object({
   body: z.unknown().optional(),
 })
 export type CallDto = z.infer<typeof callDtoSchema>
+
+/** Query de paginación de las listas tipadas (`GET .../<entidad>`). */
+export const listQuerySchema = z.object({
+  startPosition: z.coerce.number().int().min(1).optional(),
+  maxResults: z.coerce.number().int().min(1).max(1000).optional(),
+})
+export type ListQuery = z.infer<typeof listQuerySchema>
