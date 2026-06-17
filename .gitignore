@@ -146,3 +146,6 @@ CLAUDE-mapi-context.md
 seeds-tmp
 # Cheques bancarios guardados en demo (no es destino final)
 apps/mapi/.downloads/
+
+# Scripts one-off de migración de mapi_v2 (no destino final, viven local)
+apps/mapi_v2/scripts/
