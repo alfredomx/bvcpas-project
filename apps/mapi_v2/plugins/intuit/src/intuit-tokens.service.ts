@@ -72,6 +72,25 @@ export class IntuitTokensService {
     return { accessToken: raw.access_token, realmId: row.realmId }
   }
 
+  /** Intercambia el `code` del callback por tokens y los guarda (grant inicial). */
+  async exchangeCode(clientId: string, realmId: string, code: string): Promise<void> {
+    const raw = await this.requestBearer(
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: this.config.redirectUri,
+      }),
+    )
+    await this.save(clientId, realmId, raw)
+  }
+
+  /** Resuelve el `client_id` dueño de un realm (para el proxy por realmId). */
+  async getClientIdByRealm(realmId: string): Promise<string> {
+    const row = await this.repo.findByRealmId(realmId)
+    if (!row) throw new IntuitTokensNotFoundError(realmId)
+    return row.clientId
+  }
+
   /** Estado de conexión por cliente (sin exponer los tokens). */
   async listStatus(): Promise<
     {
