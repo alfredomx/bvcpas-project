@@ -13,6 +13,13 @@ import { IntuitAdminController } from './intuit-admin.controller'
 import { IntuitEntitiesController } from './intuit-entities.controller'
 import { IntuitReportsController } from './intuit-reports.controller'
 import { IntuitDerivedReportsController } from './intuit-derived-reports.controller'
+import { IntuitDevOauthController } from './intuit-dev-oauth.controller'
+
+/**
+ * Controllers dev-only: el shortcut `/_dev/oauth/...` solo se monta fuera de
+ * production (en prod la ruta no existe).
+ */
+const devControllers = process.env.NODE_ENV === 'production' ? [] : [IntuitDevOauthController]
 
 /**
  * NestModule del plugin Intuit. Consume del core (vía DI, son `@Global`):
@@ -26,6 +33,7 @@ import { IntuitDerivedReportsController } from './intuit-derived-reports.control
     IntuitEntitiesController,
     IntuitReportsController,
     IntuitDerivedReportsController,
+    ...devControllers,
   ],
   providers: [
     IntuitConfigService,

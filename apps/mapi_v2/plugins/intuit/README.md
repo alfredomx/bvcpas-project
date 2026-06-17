@@ -6,7 +6,7 @@ Conecta la cuenta de QuickBooks Online de un cliente (OAuth) y deja que mapi_v2 
 
 ## Estado
 
-`✅ v0.1.0` — OAuth + tokens + proxy V3. · `✅ v0.2.0` — migración de clients + tokens del prod viejo. · `✅ v0.3.0` — endpoints GET tipados por type de QBO (entidades + reports), read-through, GET-only. · `✅ v0.4.0` — report derivado uncats + AMA. · `✅ v0.5.0` — auto-paginado de los list. · `✅ v0.6.0` — salud de tokens + auto-refresh. (Connectors/persistencia/CDC en versiones futuras.)
+`✅ v0.1.0` — OAuth + tokens + proxy V3. · `✅ v0.2.0` — migración de clients + tokens del prod viejo. · `✅ v0.3.0` — endpoints GET tipados por type de QBO (entidades + reports), read-through, GET-only. · `✅ v0.4.0` — report derivado uncats + AMA. · `✅ v0.5.0` — auto-paginado de los list. · `✅ v0.6.0` — salud de tokens + auto-refresh. · `✅ v0.7.0` — shortcut dev-oauth (1 click). (Connectors/persistencia/CDC en versiones futuras.)
 
 ## Entradas / Salidas
 
