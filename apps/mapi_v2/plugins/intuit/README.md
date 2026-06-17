@@ -6,7 +6,7 @@ Conecta la cuenta de QuickBooks Online de un cliente (OAuth) y deja que mapi_v2 
 
 ## Estado
 
-`🚧 en construcción` (intuit v0.1.0 — OAuth + tokens + proxy V3).
+`✅ v0.1.0` — OAuth + tokens + proxy V3. (Connectors/CDC en versiones futuras.)
 
 ## Entradas / Salidas
 

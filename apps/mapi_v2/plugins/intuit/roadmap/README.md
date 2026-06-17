@@ -12,7 +12,7 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 
 **Versión `package.json` del host: compartida** (el plugin no tiene package.json propio; vive en el host). El plugin versiona con tags `intuit-vX.Y.Z`.
 
-- `20-intuit-oauth` 🚧 (intuit v0.1.0 — OAuth client-first + `intuit_tokens` + refresh + `IntuitApiService`).
+- `20-intuit-oauth` ✅ (intuit v0.1.0 — OAuth client-first + `intuit_tokens` + refresh + `IntuitApiService`). **Cerrado 2026-06-17**, tag `intuit-v0.1.0`.
 
 **Próximo (después de v0.1.0):** `intuit v0.2.0` — migración de clientes + tokens reales del prod viejo (desencripta con la `ENCRYPTION_KEY` de mapi). Luego connectors/CDC (`intuit v0.3.0+`).
 
@@ -32,13 +32,13 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 
 | Carpeta         | Status | TDD                                    | Versiones                           |
 | --------------- | ------ | -------------------------------------- | ----------------------------------- |
-| 20-intuit-oauth | 🚧     | [README.md](20-intuit-oauth/README.md) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+| 20-intuit-oauth | ✅     | [README.md](20-intuit-oauth/README.md) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo          | Estado | Tema                                           | Tag         | Archivo                             |
-| ------- | --------------- | ------ | ---------------------------------------------- | ----------- | ----------------------------------- |
-| 0.1.0   | 20-intuit-oauth | 🚧     | OAuth client-first + tokens + IntuitApiService | (pendiente) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+| Versión | Módulo          | Estado | Tema                                           | Tag           | Archivo                             |
+| ------- | --------------- | ------ | ---------------------------------------------- | ------------- | ----------------------------------- |
+| 0.1.0   | 20-intuit-oauth | ✅     | OAuth client-first + tokens + IntuitApiService | intuit-v0.1.0 | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
 
 ## Decisiones acumuladas (`D-intuit-NNN`)
 

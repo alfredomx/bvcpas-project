@@ -18,4 +18,4 @@ Que el operador pueda **conectar la cuenta QBO de un cliente** (OAuth) y que map
 
 | Versión | Estado | Tema                                           |
 | ------- | ------ | ---------------------------------------------- |
-| v0.1.0  | 🚧     | OAuth client-first + tokens + IntuitApiService |
+| v0.1.0  | ✅     | OAuth client-first + tokens + IntuitApiService |
