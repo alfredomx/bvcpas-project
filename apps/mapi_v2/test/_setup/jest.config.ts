@@ -27,7 +27,7 @@ const config: Config = {
   moduleFileExtensions: ['ts', 'js', 'json'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/core/src/$1',
-    '^@plugins/(.*)$': '<rootDir>/plugins/$1/src',
+    '^@plugins/(.*)$': '<rootDir>/plugins/$1',
   },
   collectCoverageFrom: [
     'core/src/**/*.ts',

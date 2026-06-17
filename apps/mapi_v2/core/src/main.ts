@@ -41,7 +41,7 @@ async function bootstrap(): Promise<void> {
     `  NODE_ENV   ${cfg.nodeEnv}`,
     `  PORT       ${cfg.port}`,
     `  Health     http://localhost:${cfg.port}/v1/healthz`,
-    `  Plugins    0 (core booteable solo)`,
+    `  Units      ${REGISTRY.length} (${REGISTRY.map((u) => u.name).join(', ') || 'core booteable solo'})`,
     '════════════════════════════════════════',
   ].join('\n')
 

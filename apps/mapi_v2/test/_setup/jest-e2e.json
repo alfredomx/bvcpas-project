@@ -13,7 +13,7 @@
   "moduleFileExtensions": ["ts", "js", "json"],
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/core/src/$1",
-    "^@plugins/(.*)$": "<rootDir>/plugins/$1/src"
+    "^@plugins/(.*)$": "<rootDir>/plugins/$1"
   },
   "testEnvironment": "node",
   "testTimeout": 30000,

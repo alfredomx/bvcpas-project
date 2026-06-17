@@ -1,16 +1,18 @@
 import type { DynamicModule, Type } from '@nestjs/common'
+import { exampleUnit } from '@plugins/_example/src'
 import type { ModuleDef } from './module-def'
 
 /**
- * Lista explícita de units montadas en el core. **Vacía por ahora**: el core
- * arranca solo, sin plugins ni pipes.
+ * Lista explícita de units montadas en el core.
  *
  * Cada plugin/pipe se da de alta agregando su `ModuleDef` aquí (una línea,
  * seguible con ctrl-click). El core NUNCA importa una unit por nombre fuera de
  * esta lista (regla de oro — ver README raíz). Auto-discovery (escanear
  * `plugins/*`) está diferido al 2º plugin.
+ *
+ * `_example` es la unit de prueba (se reemplaza cuando entre `plugins/intuit`).
  */
-export const REGISTRY: ModuleDef[] = []
+export const REGISTRY: ModuleDef[] = [exampleUnit]
 
 /**
  * Valida al boot la config (Zod) de cada unit contra el env. Junta TODAS las

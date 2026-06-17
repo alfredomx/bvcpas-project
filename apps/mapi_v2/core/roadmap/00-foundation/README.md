@@ -8,18 +8,18 @@ Que un chat fresco pueda arrancar el core de `mapi_v2`, conectarse a su DB/Redis
 
 ## Alcance del módulo
 
-| Pieza      | Origen (mapi)                        | Qué es                                                                                         |
-| ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| scaffold   | bootstrap mapi                       | NestJS 11 + tooling + health booteable solo ✅                                                 |
-| config     | `core/config`                        | env del **core** validado por Zod (no vars de plugin) ✅                                       |
-| db         | `core/db`                            | DbModule `@Global()` — conexión Postgres compartida ✅                                         |
-| redis      | `core/auth/redis`                    | `REDIS_CLIENT` (ioredis) para health/locks/cache ✅                                            |
-| queue      | `core/queue`                         | QueueModule (BullMQ root) — substrato de los pipes ✅                                          |
-| errors     | `common/errors`                      | DomainError (status propio) + DomainErrorFilter global ✅                                      |
-| validation | `common/pipes`                       | ZodValidationPipe (por-ruta) ✅                                                                |
-| logger     | `nestjs-pino` + `common/correlation` | Pino + correlation_id (en logs y en errores) ✅                                                |
-| registro   | nuevo (idea de c9/architect)         | contrato `Unit` (manifiesto uniforme) + registro que valida config al boot y monta la lista 📅 |
-| jwt-verify | `10-core-auth` (slim)                | guard que protege endpoints con el token admin 📅                                              |
+| Pieza      | Origen (mapi)                        | Qué es                                                                                              |
+| ---------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| scaffold   | bootstrap mapi                       | NestJS 11 + tooling + health booteable solo ✅                                                      |
+| config     | `core/config`                        | env del **core** validado por Zod (no vars de plugin) ✅                                            |
+| db         | `core/db`                            | DbModule `@Global()` — conexión Postgres compartida ✅                                              |
+| redis      | `core/auth/redis`                    | `REDIS_CLIENT` (ioredis) para health/locks/cache ✅                                                 |
+| queue      | `core/queue`                         | QueueModule (BullMQ root) — substrato de los pipes ✅                                               |
+| errors     | `common/errors`                      | DomainError (status propio) + DomainErrorFilter global ✅                                           |
+| validation | `common/pipes`                       | ZodValidationPipe (por-ruta) ✅                                                                     |
+| logger     | `nestjs-pino` + `common/correlation` | Pino + correlation_id (en logs y en errores) ✅                                                     |
+| registro   | `core/registry`                      | contrato `ModuleDef` (manifiesto uniforme) + registro que valida config al boot y monta la lista ✅ |
+| jwt-verify | `10-core-auth` (slim)                | guard que protege endpoints con el token admin 📅                                                   |
 
 ## Lo que NO va en el core (se mudó a plugin)
 
