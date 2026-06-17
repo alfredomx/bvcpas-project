@@ -12,10 +12,11 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 ## Estado actual
 
-**Versión `package.json`: `0.2.0`.**
+**Versión `package.json`: `0.3.0`.**
 
 - `00-foundation` ✅ (v0.1.0 — substrato: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim). Tag `core-v0.1.0`.
-- `11-clients` ✅ (v0.2.0 — entidad central `clients` en el core: schema + CRUD `/v1/clients`. Modelo WordPress: el core es dueño de la entidad, los plugins la extienden). **Cerrado 2026-06-17**, tag `core-v0.2.0`.
+- `11-clients` ✅ (v0.2.0 — entidad central `clients` en el core: schema + CRUD `/v1/clients`). Tag `core-v0.2.0`.
+- `12-encryption` ✅ (v0.3.0 — `EncryptionService` AES-256-GCM en el core, infra para que los plugins guarden secretos). **Cerrado 2026-06-17**, tag `core-v0.3.0`.
 
 **Próximo:** `plugins/intuit` — **primer plugin**. Consume `clients` del core y es dueño de `intuit_tokens` (`client_id` + `realm_id` + tokens) + OAuth + `IntuitApiService` + config `INTUIT_*`. Todo lo de QuickBooks vive en el plugin.
 
@@ -66,6 +67,7 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | ------------- | ------ | ------------------------------------ | --------------------------------- |
 | 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
 | 11-clients    | ✅     | [README.md](11-clients/README.md)    | [v0.2.0](11-clients/v0.2.0.md)    |
+| 12-encryption | ✅     | [README.md](12-encryption/README.md) | [v0.3.0](12-encryption/v0.3.0.md) |
 
 ## Versiones (orden cronológico)
 
@@ -73,6 +75,7 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | ------- | ------------- | ------ | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
 | 0.1.0   | 00-foundation | ✅     | Core substrato: infra + registro explícito + auth slim | core-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 | 0.2.0   | 11-clients    | ✅     | Entidad central `clients` en el core: schema + CRUD    | core-v0.2.0 | [11-clients/v0.2.0.md](11-clients/v0.2.0.md)       |
+| 0.3.0   | 12-encryption | ✅     | `EncryptionService` AES-256-GCM en el core             | core-v0.3.0 | [12-encryption/v0.3.0.md](12-encryption/v0.3.0.md) |
 
 ## Decisiones acumuladas (`D-core-NNN`)
 
@@ -103,3 +106,4 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | D-core-023 | Sin `tier` en `clients` (al vender todos son el mismo tier; no especular). `status` (active/paused/offboarded) sí; baja = soft (`offboarded`), sin DELETE físico                                                                                                                                                                                                    | 0.2.0   | —       |
 | D-core-024 | `event_log`/auditoría diferido (BACKLOG); en v0.2.0 los cambios solo se loguean por Pino + correlation_id                                                                                                                                                                                                                                                           | 0.2.0   | —       |
 | D-core-025 | Una sola DB local por ahora (`mapi_v2_local`); e2e corren contra ella limpiando sus filas. `mapi_v2_test` dedicada (con globalSetup) diferida a CI / cuando estorbe                                                                                                                                                                                                 | 0.2.0   | —       |
+| D-core-026 | Encriptación en el core (`EncryptionService` AES-256-GCM, `@Global`), no en un plugin: cripto es infra que varios plugins necesitan. Formato `iv:authTag:ciphertext` idéntico a mapi para que la migración de tokens (intuit v0.2.0) desencripte con la misma `ENCRYPTION_KEY`                                                                                      | 0.3.0   | —       |

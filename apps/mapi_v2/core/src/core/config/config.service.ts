@@ -38,6 +38,10 @@ export class AppConfigService {
     return this.cfg.JWT_SECRET
   }
 
+  get encryptionKey(): string {
+    return this.cfg.ENCRYPTION_KEY
+  }
+
   get isLocal(): boolean {
     return this.cfg.NODE_ENV === 'local'
   }

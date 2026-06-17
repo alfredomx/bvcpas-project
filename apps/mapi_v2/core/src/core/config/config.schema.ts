@@ -22,6 +22,13 @@ export const configSchema = z.object({
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),
   JWT_SECRET: z.string().min(32),
+  // Clave AES-256: 32 bytes en base64. Se valida el largo decodificado al boot.
+  ENCRYPTION_KEY: z
+    .string()
+    .refine(
+      (v) => Buffer.from(v, 'base64').length === 32,
+      'ENCRYPTION_KEY debe ser 32 bytes en base64',
+    ),
 })
 
 export type AppConfig = z.infer<typeof configSchema>

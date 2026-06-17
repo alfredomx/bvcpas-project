@@ -4,6 +4,7 @@ import { AppConfigModule } from '@/core/config/config.module'
 import { DbModule } from '@/core/db/db.module'
 import { RedisModule } from '@/core/redis/redis.module'
 import { QueueModule } from '@/core/queue/queue.module'
+import { EncryptionModule } from '@/core/encryption/encryption.module'
 import { CorrelationIdMiddleware } from '@/common/correlation/correlation-id.middleware'
 import { getCorrelationId } from '@/common/correlation/correlation.context'
 import { HealthModule } from '@/modules/health/health.module'
@@ -30,6 +31,7 @@ import { REGISTRY, registryModules } from '@/registry/registry'
     DbModule,
     RedisModule,
     QueueModule,
+    EncryptionModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport:
