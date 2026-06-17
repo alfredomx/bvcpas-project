@@ -6,7 +6,7 @@ Primera lectura de cualquier chat sobre `mapi_v2`. Alta señal, bajo contexto. E
 
 `mapi_v2` se organiza en **tres categorías**:
 
-- **`core/`** — el **substrato mínimo**. Bootea y funciona solo (`GET /v1/healthz`). Provee SOLO lo que plugins y pipes necesitan para interactuar: config (vars del core), db (conexión Postgres compartida), redis, queue (BullMQ), errores/validación/logger, auth slim (token admin) y el **registro** (cómo algo se monta). Nada de dominio.
+- **`core/`** — el **substrato mínimo** + la **entidad central `clients`** (modelo WordPress). Bootea y funciona solo (`GET /v1/healthz`). Provee lo que plugins y pipes necesitan: config (vars del core), db (conexión Postgres compartida), redis, queue (BullMQ), errores/validación/logger, auth slim (token admin), el **registro** (cómo algo se monta) y `clients` (la entidad de la que todo cuelga). El dominio de cada plugin no entra al core.
 - **`plugins/<plugin>/`** — una **integración de dominio** (Intuit, banco, uncats, etc.). Cada plugin es **dueño de sus tablas, su config, sus errores, sus rutas y sus migraciones**, y se **inserta** en el core. Le agrega capacidades sin tocarlo.
 - **`pipes/<pipe>/`** — un **proceso de fondo sobre BullMQ** (worker que consume/produce una cola). Corre sobre el queue del core. Un pipe puede vivir solo o dentro de un plugin.
 
@@ -43,7 +43,7 @@ apps/mapi_v2/                 ← el HOST. Aquí viven las deps compartidas + el
 │   │   ├── core/             ← config, db, redis, queue
 │   │   ├── common/           ← errores, validación, correlation, auth slim
 │   │   ├── registry/         ← monta la lista explícita de plugins/pipes
-│   │   └── modules/          ← health
+│   │   └── modules/          ← health, 11-clients (entidad central)
 │   └── roadmap/              ← versiones + TDD del core
 ├── plugins/<plugin>/         ← integración de dominio. Solo código + README + roadmap.
 │   ├── src/                  ← su código (core vía servicios inyectados); SUS tablas + SUS migraciones + SU config Zod
@@ -67,7 +67,7 @@ Build/run: `node dist/core/src/main.js` (el host compila todo a `dist/`). Dev: `
 
 1. **Cero reach.** Un plugin/pipe usa la API pública del core + sus propios archivos. NUNCA importa las entrañas del core ni de otro plugin. Lo común se promueve al core **a propósito** (cuando 2 lo necesitan).
 2. **Se hablan por cola + contrato**, no por código.
-3. **Core flaco.** Solo substrato. Dominio (Intuit, bancos, tokens, clientes) NUNCA va al core.
+3. **Core flaco.** Substrato + la **entidad central `clients`** (modelo WordPress: el core es dueño de la entidad de la que todo cuelga). El **dominio de cada plugin** (Intuit, bancos, tokens, sus tablas) NUNCA va al core; los plugins extienden `clients` con su propia tabla llaveada por `client_id`.
 4. **Tests scoped.** En desarrollo corres solo los tests de tu unidad. Cambias el **core** → core + lo que toca esa superficie. Antes de deploy: corrida completa.
 5. **Estado cerrado.** Plugin cerrado = congelado. Su `README.md` (cara pública) es lo único que se lee. Se reabre solo para correcciones.
 
@@ -77,16 +77,16 @@ NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino (reusado de mapi, p
 
 - **Deps compartidas:** un solo `package.json` + `node_modules` en `apps/mapi_v2/` (sin npm workspaces). El host compila y corre core + plugins + pipes en un solo build. Dev runner: `tsc-watch` (no `nest start` — el layout multi-carpeta no lo permite limpio).
 - **El core es dueño de la conexión** a su Postgres propio (`mapi_v2_local` / `mapi_v2_prod`) y de la `DATABASE_URL`.
-- **Cada plugin es dueño de SUS tablas, SUS migraciones y SU seed.** El core no define tablas de dominio. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se define con el primer plugin.)
+- **El core define SOLO la tabla central `clients`** (con su migración). **Cada plugin es dueño de SUS tablas, SUS migraciones y SU seed**, llaveadas por `client_id`. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se define con el primer plugin.)
 
 ## Unidades (índice)
 
-| Unidad           | Tipo   | Estado | Roadmap                                                                   |
-| ---------------- | ------ | ------ | ------------------------------------------------------------------------- |
-| `core`           | core   | 🚧     | [core/roadmap/](core/roadmap/README.md)                                   |
-| `plugins/intuit` | plugin | 📅     | (primer plugin — lleva qbo-client + tokens + clients + config INTUIT\_\*) |
-| `plugins/bank`   | plugin | 📅     | (descarga de banco vía bridge)                                            |
-| `plugins/uncats` | plugin | 📅     | (snapshot uncats + respuestas cliente)                                    |
+| Unidad           | Tipo   | Estado | Roadmap                                                                                            |
+| ---------------- | ------ | ------ | -------------------------------------------------------------------------------------------------- |
+| `core`           | core   | 🚧     | [core/roadmap/](core/roadmap/README.md)                                                            |
+| `plugins/intuit` | plugin | 📅     | (primer plugin — consume `clients` del core; dueño de `intuit_tokens` + OAuth + config INTUIT\_\*) |
+| `plugins/bank`   | plugin | 📅     | (descarga de banco vía bridge)                                                                     |
+| `plugins/uncats` | plugin | 📅     | (snapshot uncats + respuestas cliente)                                                             |
 
 ## Cómo arranca un chat por unidad
 

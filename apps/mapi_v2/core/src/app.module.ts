@@ -7,6 +7,7 @@ import { QueueModule } from '@/core/queue/queue.module'
 import { CorrelationIdMiddleware } from '@/common/correlation/correlation-id.middleware'
 import { getCorrelationId } from '@/common/correlation/correlation.context'
 import { HealthModule } from '@/modules/health/health.module'
+import { ClientsModule } from '@/modules/11-clients/clients.module'
 import { AuthModule } from '@/common/auth/auth.module'
 import { REGISTRY, registryModules } from '@/registry/registry'
 
@@ -43,6 +44,7 @@ import { REGISTRY, registryModules } from '@/registry/registry'
       },
     }),
     AuthModule,
+    ClientsModule,
     HealthModule,
     // Plugins/pipes del registro.
     ...registryModules(REGISTRY),
