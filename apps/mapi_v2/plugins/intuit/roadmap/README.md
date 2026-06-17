@@ -13,8 +13,9 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 **Versión `package.json` del host: compartida** (el plugin no tiene package.json propio; vive en el host). El plugin versiona con tags `intuit-vX.Y.Z`.
 
 - `20-intuit-oauth` ✅ (intuit v0.1.0 — OAuth client-first + `intuit_tokens` + refresh + `IntuitApiService`). **Cerrado 2026-06-17**, tag `intuit-v0.1.0`.
+- `21-migration` ✅ (intuit v0.2.0 — migración de clients + tokens reales del prod viejo, re-cifrados con la `ENCRYPTION_KEY` nueva). **Cerrado 2026-06-17**, tag `intuit-v0.2.0`.
 
-**Próximo (después de v0.1.0):** `intuit v0.2.0` — migración de clientes + tokens reales del prod viejo (desencripta con la `ENCRYPTION_KEY` de mapi). Luego connectors/CDC (`intuit v0.3.0+`).
+**Próximo (después de v0.2.0):** connectors / CDC / carga histórica (`intuit v0.3.0+`).
 
 ## Versionado y estados
 
@@ -33,18 +34,25 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | Carpeta         | Status | TDD                                    | Versiones                           |
 | --------------- | ------ | -------------------------------------- | ----------------------------------- |
 | 20-intuit-oauth | ✅     | [README.md](20-intuit-oauth/README.md) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+| 21-migration    | ✅     | [README.md](21-migration/README.md)    | [v0.2.0](21-migration/v0.2.0.md)    |
 
 ## Versiones (orden cronológico)
 
 | Versión | Módulo          | Estado | Tema                                           | Tag           | Archivo                             |
 | ------- | --------------- | ------ | ---------------------------------------------- | ------------- | ----------------------------------- |
 | 0.1.0   | 20-intuit-oauth | ✅     | OAuth client-first + tokens + IntuitApiService | intuit-v0.1.0 | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
+| 0.2.0   | 21-migration    | ✅     | migración clients + intuit_tokens del prod     | intuit-v0.2.0 | [v0.2.0](21-migration/v0.2.0.md)    |
 
 ## Decisiones acumuladas (`D-intuit-NNN`)
 
-| ID           | Decisión                                                                                                                                                                       | Versión | Diverge |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------- |
-| D-intuit-001 | OAuth **client-first**: el `client` se crea antes en el core (`POST /v1/clients`); `connect` recibe `clientId` y el callback solo adjunta los tokens                           | 0.1.0   | Sí      |
-| D-intuit-002 | El plugin es dueño de `intuit_tokens` (`client_id` FK → core clients, `realm_id` único, tokens encriptados con el `EncryptionService` del core)                                | 0.1.0   | —       |
-| D-intuit-003 | 1 client = 1 compañía QBO (`client_id` único). Varias compañías de una persona se agrupan por `owner` (tabla futura en core, aditiva, trigger W9/cruce), no se fusionan realms | 0.1.0   | —       |
-| D-intuit-004 | El callback no sobreescribe; `GET company-info` expone la info de QBO mapeada para que el frontend ofrezca overwrite → `PATCH /v1/clients/:id`. mapi nunca sobreescribe solo   | 0.1.0   | Sí      |
+| ID           | Decisión                                                                                                                                                                            | Versión | Diverge |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| D-intuit-001 | OAuth **client-first**: el `client` se crea antes en el core (`POST /v1/clients`); `connect` recibe `clientId` y el callback solo adjunta los tokens                                | 0.1.0   | Sí      |
+| D-intuit-002 | El plugin es dueño de `intuit_tokens` (`client_id` FK → core clients, `realm_id` único, tokens encriptados con el `EncryptionService` del core)                                     | 0.1.0   | —       |
+| D-intuit-003 | 1 client = 1 compañía QBO (`client_id` único). Varias compañías de una persona se agrupan por `owner` (tabla futura en core, aditiva, trigger W9/cruce), no se fusionan realms      | 0.1.0   | —       |
+| D-intuit-004 | El callback no sobreescribe; `GET company-info` expone la info de QBO mapeada para que el frontend ofrezca overwrite → `PATCH /v1/clients/:id`. mapi nunca sobreescribe solo        | 0.1.0   | Sí      |
+| D-intuit-005 | Convención de migraciones por plugin: una sola DB, un solo historial; el `drizzle.config` del host agrega los schemas de plugins por glob; cada plugin es dueño de su `*.schema.ts` | 0.1.0   | —       |
+| D-intuit-006 | Realm ya ligado a otro cliente en el callback → `409 INTUIT_REALM_CONFLICT` (no se sobreescribe en silencio)                                                                        | 0.1.0   | —       |
+| D-intuit-007 | La migración de datos es un script one-off **gitignored** (`apps/mapi_v2/scripts/`), no código del repo; `.gitignore` anclado a esa ruta. Lógica documentada en el roadmap          | 0.2.0   | —       |
+| D-intuit-008 | Solo se migran los campos **genéricos** de `clients` (los del core); los campos QBO/uncats viejos se traerán con el plugin que los posea (modelo WordPress)                         | 0.2.0   | —       |
+| D-intuit-009 | Tokens **descifrados con la llave vieja + re-cifrados con la nueva** (las `ENCRYPTION_KEY` difieren); mismo formato `iv:authTag:ciphertext` base64 → mapi_v2 los lee sin cambios    | 0.2.0   | —       |
