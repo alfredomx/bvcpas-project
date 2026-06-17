@@ -31,6 +31,14 @@ export default tseslint.config(
     },
   },
   {
+    // Tipos QBO "vendored" (extraídos de la doc de Intuit Developer): el `any`
+    // en campos no modelados es de origen; no se reescribe la definición.
+    files: ['plugins/intuit/src/types/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
+  {
     files: ['test/**/*.ts', '**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
