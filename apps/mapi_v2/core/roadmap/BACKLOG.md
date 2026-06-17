@@ -4,10 +4,16 @@ Cosas diferidas a propósito. Cuando llegue el trigger, se retoman y se mueven a
 
 > Cuando difieras algo durante una versión, además de mencionarlo en su `vX.Y.Z.md`, agrega una línea aquí agrupada por su trigger.
 
-## Bloqueado por: primer plugin real (`bank`)
+## Bloqueado por: primer plugin real (`intuit`)
 
-- [ ] Validar el plugin-loader (registro) y la API pública del core end-to-end con un plugin que produzca/consuma de verdad.
-- [ ] **Errores de plugin:** verificar que el primer plugin declara sus `DomainError` con `code` + `status` propio (D-core-011) y que el `DomainErrorFilter` los homogeniza bien (status correcto, `correlation_id` en el body). No hay registro central de códigos — cada plugin es dueño de los suyos.
+- [ ] **`plugins/intuit` — primer plugin (su propia unidad/roadmap).** Lleva todo lo que salió del core: qbo-client (HTTP a QBO V3 + refresh), OAuth, tokens, tabla `clients`, config `INTUIT_*` (con su Zod propio), y el seed de clientes/credenciales (port de mapi). Valida la API pública del core y el contrato de inserción end-to-end. (D-core-015)
+- [ ] **Convención de migraciones por plugin.** Un solo Postgres con tablas de varios plugins necesita una convención (carpetas de migración por plugin / orden). Se aterriza con el primer plugin que cree tablas (intuit).
+- [ ] **Errores de plugin:** verificar que `intuit` declara sus `DomainError` con `code` + `status` propio (D-core-011) y que el `DomainErrorFilter` los homogeniza bien (status correcto, `correlation_id` en el body). No hay registro central de códigos.
+
+## Bloqueado por: segundo plugin real
+
+- [ ] **Loader dinámico (auto-discovery).** Hoy el registro es una lista explícita (D-core-014). Endurecer a descubrimiento dinámico SOLO si con 2 plugins reales (intuit + bank) el contrato común ya está claro y la lista explícita estorba.
+- [ ] **Health por plugin.** Agregar al `/v1/healthz` los probes opcionales que cada plugin/pipe contribuya vía el registro. Hoy healthz solo checa el core (db + redis).
 
 ## Bloqueado por: financiamiento de multiusuario
 

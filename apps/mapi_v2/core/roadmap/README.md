@@ -14,9 +14,11 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 **Versión `package.json`: `0.1.0`.**
 
-- `00-foundation` 🚧 (v0.1.0 — scaffold booteable solo + port del core desde mapi + DB propia/seed).
+- `00-foundation` 🚧 (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim).
 
-**Próximo (cuando cierre la fundación):** plugin-loader (registro) + primer plugin `bank`.
+Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger. Falta: registro explícito (cómo se monta un plugin/pipe) + jwt-verify slim.
+
+**Próximo (cuando cierre la fundación):** `plugins/intuit` — **primer plugin** (qbo-client + tokens + clients + config `INTUIT_*`). Todo lo de QuickBooks vive en el plugin, no en el core.
 
 ## Estructura de `roadmap/`
 
@@ -67,18 +69,26 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo        | Estado | Tema                                                       | Tag         | Archivo                                            |
-| ------- | ------------- | ------ | ---------------------------------------------------------- | ----------- | -------------------------------------------------- |
-| 0.1.0   | 00-foundation | 🚧     | Scaffold core booteable solo + port infra + DB propia/seed | (pendiente) | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
+| Versión | Módulo        | Estado | Tema                                                   | Tag         | Archivo                                            |
+| ------- | ------------- | ------ | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
+| 0.1.0   | 00-foundation | 🚧     | Core substrato: infra + registro explícito + auth slim | (pendiente) | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 
 ## Decisiones acumuladas (`D-core-NNN`)
 
-| ID         | Decisión                                                                                      | Versión | Diverge |
-| ---------- | --------------------------------------------------------------------------------------------- | ------- | ------- |
-| D-core-001 | Sistema host+plugins: el core bootea solo y NUNCA importa un plugin por nombre (los descubre) | 0.1.0   | —       |
-| D-core-002 | `mapi` congelado como demo; la infra se **porta** pieza por pieza, no se toca mapi            | 0.1.0   | —       |
-| D-core-003 | Stack reusado de mapi probado (NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino)  | 0.1.0   | No      |
-| D-core-004 | `tsc + tsc-alias` directo, sin `nest build` (heredado mapi D-mapi-001)                        | 0.1.0   | No      |
-| D-core-005 | Prefijo global `/v1` (heredado mapi D-mapi-002)                                               | 0.1.0   | No      |
-| D-core-006 | Puerto `4200` por defecto — coexiste con mapi (local 4000 / prod docker 4100)                 | 0.1.0   | No      |
-| D-core-007 | Nombre de paquete `mapi_v2-core` (etiqueta privada, no se publica)                            | 0.1.0   | No      |
+| ID         | Decisión                                                                                                                                                                                                                                                                                                                                                       | Versión | Diverge |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- |
+| D-core-001 | Sistema core+plugins+pipes: el core bootea solo y NUNCA importa un plugin/pipe por nombre; los monta por registro                                                                                                                                                                                                                                              | 0.1.0   | —       |
+| D-core-002 | `mapi` congelado como demo; la infra se **porta** pieza por pieza, no se toca mapi                                                                                                                                                                                                                                                                             | 0.1.0   | —       |
+| D-core-003 | Stack reusado de mapi probado (NestJS 11 + BullMQ 5 + Drizzle + ioredis + nestjs-zod + Pino)                                                                                                                                                                                                                                                                   | 0.1.0   | No      |
+| D-core-004 | `tsc + tsc-alias` directo, sin `nest build` (heredado mapi D-mapi-001)                                                                                                                                                                                                                                                                                         | 0.1.0   | No      |
+| D-core-005 | Prefijo global `/v1` (heredado mapi D-mapi-002)                                                                                                                                                                                                                                                                                                                | 0.1.0   | No      |
+| D-core-006 | Puerto `4200` por defecto — coexiste con mapi (local 4000 / prod docker 4100)                                                                                                                                                                                                                                                                                  | 0.1.0   | No      |
+| D-core-007 | Nombre de paquete `mapi_v2-core` (etiqueta privada, no se publica)                                                                                                                                                                                                                                                                                             | 0.1.0   | No      |
+| D-core-008 | QueueModule registra SOLO la conexión raíz de BullMQ; las colas de dominio las declara cada plugin/pipe                                                                                                                                                                                                                                                        | 0.1.0   | —       |
+| D-core-009 | `REDIS_URL` con índice db **3** (distinto al de mapi); evita colisión de colas en el Redis local                                                                                                                                                                                                                                                               | 0.1.0   | No      |
+| D-core-010 | `REDIS_CLIENT` (ioredis raw) separado de BullMQ; cierra al shutdown como el pool de Postgres                                                                                                                                                                                                                                                                   | 0.1.0   | No      |
+| D-core-011 | `DomainError` carga su propio `status` HTTP; sin mapa central `STATUS_BY_CODE` (el core es ciego a los códigos de los plugins)                                                                                                                                                                                                                                 | 0.1.0   | Sí      |
+| D-core-012 | `correlation_id` en cada log de Pino y en el cuerpo de cada error (cruzar error visto vs logs)                                                                                                                                                                                                                                                                 | 0.1.0   | No      |
+| D-core-013 | Tres categorías: **core** (substrato) / **plugins** (dominio: dueños de sus tablas, config, errores, migraciones) / **pipes** (procesos sobre BullMQ). Se montan en el core por el registro                                                                                                                                                                    | 0.1.0   | —       |
+| D-core-014 | **Manifiesto uniforme `Unit` + registro con validación al boot** (inspirado en c9/architect). Cada plugin/pipe exporta `{ name, kind, module, config }`; el registro es una lista explícita que valida la config Zod al arranque (fail-fast claro) y monta los módulos. Auto-discovery diferido al 2º plugin (el valor es el manifiesto, no el descubrimiento) | 0.1.0   | —       |
+| D-core-015 | `qbo-client`/Intuit NO es core → es el **primer plugin** (`plugins/intuit`). El core no lleva config `INTUIT_*` ni tabla `clients`; eso vive en el plugin con su Zod y sus migraciones                                                                                                                                                                         | 0.1.0   | —       |

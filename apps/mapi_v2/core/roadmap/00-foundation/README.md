@@ -1,41 +1,48 @@
 # 00-foundation (core) — TDD vivo
 
-> Módulo de **infraestructura** del core. No hace talacha; deja el host booteable solo y la infra lista para que los plugins la consuman.
+> Módulo de **substrato** del core. No hace dominio; deja el host booteable solo y la infra mínima lista para que plugins y pipes se monten encima.
 
 ## Qué resuelve
 
-Que un chat fresco pueda arrancar el core de `mapi_v2`, conectarse a su DB/Redis propios, y tener todas las piezas de infra (config, db, queue, errores, validación, logger, qbo-client, plugin-bridge, jwt-verify, plugin-loader) disponibles — portadas desde `mapi` (probado), no reinventadas.
+Que un chat fresco pueda arrancar el core de `mapi_v2`, conectarse a su DB/Redis propios, y tener el substrato mínimo (config, db, redis, queue, errores, validación, logger, registro explícito, auth slim) — portado desde `mapi` (probado), no reinventado. **Nada de dominio vive aquí** (Intuit, bancos, tokens, clientes son plugins).
 
 ## Alcance del módulo
 
-| Pieza         | Origen (mapi)                        | Qué es                                         |
-| ------------- | ------------------------------------ | ---------------------------------------------- |
-| scaffold      | bootstrap mapi                       | NestJS 11 + tooling + health booteable solo    |
-| config        | `core/config`                        | env validado por Zod                           |
-| db            | `core/db`                            | DbModule `@Global()` (Drizzle + postgres-js)   |
-| queue         | `core/queue`                         | QueueModule reusable (BullMQ + ioredis)        |
-| errors        | `common/errors`                      | DomainErrorFilter + DomainError base           |
-| validation    | `common/pipes`                       | ZodValidationPipe                              |
-| logger        | `nestjs-pino` + `common/correlation` | Pino + correlation_id                          |
-| qbo-client    | `20-intuit-oauth` (extraído)         | cliente HTTP a QBO con refresh transparente    |
-| plugin-bridge | `23-plugin-bridge` (extraído)        | gateway WS hacia el plugin de navegador        |
-| jwt-verify    | `10-core-auth` (slim)                | guard que protege endpoints con el token admin |
-| plugin-loader | nuevo (no existe en mapi)            | descubre y monta los plugins del registro      |
+| Pieza      | Origen (mapi)                        | Qué es                                                                                         |
+| ---------- | ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| scaffold   | bootstrap mapi                       | NestJS 11 + tooling + health booteable solo ✅                                                 |
+| config     | `core/config`                        | env del **core** validado por Zod (no vars de plugin) ✅                                       |
+| db         | `core/db`                            | DbModule `@Global()` — conexión Postgres compartida ✅                                         |
+| redis      | `core/auth/redis`                    | `REDIS_CLIENT` (ioredis) para health/locks/cache ✅                                            |
+| queue      | `core/queue`                         | QueueModule (BullMQ root) — substrato de los pipes ✅                                          |
+| errors     | `common/errors`                      | DomainError (status propio) + DomainErrorFilter global ✅                                      |
+| validation | `common/pipes`                       | ZodValidationPipe (por-ruta) ✅                                                                |
+| logger     | `nestjs-pino` + `common/correlation` | Pino + correlation_id (en logs y en errores) ✅                                                |
+| registro   | nuevo (idea de c9/architect)         | contrato `Unit` (manifiesto uniforme) + registro que valida config al boot y monta la lista 📅 |
+| jwt-verify | `10-core-auth` (slim)                | guard que protege endpoints con el token admin 📅                                              |
+
+## Lo que NO va en el core (se mudó a plugin)
+
+- **qbo-client / Intuit OAuth / tokens / tabla `clients` / config `INTUIT_*`** → `plugins/intuit` (primer plugin). El core no sabe de QuickBooks.
+- **bridge** (WS al plugin de navegador) → del plugin que lo necesite (Intuit interno / bank), o se promueve al core si 2 plugins lo comparten.
+- **seed de clientes/credenciales** → del plugin Intuit (los "clientes" son de QBO).
 
 ## Estructura de destino
 
 ```
 apps/mapi_v2/core/src/
-├── (infra de la tabla de arriba)
-└── plugin-loader/   ← descubre plugins; el core NUNCA los importa por nombre
+├── core/        ← config, db, redis, queue
+├── common/      ← errors, pipes (validación), correlation, auth (jwt-verify slim)
+├── modules/     ← health
+└── registry/    ← monta la lista explícita de plugins/pipes (el core nunca los importa por nombre)
 ```
 
-## DB propia
+## DB
 
-`mapi_v2_local` / `mapi_v2_prod`, con seed único de referencia (clientes + credenciales) copiado de mapi. El motor es dueño de su data.
+El core es dueño de la **conexión** a `mapi_v2_local` / `mapi_v2_prod`. **No define tablas de dominio.** Cada plugin trae sus tablas + sus migraciones. (Convención de migraciones por plugin sobre un mismo Postgres: pendiente en BACKLOG, se aterriza con el primer plugin.)
 
 ## Versiones
 
-| Versión | Estado | Tema                                                       |
-| ------- | ------ | ---------------------------------------------------------- |
-| v0.1.0  | 🚧     | Scaffold core booteable solo + port infra + DB propia/seed |
+| Versión | Estado | Tema                                                   |
+| ------- | ------ | ------------------------------------------------------ |
+| v0.1.0  | 🚧     | Core substrato: infra + registro explícito + auth slim |
