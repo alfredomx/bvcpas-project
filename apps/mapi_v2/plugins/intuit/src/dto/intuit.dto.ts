@@ -20,3 +20,16 @@ export const listQuerySchema = z.object({
   maxResults: z.coerce.number().int().min(1).max(1000).optional(),
 })
 export type ListQuery = z.infer<typeof listQuerySchema>
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'formato YYYY-MM-DD')
+
+/** Query del report derivado `GET .../reports/uncat-amas`. */
+export const uncatAmasQuerySchema = z.object({
+  start_date: isoDate.optional(),
+  end_date: isoDate.optional(),
+  accounting_method: z.enum(['Accrual', 'Cash']).optional(),
+  category: z
+    .enum(['uncategorized_expense', 'uncategorized_income', 'ask_my_accountant'])
+    .optional(),
+})
+export type UncatAmasQuery = z.infer<typeof uncatAmasQuerySchema>

@@ -15,8 +15,9 @@ Proceso, índice y decisiones del **plugin Intuit** (QuickBooks Online) de `mapi
 - `20-intuit-oauth` ✅ (intuit v0.1.0 — OAuth client-first + `intuit_tokens` + refresh + `IntuitApiService`). **Cerrado 2026-06-17**, tag `intuit-v0.1.0`.
 - `21-migration` ✅ (intuit v0.2.0 — migración de clients + tokens reales del prod viejo, re-cifrados con la `ENCRYPTION_KEY` nueva). **Cerrado 2026-06-17**, tag `intuit-v0.2.0`.
 - `22-typed-reads` ✅ (intuit v0.3.0 — endpoints GET tipados por type de QBO: 30 entidades list+by-id, exchange-rate, 20 reports. Read-through, GET-only, rutas `/v1/intuit/:clientId/...`). **Cerrado 2026-06-17**, tag `intuit-v0.3.0` · smoke en vivo 49/51.
+- `23-uncat-amas` ✅ (intuit v0.4.0 — report derivado uncats + AMA sobre `TransactionList`, read-through GET-only). **Cerrado 2026-06-17**, tag `intuit-v0.4.0` · smoke en vivo 51 filas.
 
-**Próximo (después de v0.3.0):** connectors / persistencia / backfill / CDC. Mutaciones (POST/PATCH/DELETE) a pedido, una por una.
+**Próximo (después de v0.4.0):** connectors / persistencia / backfill / CDC · snapshot de uncats para notas del cliente. Mutaciones (POST/PATCH/DELETE) a pedido, una por una.
 
 ## Versionado y estados
 
@@ -37,6 +38,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 20-intuit-oauth | ✅     | [README.md](20-intuit-oauth/README.md) | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
 | 21-migration    | ✅     | [README.md](21-migration/README.md)    | [v0.2.0](21-migration/v0.2.0.md)    |
 | 22-typed-reads  | ✅     | [README.md](22-typed-reads/README.md)  | [v0.3.0](22-typed-reads/v0.3.0.md)  |
+| 23-uncat-amas   | ✅     | [README.md](23-uncat-amas/README.md)   | [v0.4.0](23-uncat-amas/v0.4.0.md)   |
 
 ## Versiones (orden cronológico)
 
@@ -45,6 +47,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | 0.1.0   | 20-intuit-oauth | ✅     | OAuth client-first + tokens + IntuitApiService | intuit-v0.1.0 | [v0.1.0](20-intuit-oauth/v0.1.0.md) |
 | 0.2.0   | 21-migration    | ✅     | migración clients + intuit_tokens del prod     | intuit-v0.2.0 | [v0.2.0](21-migration/v0.2.0.md)    |
 | 0.3.0   | 22-typed-reads  | ✅     | endpoints GET tipados (entidades + reports)    | intuit-v0.3.0 | [v0.3.0](22-typed-reads/v0.3.0.md)  |
+| 0.4.0   | 23-uncat-amas   | ✅     | report derivado uncats + AMA                   | intuit-v0.4.0 | [v0.4.0](23-uncat-amas/v0.4.0.md)   |
 
 ## Decisiones acumuladas (`D-intuit-NNN`)
 
@@ -66,3 +69,7 @@ SemVer `intuit-MAJOR.MINOR.PATCH`, independiente del core y de otros plugins. Mi
 | D-intuit-014 | `by-id` uniforme por type aunque QBO rechace algunos (Preferences singleton, TaxCodes de sistema → 400 passthrough); se prefiere uniformidad sobre casos especiales                   | 0.3.0   | —       |
 | D-intuit-015 | `src/types/*.ts` son tipos QBO **vendored** (doc de Intuit); `any` permitido ahí vía override de eslint scoped, sin reescribir las definiciones                                       | 0.3.0   | —       |
 | D-intuit-016 | Rutas **sin segmento `clients`**: `/v1/intuit/:clientId/...` (el plugin ya cuelga de `/v1/intuit`); `company-info` de v0.1.0 conserva `clients` por ahora                             | 0.3.0   | —       |
+| D-intuit-017 | Reports **derivados** (lógica propia sobre un report nativo) en service/controller separados de los passthrough; no tocan el catálogo `QBO_REPORTS` ni su test 1:1                    | 0.4.0   | —       |
+| D-intuit-018 | Mapeo **posicional** del `TransactionList` portado del mapi viejo (probado); supuesto: orden de columnas estable, validado por smoke en vivo                                          | 0.4.0   | —       |
+| D-intuit-019 | `uncat-amas`: salida **plana** con `category` (3 buckets) + filtro `?category`; conteos/resúmenes y snapshot para notas del cliente se difieren                                       | 0.4.0   | —       |
+| D-intuit-020 | Aplanado defensivo de filas del report (`collectLeafRows`): recoge hojas con `ColData`, soporta report plano o agrupado por secciones                                                 | 0.4.0   | —       |
