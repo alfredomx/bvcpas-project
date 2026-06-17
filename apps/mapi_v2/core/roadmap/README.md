@@ -14,9 +14,9 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 **Versión `package.json`: `0.1.0`.**
 
-- `00-foundation` 🚧 (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim).
+- `00-foundation` ✅ (v0.1.0 — el core como **substrato mínimo**: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim). **Cerrado 2026-06-17**, tag `core-v0.1.0`.
 
-Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`), infra de tests (jest) y auth slim (`AdminGuard` global + `@Public`). **Listo para cerrar v0.1.0** (bump + merge + tag).
+Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, registro explícito (`ModuleDef` + fail-fast + plugin `_example`), infra de tests (jest) y auth slim (`AdminGuard` global + `@Public`).
 
 **Próximo (cuando cierre la fundación):** `plugins/intuit` — **primer plugin** (qbo-client + tokens + clients + config `INTUIT_*`). Todo lo de QuickBooks vive en el plugin, no en el core.
 
@@ -26,7 +26,7 @@ Hecho: config + db, queue (BullMQ + Redis), errores + validación + logger, regi
 core/roadmap/
 ├── README.md          ← este archivo (proceso + índice + decisiones del core)
 ├── BACKLOG.md         ← diferidos por trigger
-└── 00-foundation/     ← scaffold + port del core 🚧 v0.1.0
+└── 00-foundation/     ← scaffold + port del core ✅ v0.1.0
     ├── README.md      ← TDD vivo
     └── v0.1.0.md      ← bitácora de la versión activa
 ```
@@ -65,13 +65,13 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 
 | Carpeta       | Status | TDD                                  | Versiones                         |
 | ------------- | ------ | ------------------------------------ | --------------------------------- |
-| 00-foundation | 🚧     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
+| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
 
 ## Versiones (orden cronológico)
 
 | Versión | Módulo        | Estado | Tema                                                   | Tag         | Archivo                                            |
 | ------- | ------------- | ------ | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
-| 0.1.0   | 00-foundation | 🚧     | Core substrato: infra + registro explícito + auth slim | (pendiente) | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
+| 0.1.0   | 00-foundation | ✅     | Core substrato: infra + registro explícito + auth slim | core-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
 
 ## Decisiones acumuladas (`D-core-NNN`)
 

@@ -45,4 +45,4 @@ El core es dueño de la **conexión** a `mapi_v2_local` / `mapi_v2_prod`. **No d
 
 | Versión | Estado | Tema                                                   |
 | ------- | ------ | ------------------------------------------------------ |
-| v0.1.0  | 🚧     | Core substrato: infra + registro explícito + auth slim |
+| v0.1.0  | ✅     | Core substrato: infra + registro explícito + auth slim |
