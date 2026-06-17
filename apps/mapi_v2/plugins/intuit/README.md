@@ -30,7 +30,7 @@ Conecta la cuenta de QuickBooks Online de un cliente (OAuth) y deja que mapi_v2 
 
 **Report derivado (v0.4.0, GET-only):** `uncat-amas` arma sobre `TransactionList` la lista de transacciones sin categorizar (expense/income) + "Ask My Accountant" — ver [roadmap del módulo](roadmap/23-uncat-amas/README.md). Query: `start_date`, `end_date`, `accounting_method`, `category` (opcional).
 
-**Lecturas tipadas (v0.3.0, GET-only, read-through):** 30 entidades (`accounts`, `bills`, `invoices`, `customers`, `vendors`, … — ver [roadmap del módulo](roadmap/22-typed-reads/README.md)) con list + by-id, y 20 reports (`profit-and-loss`, `balance-sheet`, `general-ledger`, …). Listas paginan con `startPosition`/`maxResults`. No hay POST/PATCH/DELETE: las mutaciones se agregan a pedido.
+**Lecturas tipadas (v0.3.0, GET-only, read-through):** 30 entidades (`accounts`, `bills`, `invoices`, `customers`, `vendors`, … — ver [roadmap del módulo](roadmap/22-typed-reads/README.md)) con list + by-id, y 20 reports (`profit-and-loss`, `balance-sheet`, `general-ledger`, …). Las listas **auto-paginan** (traen todo; tope 20 000 → `INTUIT_TOO_MANY_RECORDS`); `startPosition`/`maxResults` quedan como override de una página (v0.5.0). No hay POST/PATCH/DELETE: las mutaciones se agregan a pedido.
 
 ## Config (env vars)
 
