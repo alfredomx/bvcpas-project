@@ -55,3 +55,18 @@ export class IntuitBadRequestError extends DomainError {
     super(message, details)
   }
 }
+
+/**
+ * Una lista auto-paginada superó el tope de seguridad. No se trunca en silencio:
+ * el caller debe acotar (fechas/filtro) o usar paginación manual / backfill.
+ */
+export class IntuitTooManyRecordsError extends DomainError {
+  readonly code = 'INTUIT_TOO_MANY_RECORDS'
+  readonly status = 400
+  constructor(entity: string, cap: number) {
+    super(
+      `La lista de '${entity}' supera el tope de ${cap} registros; acota el rango/filtro o usa paginación manual (startPosition/maxResults).`,
+      { entity, cap },
+    )
+  }
+}
