@@ -3,6 +3,7 @@ import { InjectQueue, Processor, WorkerHost } from '@nestjs/bullmq'
 import { Job, Queue, QueueEvents } from 'bullmq'
 import { AppConfigService } from '@/core/config/config.service'
 import { connectionFromUrl } from '@/core/queue/queue.module'
+import { QueueBoardRegistry } from '@/core/queue/queue-board.registry'
 import { BankDownloadService } from './bank-download.service'
 import { BankSessionService } from './bank-session.service'
 import type { ProgressFn } from './bank-download.types'
@@ -95,10 +96,14 @@ export class BankDownloadQueueService implements OnModuleDestroy {
   constructor(
     @InjectQueue(BANK_DOWNLOAD_QUEUE) private readonly queue: Queue,
     cfg: AppConfigService,
+    board: QueueBoardRegistry,
   ) {
     this.events = new QueueEvents(BANK_DOWNLOAD_QUEUE, {
       connection: connectionFromUrl(cfg.redisUrl),
     })
+    // Da de alta la cola en el dashboard del core (bull-board). Cero-reach: el
+    // core no conoce `bank-download`; este plugin lo registra.
+    board.register(BANK_DOWNLOAD_QUEUE)
   }
 
   /** Encola `job` con nombre `label` y devuelve su resultado al completarse. */

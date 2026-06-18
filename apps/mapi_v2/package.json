@@ -1,6 +1,6 @@
 {
   "name": "mapi_v2",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "mapi_v2 - host (core + plugins + pipes). Deps compartidas; el core compila y monta los plugins/pipes del registro.",
   "private": true,
   "license": "UNLICENSED",
@@ -27,6 +27,8 @@
     "test:e2e": "jest --config ./test/_setup/jest-e2e.json --runInBand --forceExit"
   },
   "dependencies": {
+    "@bull-board/api": "^8.0.0",
+    "@bull-board/express": "^8.0.0",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",

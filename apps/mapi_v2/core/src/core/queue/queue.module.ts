@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common'
+import { Global, Module } from '@nestjs/common'
 import { BullModule } from '@nestjs/bullmq'
 import { AppConfigModule } from '@/core/config/config.module'
 import { AppConfigService } from '@/core/config/config.service'
+import { QueueBoardRegistry } from './queue-board.registry'
 
 /**
  * Convierte una REDIS_URL (`redis://[user:pass@]host:port/db`) en las opciones
@@ -32,7 +33,11 @@ export function connectionFromUrl(redisUrl: string): {
  * ninguna cola de dominio (`bank-download`, etc.): esas pertenecen a cada
  * plugin, que las declara con `BullModule.registerQueue(...)` en su propio
  * módulo. El core provee la conexión; el plugin provee sus colas.
+ *
+ * `@Global` + exporta el `QueueBoardRegistry`: cada plugin/pipe con cola registra
+ * su nombre ahí (cero-reach) para que el bootstrap monte bull-board con todas.
  */
+@Global()
 @Module({
   imports: [
     BullModule.forRootAsync({
@@ -43,6 +48,7 @@ export function connectionFromUrl(redisUrl: string): {
       }),
     }),
   ],
-  exports: [BullModule],
+  providers: [QueueBoardRegistry],
+  exports: [BullModule, QueueBoardRegistry],
 })
 export class QueueModule {}
