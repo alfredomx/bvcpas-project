@@ -1,6 +1,7 @@
 import 'reflect-metadata'
 import 'dotenv/config'
 import { NestFactory } from '@nestjs/core'
+import { WsAdapter } from '@nestjs/platform-ws'
 import { Logger as PinoNestLogger } from 'nestjs-pino'
 import { AppModule } from './app.module'
 import { AppConfigService } from '@/core/config/config.service'
@@ -30,6 +31,8 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('v1')
   app.enableCors()
   app.useGlobalFilters(new DomainErrorFilter())
+  // El plugin `bridge` usa un WebSocketGateway sobre `ws` (no socket.io).
+  app.useWebSocketAdapter(new WsAdapter(app))
   app.enableShutdownHooks()
 
   const cfg = app.get(AppConfigService)
