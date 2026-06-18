@@ -1,7 +1,7 @@
 import type { DynamicModule, Type } from '@nestjs/common'
 import { intuitPlugin } from '@plugins/intuit/src'
 import { bankCredentialsPlugin } from '@plugins/bank-credentials/src'
-import { bridgePlugin } from '@plugins/bridge/src'
+import { kiroBridgePlugin } from '@plugins/kiro-bridge/src'
 import type { ModuleDef } from './module-def'
 
 /**
@@ -14,7 +14,7 @@ import type { ModuleDef } from './module-def'
  *
  * `intuit` es el primer plugin real (reemplazó al `_example` de la fundación).
  */
-export const REGISTRY: ModuleDef[] = [intuitPlugin, bankCredentialsPlugin, bridgePlugin]
+export const REGISTRY: ModuleDef[] = [intuitPlugin, bankCredentialsPlugin, kiroBridgePlugin]
 
 /**
  * Valida al boot la config (Zod) de cada plugin/pipe contra el env. Junta

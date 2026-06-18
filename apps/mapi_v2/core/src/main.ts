@@ -31,7 +31,7 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix('v1')
   app.enableCors()
   app.useGlobalFilters(new DomainErrorFilter())
-  // El plugin `bridge` usa un WebSocketGateway sobre `ws` (no socket.io).
+  // El plugin `kiro-bridge` usa un WebSocketGateway sobre `ws` (no socket.io).
   app.useWebSocketAdapter(new WsAdapter(app))
   app.enableShutdownHooks()
 

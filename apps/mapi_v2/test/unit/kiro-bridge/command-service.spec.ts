@@ -1,9 +1,9 @@
-import { BridgeCommandService } from '@plugins/bridge/src/bridge-command.service'
+import { BridgeCommandService } from '@plugins/kiro-bridge/src/bridge-command.service'
 import {
   BridgeCommandTimeoutError,
   BridgeNotConnectedError,
-} from '@plugins/bridge/src/bridge.errors'
-import type { BridgeTransport } from '@plugins/bridge/src/bridge.internal-types'
+} from '@plugins/kiro-bridge/src/bridge.errors'
+import type { BridgeTransport } from '@plugins/kiro-bridge/src/bridge.internal-types'
 
 function svc(): BridgeCommandService {
   const s = new BridgeCommandService()

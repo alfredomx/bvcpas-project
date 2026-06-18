@@ -1,8 +1,8 @@
 /**
  * Contrato del bridge mapi↔kiro (D-core-027). Define el **protocolo compartido**
- * (comandos/resultados/pasos DOM) + el **puerto**. El plugin `bridge` lo
+ * (comandos/resultados/pasos DOM) + el **puerto**. El plugin `kiro-bridge` lo
  * implementa y lo liga `@Global`; los consumidores (`bank-downloader`) inyectan
- * `BRIDGE_COMMAND_PORT` y usan estos tipos, sin importar el plugin `bridge`.
+ * `BRIDGE_COMMAND_PORT` y usan estos tipos, sin importar el plugin `kiro-bridge`.
  *
  * `correlationId` (transporte) === `requestId` del executor de kiro.
  */

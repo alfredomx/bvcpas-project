@@ -1,4 +1,4 @@
-# `plugins/bridge`
+# `plugins/kiro-bridge`
 
 Plugin de transporte de `mapi_v2`. Es el **bridge WebSocket mapi↔kiro** (la extensión de Chrome): mapi manda comandos (`execute_fetch`, `list_tabs`, `execute_dom`, `open_tab`, `close_tab`…) y kiro los ejecuta en la **sesión viva** del navegador del operador y responde.
 
