@@ -12,7 +12,11 @@ import {
   type StatementRef,
 } from './bank-adapter.base'
 import type { BankFetchExecutor, BankFetchRequest, FetchResult } from './bank-fetch.types'
-import { BankAdapterError, BankFetchError, ChaseAccountNotFoundError } from '../bank-download.errors'
+import {
+  BankAdapterError,
+  BankFetchError,
+  ChaseAccountNotFoundError,
+} from '../bank-download.errors'
 
 /**
  * URL del logonbox de Chase como pestaña top-level. El form de login queda en el
