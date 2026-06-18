@@ -74,20 +74,37 @@ describe('BankDownloadService.downloadChecks', () => {
     expect(res.saved_dir).toBeNull()
   })
 
-  it('aísla por cuenta: un fallo en una mask no bota las demás', async () => {
-    const search = jest
+  it('PROPAGA si searchTransactions falla (sesión/bridge): el job no se disfraza de 0', async () => {
+    const adapter = fakeAdapter({
+      searchTransactions: jest.fn().mockRejectedValue(new Error('BRIDGE_NOT_CONNECTED')),
+    })
+    await expect(
+      service(adapter).downloadChecks({
+        credentialId: 'cr1',
+        accountMasks: ['9027'],
+        ...RANGE,
+      }),
+    ).rejects.toThrow('BRIDGE_NOT_CONNECTED')
+  })
+
+  it('aísla solo por-imagen: una imagen que falla se salta, el resto sigue', async () => {
+    const downloadImage = jest
       .fn()
-      .mockResolvedValueOnce([txn()]) // mask 9027 ok
-      .mockRejectedValueOnce(new Error('boom')) // mask 5799 falla
-    const res = await service(fakeAdapter({ searchTransactions: search })).downloadChecks({
+      .mockRejectedValueOnce(new Error('img 404')) // 1er cheque sin imagen
+      .mockResolvedValueOnce({ front: 'AAAA', rear: undefined }) // 2º ok
+    const adapter = fakeAdapter({
+      searchTransactions: jest.fn().mockResolvedValue([txn(), txn({ sequenceNumber: 's2' })]),
+      downloadImage,
+    })
+    const res = await service(adapter).downloadChecks({
       credentialId: 'cr1',
-      accountMasks: ['9027', '5799'],
+      accountMasks: ['9027'],
       ...RANGE,
     })
 
+    // 2 txns, 1 imagen falló → 1 cheque ensamblado; el job completa (no lanza).
     expect(res.total_checks).toBe(1)
     expect(res.accounts[0]).toMatchObject({ account_mask: '9027', count: 1 })
-    expect(res.accounts[1]).toMatchObject({ account_mask: '5799', count: 0 })
   })
 })
 

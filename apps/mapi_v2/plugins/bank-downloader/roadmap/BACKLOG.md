@@ -2,6 +2,10 @@
 
 Diferidos del plugin, agrupados por **trigger concreto**. No es roadmap: es lo que sabemos que falta pero no se construye hasta que toque.
 
+## Trigger: cuando el caller necesite el código de error real (no 500)
+
+- [ ] **Propagar `code`/`status` del `DomainError` a través de la cola.** Los verbos de descarga van por `runAndWait` (BullMQ `waitUntilFinished`), que reconstruye un `Error` plano desde el `failedReason` serializado → el caller recibe **500 genérico** en vez del **502 BANK_FETCH_ERROR** real. El motivo sí queda visible en bull-board (D-bank-down-007 / v0.1.1). Fix: el worker serializa `{code,status}` y `runAndWait` re-lanza un `DomainError`. _Trigger: cuando el frontend necesite distinguir el tipo de fallo de descarga por el HTTP status._
+
 ## Trigger: cuando el flujo del dashboard lo pida
 
 - [ ] **Verbo único `client-download` (orquestador)** — un job que haga TODO el ciclo del cliente en el worker (login → resolver masks → descarga → logout), para encolar un batch por cliente que se serializa solo. El mapi viejo lo tenía (`kind: 'client-download'`); v0.1.0 lo difiere y asume que la sesión ya está viva (el operador hizo `accounts` primero). _Trigger: cuando el frontend quiera disparar una descarga completa de cliente con un botón._
