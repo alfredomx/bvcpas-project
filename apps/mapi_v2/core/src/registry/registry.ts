@@ -1,5 +1,6 @@
 import type { DynamicModule, Type } from '@nestjs/common'
 import { intuitPlugin } from '@plugins/intuit/src'
+import { bankCredentialsPlugin } from '@plugins/bank-credentials/src'
 import type { ModuleDef } from './module-def'
 
 /**
@@ -12,7 +13,7 @@ import type { ModuleDef } from './module-def'
  *
  * `intuit` es el primer plugin real (reemplazó al `_example` de la fundación).
  */
-export const REGISTRY: ModuleDef[] = [intuitPlugin]
+export const REGISTRY: ModuleDef[] = [intuitPlugin, bankCredentialsPlugin]
 
 /**
  * Valida al boot la config (Zod) de cada plugin/pipe contra el env. Junta

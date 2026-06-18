@@ -22,6 +22,13 @@
       "when": 1781721953284,
       "tag": "0002_productive_ulik",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781728117929,
+      "tag": "0003_yielding_mojo",
+      "breakpoints": true
     }
   ]
 }
