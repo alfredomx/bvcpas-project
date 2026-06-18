@@ -15,6 +15,10 @@ Diferidos del plugin, agrupados por **trigger concreto**. No es roadmap: es lo q
 
 - [ ] **Emitir eventos de descarga** — `bank_download.started` / `.completed` / `.failed` por cuenta/credencial. El mapi viejo no los persistía (solo logs); con `event_log` en el core conviene auditarlos (D-bank-down-005). _Trigger: cuando se monte un `event_log` en el core._
 
+## Trigger: cuando se quiera completar la descarga real de Chase
+
+- [ ] **Auth del endpoint de documentos de Chase (`secure.chase.com` → 401).** Tras el fix same-origin (v0.1.2), el fetch ya llega a `secure.chase.com/svc/rr/documents/...` pero Chase responde **401**: ese subdominio necesita su propia sesión autenticada, separada de `secure01a.chase.com` (donde quedó la sesión viva tras el login). Abrir la pestaña no basta. Afinación específica del **adapter Chase** (cookies/headers/flujo del endpoint de documentos). _Resolver comparando contra `D:\archived\sandbox\bankify` (la ingeniería inversa que SÍ funciona). Trigger: cuando se quiera descarga real de cheques/depósitos/statements de Chase end-to-end._
+
 ## Trigger: cuando entre un banco nuevo
 
 - [ ] **Más adapters** — hoy solo Chase está portado (`adapter-registry`). RBFCU, Wells Fargo, Frost, etc. devuelven `null` → `BankAdapterNotSupportedError`. Cada banco es ingeniería inversa propia (referencia: `D:\archived\sandbox\bankify`). _Trigger: cuando un cliente real use un portal sin adapter._
