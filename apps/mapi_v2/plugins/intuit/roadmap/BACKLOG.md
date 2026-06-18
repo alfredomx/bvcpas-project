@@ -12,3 +12,7 @@ Cosas diferidas del plugin Intuit, agrupadas por **trigger concreto** (cuándo r
 ## Trigger: cuando se arme la persistencia / connectors
 
 - [ ] **Persistencia / CDC / backfill** — hoy las lecturas son read-through (en vivo, sin DB). Cuando se necesite snapshot/histórico en DB: connectors (pull QBO → staging), CDC incremental, cursores, jobs en cola (pipe). _Trigger: cuando un plugin (p.ej. uncats) necesite snapshot persistido, o se quiera histórico consultable._
+
+## Trigger: cuando se estandarice el contrato de la API (convención flat + params)
+
+- [ ] **Migrar rutas de intuit a la convención flat** — hoy intuit mete `clientId` en el path (`/v1/intuit/:clientId/...`, `/v1/intuit/clients/:id/...`). La convención adoptada desde `bank-credentials v0.1.0` es: **namespace flat por dominio**, `clientId` NUNCA en el path → filtro query en listas (`?clientId=`) y campo del body en alta/mutación; ops por uuid en `/:id`. Romper estas rutas requiere coordinar con qubot/frontend (cambio de contrato). _Trigger: cuando se unifique el contrato de la API (probablemente al montar Scalar o al conectar el frontend)._ Ver [[feedback_api_route_convention]].
