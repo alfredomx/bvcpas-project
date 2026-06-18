@@ -8,6 +8,20 @@ import type { ListActivityDto } from '@plugins/bank-downloader/src/dto/bank-down
 
 jest.mock('@plugins/bank-downloader/src/adapters/adapter-registry')
 
+// La descarga persiste SIEMPRE (fire-and-forget). En tests mockeamos el guardado
+// a disco (sin FS real), conservando las constantes/helpers reales del módulo.
+jest.mock('@plugins/bank-downloader/src/bank-download.storage', () => ({
+  ...jest.requireActual('@plugins/bank-downloader/src/bank-download.storage'),
+  saveChecksToDisk: jest.fn().mockResolvedValue({ dir: '.downloads/Bilia Eatery', filesWritten: 1 }),
+  saveDepositsToDisk: jest.fn().mockResolvedValue({ dir: '.downloads/Bilia Eatery', filesWritten: 0 }),
+  saveStatementsToDisk: jest
+    .fn()
+    .mockResolvedValue({ dir: '.downloads/Bilia Eatery', filesWritten: 0 }),
+  saveTransactionFileToDisk: jest
+    .fn()
+    .mockResolvedValue({ dir: '.downloads/Bilia Eatery', file: 'x.csv' }),
+}))
+
 const mockedGetFactory = getAdapterFactory as jest.MockedFunction<typeof getAdapterFactory>
 
 const creds = {
@@ -71,7 +85,8 @@ describe('BankDownloadService.downloadChecks', () => {
     expect(res.total_checks).toBe(2)
     expect(res.accounts).toHaveLength(2)
     expect(res.accounts[0]).toMatchObject({ account_mask: '9027', count: 1 })
-    expect(res.saved_dir).toBeNull()
+    // Persiste siempre: saved_dir viene del storage (mockeado), no null.
+    expect(res.saved_dir).toBe('.downloads/Bilia Eatery')
   })
 
   it('PROPAGA si searchTransactions falla (sesión/bridge): el job no se disfraza de 0', async () => {
