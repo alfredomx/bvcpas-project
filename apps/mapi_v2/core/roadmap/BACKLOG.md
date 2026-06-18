@@ -18,6 +18,7 @@ Cosas diferidas a propósito. Cuando llegue el trigger, se retoman y se mueven a
 ## Bloqueado por: financiamiento de multiusuario
 
 - [ ] Identidad/tenancy (usuarios, sesiones, multi-cuenta, gateway externo). Hoy: un operador único + token admin. Ver [`../../README.md`](../../README.md) — frontera motor/identidad.
+- [ ] **Asegurar `/v1/admin/queues` (bull-board).** Hoy es **público** (D-core-028, local-only: el browser no manda `Bearer` fácil y no hay auth real). Cuando entre el módulo de auth, ponerlo detrás del operador (middleware con Bearer/`?token=`/cookie como el mapi viejo, o cookie de sesión). Trigger: módulo de auth / exponer el server fuera de localhost.
 
 ## Bloqueado por: W9 / cruce de info entre compañías de un mismo dueño
 

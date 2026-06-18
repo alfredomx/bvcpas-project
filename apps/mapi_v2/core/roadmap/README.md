@@ -12,11 +12,12 @@ Proceso, índice y decisiones del **core** de `mapi_v2`. El core bootea solo y p
 
 ## Estado actual
 
-**Versión `package.json`: `0.3.0`.**
+**Versión `package.json`: `0.4.0`.**
 
 - `00-foundation` ✅ (v0.1.0 — substrato: config, db, redis, queue, errores/validación/logger, registro explícito + auth slim). Tag `core-v0.1.0`.
 - `11-clients` ✅ (v0.2.0 — entidad central `clients` en el core: schema + CRUD `/v1/clients`). Tag `core-v0.2.0`.
 - `12-encryption` ✅ (v0.3.0 — `EncryptionService` AES-256-GCM en el core, infra para que los plugins guarden secretos). **Cerrado 2026-06-17**, tag `core-v0.3.0`.
+- `13-queue-board` ✅ (v0.4.0 — bull-board en `/v1/admin/queues`: dashboard de colas BullMQ; descubre las colas vía `QueueBoardRegistry` cero-reach, público local). **Cerrado 2026-06-18**, tag `core-v0.4.0`.
 
 **Próximo:** `plugins/intuit` — **primer plugin**. Consume `clients` del core y es dueño de `intuit_tokens` (`client_id` + `realm_id` + tokens) + OAuth + `IntuitApiService` + config `INTUIT_*`. Todo lo de QuickBooks vive en el plugin.
 
@@ -63,19 +64,21 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 
 ## Índice de módulos del core
 
-| Carpeta       | Status | TDD                                  | Versiones                         |
-| ------------- | ------ | ------------------------------------ | --------------------------------- |
-| 00-foundation | ✅     | [README.md](00-foundation/README.md) | [v0.1.0](00-foundation/v0.1.0.md) |
-| 11-clients    | ✅     | [README.md](11-clients/README.md)    | [v0.2.0](11-clients/v0.2.0.md)    |
-| 12-encryption | ✅     | [README.md](12-encryption/README.md) | [v0.3.0](12-encryption/v0.3.0.md) |
+| Carpeta        | Status | TDD                                   | Versiones                          |
+| -------------- | ------ | ------------------------------------- | ---------------------------------- |
+| 00-foundation  | ✅     | [README.md](00-foundation/README.md)  | [v0.1.0](00-foundation/v0.1.0.md)  |
+| 11-clients     | ✅     | [README.md](11-clients/README.md)     | [v0.2.0](11-clients/v0.2.0.md)     |
+| 12-encryption  | ✅     | [README.md](12-encryption/README.md)  | [v0.3.0](12-encryption/v0.3.0.md)  |
+| 13-queue-board | ✅     | [README.md](13-queue-board/README.md) | [v0.4.0](13-queue-board/v0.4.0.md) |
 
 ## Versiones (orden cronológico)
 
-| Versión | Módulo        | Estado | Tema                                                   | Tag         | Archivo                                            |
-| ------- | ------------- | ------ | ------------------------------------------------------ | ----------- | -------------------------------------------------- |
-| 0.1.0   | 00-foundation | ✅     | Core substrato: infra + registro explícito + auth slim | core-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md) |
-| 0.2.0   | 11-clients    | ✅     | Entidad central `clients` en el core: schema + CRUD    | core-v0.2.0 | [11-clients/v0.2.0.md](11-clients/v0.2.0.md)       |
-| 0.3.0   | 12-encryption | ✅     | `EncryptionService` AES-256-GCM en el core             | core-v0.3.0 | [12-encryption/v0.3.0.md](12-encryption/v0.3.0.md) |
+| Versión | Módulo         | Estado | Tema                                                   | Tag         | Archivo                                              |
+| ------- | -------------- | ------ | ------------------------------------------------------ | ----------- | ---------------------------------------------------- |
+| 0.1.0   | 00-foundation  | ✅     | Core substrato: infra + registro explícito + auth slim | core-v0.1.0 | [00-foundation/v0.1.0.md](00-foundation/v0.1.0.md)   |
+| 0.2.0   | 11-clients     | ✅     | Entidad central `clients` en el core: schema + CRUD    | core-v0.2.0 | [11-clients/v0.2.0.md](11-clients/v0.2.0.md)         |
+| 0.3.0   | 12-encryption  | ✅     | `EncryptionService` AES-256-GCM en el core             | core-v0.3.0 | [12-encryption/v0.3.0.md](12-encryption/v0.3.0.md)   |
+| 0.4.0   | 13-queue-board | ✅     | bull-board en `/v1/admin/queues` (registro cero-reach) | core-v0.4.0 | [13-queue-board/v0.4.0.md](13-queue-board/v0.4.0.md) |
 
 ## Decisiones acumuladas (`D-core-NNN`)
 
@@ -108,3 +111,4 @@ SemVer `MAJOR.MINOR.PATCH`. No hay v1.0.0. Versiones por unidad (el core version
 | D-core-025 | Una sola DB local por ahora (`mapi_v2_local`); e2e corren contra ella limpiando sus filas. `mapi_v2_test` dedicada (con globalSetup) diferida a CI / cuando estorbe                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 0.2.0   | —       |
 | D-core-026 | Encriptación en el core (`EncryptionService` AES-256-GCM, `@Global`), no en un plugin: cripto es infra que varios plugins necesitan. Formato `iv:authTag:ciphertext` idéntico a mapi para que la migración de tokens (intuit v0.2.0) desencripte con la misma `ENCRYPTION_KEY`                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | 0.3.0   | —       |
 | D-core-027 | **Comunicación plugin→plugin estandarizada por UNA pregunta**: _¿el consumidor necesita el dato YA para responder?_ **Sí y es chico → contrato síncrono publicado en el core** (patrón puerto/adaptador = hooks WordPress): la interfaz + el token DI (`Symbol`) viven en `core/src/contracts/<x>.port.ts` (alias `@/contracts/...`); el plugin DUEÑO liga el token a su servicio en SU módulo (`{ provide, useExisting }`, exportado/`@Global`); el consumidor inyecta el token y NUNCA importa `@plugins/<otro>`. **No / pesado / diferible / debe reintentar → cola (pipe)**, cuyo contrato de job también vive en el core. **Invariante:** lo único que un plugin importa directo es el core. (Regla viva: se materializa con el 2º plugin consumidor) | —       | —       |
+| D-core-028 | **bull-board en el core** (`/v1/admin/queues`): montado como middleware Express (NO pasa por el `AdminGuard` de Nest), **público** (local-only; asegurar cuando entre auth → BACKLOG). Cero-reach vía `QueueBoardRegistry` (`@Global`): cada plugin/pipe con cola registra su nombre en el constructor de un provider; el bootstrap resuelve cada cola (`getQueueToken`) y la agrega al board. El core NO hardcodea nombres de cola (diverge del mapi viejo, que montaba `bank-download` hardcodeado + auth JWT)                                                                                                                                                                                                                                           | 0.4.0   | Sí      |
