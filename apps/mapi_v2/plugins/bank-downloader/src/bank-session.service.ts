@@ -97,10 +97,23 @@ export class BankSessionService {
     throw new BankSessionNotEstablishedError(portalName)
   }
 
-  /** Usa la pestaña del host del logonbox si ya existe; si no, abre una nueva. */
+  /**
+   * Asegura una pestaña EN LA URL DE LA RECETA (el logon), no solo en el mismo
+   * host. Reusar por host dejaba la pestaña en otra ruta del banco (ej. el
+   * dashboard), donde el form de login no es el mismo y el `fill` no encuentra los
+   * campos. Reusa solo si ya está en `url` exacta; si hay una del mismo host en
+   * otra ruta, la cierra y abre una fresca (no hay comando `navigate` en el
+   * bridge). Solo se llama cuando NO hay sesión viva (login en frío).
+   */
   private async ensureTab(url: string): Promise<number> {
-    const existing = await this.findTabByHost(url)
-    if (existing !== null) return existing
+    const tabs = (await this.bridge.send({ type: 'list_tabs' })) as ListTabsResult
+    const exact = tabs.tabs.find((t) => t.url === url)
+    if (exact) return exact.tabId
+
+    const host = safeHost(url)
+    const stale = tabs.tabs.find((t) => t.url !== undefined && safeHost(t.url) === host)
+    if (stale) await this.bridge.send({ type: 'close_tab', payload: { tabId: stale.tabId } })
+
     const opened = (await this.bridge.send({ type: 'open_tab', payload: { url } })) as OpenTabResult
     return opened.tabId
   }
