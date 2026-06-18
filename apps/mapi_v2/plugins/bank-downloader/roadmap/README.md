@@ -16,8 +16,9 @@ El plugin versiona con tags `bank-downloader-vX.Y.Z`, independiente del core y d
 - `10-download` ✅ (bank-downloader v0.1.1 — **errores honestos**: los verbos de descarga ya no se disfrazan de "0 cheques" ante fallos de sesión/bridge/fetch; `searchTransactions` propaga, solo se aíslan fallos por-imagen). **Cerrado 2026-06-18**, tag `bank-downloader-v0.1.1`.
 - `10-download` ✅ (bank-downloader v0.1.2 — **pestaña same-origin**: el `BridgeFetchExecutor` abre una pestaña al origen del fetch y reintenta una vez cuando kiro no encuentra pestaña same-origin. El fetch ya llega al endpoint de documentos de Chase). **Cerrado 2026-06-18**, tag `bank-downloader-v0.1.2`.
 - `10-download` ✅ (bank-downloader v0.2.0 — **fire-and-forget**: los verbos pesados encolan y devuelven `202 { jobId }`; el worker hace TODO (login → descarga → logout) y persiste siempre. Cierra el orquestador `client-download`). **Cerrado 2026-06-18**, tag `bank-downloader-v0.2.0`.
+- `10-download` ✅ (bank-downloader v0.2.1 — **login en la ruta correcta**: `ensureTab` abre el logon FRESCO en vez de reusar una pestaña del mismo host en otra ruta. Descarga real end-to-end confirmada; resuelve el Chase 401). **Cerrado 2026-06-18**, tag `bank-downloader-v0.2.1`.
 
-**Diferidos:** ver [BACKLOG.md](BACKLOG.md) (auth del endpoint de documentos de Chase `secure.chase.com` 401, `accountMasks: "all"`, `GET /jobs/:jobId`, más bancos, eventos cuando el core tenga event_log, Dropbox como destino real).
+**Diferidos:** ver [BACKLOG.md](BACKLOG.md) (`accountMasks: "all"`, `GET /jobs/:jobId`, más bancos, eventos cuando el core tenga event_log, Dropbox como destino real).
 
 ## Versionado y estados
 
@@ -32,9 +33,9 @@ SemVer `bank-downloader-MAJOR.MINOR.PATCH`. Estados: ✅ Completado · 🚧 En p
 
 ## Índice de módulos
 
-| Carpeta     | Status | Versiones                                                                                                                             |
-| ----------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 10-download | ✅     | [v0.1.0](10-download/v0.1.0.md) · [v0.1.1](10-download/v0.1.1.md) · [v0.1.2](10-download/v0.1.2.md) · [v0.2.0](10-download/v0.2.0.md) |
+| Carpeta     | Status | Versiones                                                                                                                                                               |
+| ----------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10-download | ✅     | [v0.1.0](10-download/v0.1.0.md) · [v0.1.1](10-download/v0.1.1.md) · [v0.1.2](10-download/v0.1.2.md) · [v0.2.0](10-download/v0.2.0.md) · [v0.2.1](10-download/v0.2.1.md) |
 
 ## Decisiones acumuladas (`D-bank-down-NNN`)
 
@@ -50,3 +51,4 @@ SemVer `bank-downloader-MAJOR.MINOR.PATCH`. Estados: ✅ Completado · 🚧 En p
 | D-bank-down-008 | **Same-origin en el executor.** kiro corre el fetch en una pestaña del mismo origen; si no la hay, el `BridgeFetchExecutor` abre una al origen del fetch y reintenta UNA vez. Genérico (todos los adapters), cero-reach (usa el `BRIDGE_COMMAND_PORT`). Detecta el caso por substring `same-origin` en `result.error` (contrato con kiro)   | 0.1.2   | —       |
 | D-bank-down-009 | **Descargas fire-and-forget.** Los verbos pesados encolan y devuelven `202 { jobId }`; el worker hace TODO (asegura sesión/login → descarga → logout condicional), no asume nada. Cierra el orquestador `client-download` (antes D-bank-down-006). `accounts`/`*/list` siguen síncronos. Resultado/fallo en bull-board                      | 0.2.0   | Sí      |
 | D-bank-down-010 | **Persiste siempre** a disco; sin flag `save` (en fire-and-forget no hay respuesta inline). El returnvalue del job = resumen (counts + `saved_dir`), sin base64. Recuperar archivos del `saved_dir` (Dropbox real diferido en BACKLOG)                                                                                                      | 0.2.0   | —       |
+| D-bank-down-011 | **`ensureTab` asegura la URL del logon, no solo el host.** Reusar por host dejaba el login en otra ruta (ej. dashboard) donde el form no es alcanzable. Ahora reusa solo si está en la URL exacta del logon; si hay una del mismo host en otra ruta, la cierra y abre fresca. Resuelve el login automático y el Chase 401 (era síntoma)     | 0.2.1   | —       |
