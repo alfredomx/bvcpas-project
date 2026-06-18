@@ -113,19 +113,17 @@ export class BankDownloadService {
       totalChecks += checks.length
     }
 
-    let savedDir: string | null = null
-    if (dto.save) {
-      const { dir } = await saveChecksToDisk({
-        baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
-        clientName,
-        accounts,
-      })
-      savedDir = dir
-      for (const a of accounts) {
-        for (const c of a.checks) {
-          c.frontImageBase64 = undefined
-          c.rearImageBase64 = undefined
-        }
+    // Persiste siempre (fire-and-forget: no hay respuesta inline). El returnvalue
+    // del job lleva el resumen + saved_dir; los base64 se quitan (ya están en disco).
+    const { dir: savedDir } = await saveChecksToDisk({
+      baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
+      clientName,
+      accounts,
+    })
+    for (const a of accounts) {
+      for (const c of a.checks) {
+        c.frontImageBase64 = undefined
+        c.rearImageBase64 = undefined
       }
     }
 
@@ -240,24 +238,20 @@ export class BankDownloadService {
       totalImages += imageCount
     }
 
-    let savedDir: string | null = null
-    if (dto.save) {
-      const { dir } = await saveDepositsToDisk({
-        baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
-        clientName,
-        accounts: accounts.map((a) => ({ account_mask: a.account_mask, deposits: a.deposits })),
-      })
-      savedDir = dir
-      for (const a of accounts) {
-        for (const d of a.deposits) {
-          if (d.depositSlipImage) {
-            d.depositSlipImage.frontImageBase64 = undefined
-            d.depositSlipImage.rearImageBase64 = undefined
-          }
-          for (const c of d.checksImages) {
-            c.frontImageBase64 = undefined
-            c.rearImageBase64 = undefined
-          }
+    const { dir: savedDir } = await saveDepositsToDisk({
+      baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
+      clientName,
+      accounts: accounts.map((a) => ({ account_mask: a.account_mask, deposits: a.deposits })),
+    })
+    for (const a of accounts) {
+      for (const d of a.deposits) {
+        if (d.depositSlipImage) {
+          d.depositSlipImage.frontImageBase64 = undefined
+          d.depositSlipImage.rearImageBase64 = undefined
+        }
+        for (const c of d.checksImages) {
+          c.frontImageBase64 = undefined
+          c.rearImageBase64 = undefined
         }
       }
     }
@@ -306,16 +300,12 @@ export class BankDownloadService {
       total += statements.length
     }
 
-    let savedDir: string | null = null
-    if (dto.save) {
-      const { dir } = await saveStatementsToDisk({
-        baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
-        clientName: client.legalName,
-        accounts: accounts.map((a) => ({ account_mask: a.account_mask, statements: a.statements })),
-      })
-      savedDir = dir
-      for (const a of accounts) for (const s of a.statements) s.pdfBase64 = undefined
-    }
+    const { dir: savedDir } = await saveStatementsToDisk({
+      baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
+      clientName: client.legalName,
+      accounts: accounts.map((a) => ({ account_mask: a.account_mask, statements: a.statements })),
+    })
+    for (const a of accounts) for (const s of a.statements) s.pdfBase64 = undefined
 
     return {
       credential_id: dto.credentialId,
@@ -341,23 +331,17 @@ export class BankDownloadService {
       const mask = masks[mi]
       const buffer = await adapter.exportTransactions(mask, from, to, dto.format)
       const content = buffer.toString('utf8')
-      if (dto.save) {
-        const { dir } = await saveTransactionFileToDisk({
-          baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
-          clientName,
-          accountMask: mask,
-          from,
-          to,
-          format: dto.format,
-          content,
-        })
-        savedDir = dir
-      }
-      accounts.push({
-        account_mask: mask,
-        bytes: buffer.length,
-        content: dto.save ? undefined : content,
+      const { dir } = await saveTransactionFileToDisk({
+        baseDir: join(process.cwd(), DEMO_DOWNLOADS_DIR),
+        clientName,
+        accountMask: mask,
+        from,
+        to,
+        format: dto.format,
+        content,
       })
+      savedDir = dir
+      accounts.push({ account_mask: mask, bytes: buffer.length })
       await this.report(onProgress, 'transactions', mask, mi, masks.length, 1, 1)
     }
 

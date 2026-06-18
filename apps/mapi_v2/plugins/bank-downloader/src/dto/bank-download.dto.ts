@@ -50,7 +50,6 @@ export const downloadChecksSchema = z
     range: z.enum(DATE_RANGE_PRESETS).optional(),
     from: mmddyyyy.optional(),
     to: mmddyyyy.optional(),
-    save: z.boolean().optional(),
   })
   .strict()
   .superRefine(refineRange)
@@ -72,7 +71,6 @@ export const downloadStatementsSchema = z
       .string()
       .regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'to debe ser YYYY-MM')
       .optional(),
-    save: z.boolean().optional(),
   })
   .strict()
   .superRefine((data, ctx) => {
@@ -96,7 +94,6 @@ export const downloadTransactionsSchema = z
     range: z.enum(DATE_RANGE_PRESETS).optional(),
     from: mmddyyyy.optional(),
     to: mmddyyyy.optional(),
-    save: z.boolean().optional(),
   })
   .strict()
   .superRefine(refineRange)

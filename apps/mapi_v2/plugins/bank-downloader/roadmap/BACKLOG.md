@@ -2,13 +2,12 @@
 
 Diferidos del plugin, agrupados por **trigger concreto**. No es roadmap: es lo que sabemos que falta pero no se construye hasta que toque.
 
-## Trigger: cuando el caller necesite el código de error real (no 500)
-
-- [ ] **Propagar `code`/`status` del `DomainError` a través de la cola.** Los verbos de descarga van por `runAndWait` (BullMQ `waitUntilFinished`), que reconstruye un `Error` plano desde el `failedReason` serializado → el caller recibe **500 genérico** en vez del **502 BANK_FETCH_ERROR** real. El motivo sí queda visible en bull-board (D-bank-down-007 / v0.1.1). Fix: el worker serializa `{code,status}` y `runAndWait` re-lanza un `DomainError`. _Trigger: cuando el frontend necesite distinguir el tipo de fallo de descarga por el HTTP status._
+> **Cerrados/obsoletos:** el orquestador `client-download` (login→descarga→logout en el worker) **se cerró en v0.2.0** (el worker ya hace todo). El item "propagar el código de error a través de la cola (500 vs 502)" quedó **obsoleto** en v0.2.0: sin `runAndWait`, el caller no espera el resultado y el error vive en el job/bull-board.
 
 ## Trigger: cuando el flujo del dashboard lo pida
 
-- [ ] **Verbo único `client-download` (orquestador)** — un job que haga TODO el ciclo del cliente en el worker (login → resolver masks → descarga → logout), para encolar un batch por cliente que se serializa solo. El mapi viejo lo tenía (`kind: 'client-download'`); v0.1.0 lo difiere y asume que la sesión ya está viva (el operador hizo `accounts` primero). _Trigger: cuando el frontend quiera disparar una descarga completa de cliente con un botón._
+- [ ] **`accountMasks: "all"`** — el worker ya logueó y tiene las cuentas vía `listAccounts`; resolver "all" sería trivial. v0.2.0 usa masks explícitas (las sacas de `accounts`). _Trigger: cuando el frontend quiera "descargar todas las cuentas" sin pasar masks._
+- [ ] **`GET /v1/bank/download/jobs/:jobId`** — estado/resumen de un job (progreso, resultado, fallo) sin abrir bull-board. _Trigger: cuando el frontend necesite mostrar el avance/resultado de una descarga encolada._
 - [ ] **Listado de credenciales para el step-flow** — hoy el caller manda `credentialId` directo. Si el dashboard necesita "¿qué credenciales tiene este cliente?" para armar el flujo, ese listado lo expone `bank-credentials` (no este plugin). _Trigger: cuando se arme la pantalla de descarga._
 
 ## Trigger: cuando el core tenga `event_log`

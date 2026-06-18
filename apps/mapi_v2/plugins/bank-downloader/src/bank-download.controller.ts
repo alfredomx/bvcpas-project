@@ -2,7 +2,7 @@ import { Body, Controller, HttpCode, Post } from '@nestjs/common'
 import { ZodValidationPipe } from '@/common/pipes/zod-validation.pipe'
 import { BankSessionService } from './bank-session.service'
 import { BankDownloadService } from './bank-download.service'
-import { BankDownloadQueueService } from './bank-download.queue'
+import { BankDownloadQueueService, type BankDownloadJob } from './bank-download.queue'
 import {
   downloadChecksSchema,
   downloadDepositsSchema,
@@ -12,13 +12,9 @@ import {
   listActivitySchema,
   listStatementRefsSchema,
   type DownloadChecksDto,
-  type DownloadChecksResponse,
   type DownloadDepositsDto,
-  type DownloadDepositsResponse,
   type DownloadStatementsDto,
-  type DownloadStatementsResponse,
   type DownloadTransactionsDto,
-  type DownloadTransactionsResponse,
   type ListAccountsRequestDto,
   type ListAccountsResponse,
   type ListActivityDto,
@@ -27,18 +23,22 @@ import {
   type ListStatementRefsResponse,
 } from './dto/bank-download.dto'
 
+/** Respuesta de un verbo de descarga: el job quedó encolado (fire-and-forget). */
+interface EnqueuedJob {
+  jobId: string
+}
+
 /**
  * Descarga bancaria (bajo el `AdminGuard` global). Rutas flat `/v1/bank/download/*`;
  * `clientId` se deriva del `credentialId` (vía `BANK_CREDENTIALS_PORT`), nunca va
  * en la ruta.
  *
- * - **accounts**: login + cuentas EN VIVO (síncrono, no encolado — necesita la
- *   sesión viva para responder y arrancar el step-flow).
- * - **checks/deposits/statements/transactions**: descargas pesadas → cola
- *   (`runAndWait`, 1 sesión de banco a la vez, respuesta inline).
+ * - **accounts**: login + cuentas EN VIVO (síncrono — interactivo: ver qué hay y
+ *   sacar masks antes de encolar).
+ * - **checks/deposits/statements/transactions**: **fire-and-forget** → `202
+ *   { jobId }` al instante; el worker hace TODO (login → descarga → logout),
+ *   persiste a disco, y el resultado/fallo queda en bull-board.
  * - **`.../list`**: preview/read sin imágenes (síncrono, directo al service).
- *
- * Si no hay plugin conectado → 503; si el portal no tiene adapter → 501.
  */
 @Controller('bank/download')
 export class BankDownloadController {
@@ -57,35 +57,35 @@ export class BankDownloadController {
   }
 
   @Post('checks')
-  @HttpCode(200)
+  @HttpCode(202)
   checks(
     @Body(new ZodValidationPipe(downloadChecksSchema)) dto: DownloadChecksDto,
-  ): Promise<DownloadChecksResponse> {
-    return this.queue.runAndWait({ kind: 'checks', dto }, `checks:${dto.credentialId}`)
+  ): Promise<EnqueuedJob> {
+    return this.enqueue({ kind: 'checks', dto }, `checks:${dto.credentialId}`)
   }
 
   @Post('deposits')
-  @HttpCode(200)
+  @HttpCode(202)
   deposits(
     @Body(new ZodValidationPipe(downloadDepositsSchema)) dto: DownloadDepositsDto,
-  ): Promise<DownloadDepositsResponse> {
-    return this.queue.runAndWait({ kind: 'deposits', dto }, `deposits:${dto.credentialId}`)
+  ): Promise<EnqueuedJob> {
+    return this.enqueue({ kind: 'deposits', dto }, `deposits:${dto.credentialId}`)
   }
 
   @Post('statements')
-  @HttpCode(200)
+  @HttpCode(202)
   statements(
     @Body(new ZodValidationPipe(downloadStatementsSchema)) dto: DownloadStatementsDto,
-  ): Promise<DownloadStatementsResponse> {
-    return this.queue.runAndWait({ kind: 'statements', dto }, `statements:${dto.credentialId}`)
+  ): Promise<EnqueuedJob> {
+    return this.enqueue({ kind: 'statements', dto }, `statements:${dto.credentialId}`)
   }
 
   @Post('transactions')
-  @HttpCode(200)
+  @HttpCode(202)
   transactions(
     @Body(new ZodValidationPipe(downloadTransactionsSchema)) dto: DownloadTransactionsDto,
-  ): Promise<DownloadTransactionsResponse> {
-    return this.queue.runAndWait({ kind: 'transactions', dto }, `transactions:${dto.credentialId}`)
+  ): Promise<EnqueuedJob> {
+    return this.enqueue({ kind: 'transactions', dto }, `transactions:${dto.credentialId}`)
   }
 
   @Post('checks/list')
@@ -110,5 +110,10 @@ export class BankDownloadController {
     @Body(new ZodValidationPipe(listStatementRefsSchema)) dto: ListStatementRefsDto,
   ): Promise<ListStatementRefsResponse> {
     return this.service.listStatementRefs(dto)
+  }
+
+  /** Encola el job y devuelve su `jobId` (el worker lo procesa después). */
+  private async enqueue(job: BankDownloadJob, label: string): Promise<EnqueuedJob> {
+    return { jobId: await this.queue.enqueue(job, label) }
   }
 }
