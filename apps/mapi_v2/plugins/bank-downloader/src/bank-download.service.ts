@@ -77,13 +77,16 @@ export class BankDownloadService {
     let totalChecks = 0
     for (let mi = 0; mi < masks.length; mi++) {
       const mask = masks[mi]
-      try {
-        const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
-        await this.report(onProgress, 'checks', mask, mi, masks.length, 0, txns.length)
-        const checks: DownloadedImage[] = []
-        for (let i = 0; i < txns.length; i++) {
-          const tx = txns[i]
-          if (!tx.sequenceNumber) continue
+      // `searchTransactions` es la prueba de sesión: si falla (bridge caído, sin
+      // sesión, sin pestaña same-origin) PROPAGA y el job falla honesto (no se
+      // disfraza de "0 cheques"). Solo se aíslan los fallos por-imagen.
+      const txns = await adapter.searchTransactions(mask, from, to, 'CHECK')
+      await this.report(onProgress, 'checks', mask, mi, masks.length, 0, txns.length)
+      const checks: DownloadedImage[] = []
+      for (let i = 0; i < txns.length; i++) {
+        const tx = txns[i]
+        if (!tx.sequenceNumber) continue
+        try {
           const img = await adapter.downloadImage(mask, tx.sequenceNumber, tx.date, 'CHECK')
           checks.push({
             sequenceNumber: tx.sequenceNumber,
@@ -94,18 +97,20 @@ export class BankDownloadService {
             postDate: tx.date,
             amount: tx.amount,
           })
-          await this.report(onProgress, 'checks', mask, mi, masks.length, i + 1, txns.length)
-          if (i < txns.length - 1) await this.pace()
+        } catch (err) {
+          // Best-effort por imagen: el search pasó (la sesión sirve), un cheque
+          // sin imagen no bota el batch.
+          this.logger.warn(
+            `checks: imagen ${tx.sequenceNumber} (mask ${mask}) falló, se salta: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          )
         }
-        accounts.push({ account_mask: mask, count: checks.length, checks })
-        totalChecks += checks.length
-      } catch (err) {
-        // Aislar por cuenta: un fallo en una mask no bota las demás.
-        this.logger.warn(
-          `checks: mask ${mask} falló, se salta: ${err instanceof Error ? err.message : String(err)}`,
-        )
-        accounts.push({ account_mask: mask, count: 0, checks: [] })
+        await this.report(onProgress, 'checks', mask, mi, masks.length, i + 1, txns.length)
+        if (i < txns.length - 1) await this.pace()
       }
+      accounts.push({ account_mask: mask, count: checks.length, checks })
+      totalChecks += checks.length
     }
 
     let savedDir: string | null = null
@@ -147,20 +152,22 @@ export class BankDownloadService {
     let totalImages = 0
     for (let mi = 0; mi < masks.length; mi++) {
       const mask = masks[mi]
-      try {
-        const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
-        await this.report(onProgress, 'deposits', mask, mi, masks.length, 0, deps.length)
-        const deposits: DepositResult[] = []
-        for (let di = 0; di < deps.length; di++) {
-          const dep = deps[di]
-          const details = await adapter.getDepositDetails(mask, dep)
-          const result: DepositResult = {
-            depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
-            totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
-            checksImages: [],
-          }
+      // `searchTransactions`/`getDepositDetails` son la prueba de sesión → PROPAGAN
+      // (job falla honesto). Solo se aíslan los fallos por-imagen.
+      const deps = await adapter.searchTransactions(mask, from, to, 'DEPOSIT')
+      await this.report(onProgress, 'deposits', mask, mi, masks.length, 0, deps.length)
+      const deposits: DepositResult[] = []
+      for (let di = 0; di < deps.length; di++) {
+        const dep = deps[di]
+        const details = await adapter.getDepositDetails(mask, dep)
+        const result: DepositResult = {
+          depositSequenceNumber: details.depositSequenceNumber ?? dep.sequenceNumber,
+          totalAmount: details.totalDepositAmount ?? dep.amount ?? 0,
+          checksImages: [],
+        }
 
-          if (details.depositSlipAvailable) {
+        if (details.depositSlipAvailable) {
+          try {
             const slip = await adapter.downloadImage(
               mask,
               result.depositSequenceNumber,
@@ -176,12 +183,20 @@ export class BankDownloadService {
               postDate: dep.date,
               amount: result.totalAmount,
             }
-            await this.pace()
+          } catch (err) {
+            this.logger.warn(
+              `deposits: slip ${result.depositSequenceNumber} (mask ${mask}) falló, se salta: ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            )
           }
+          await this.pace()
+        }
 
-          const innerChecks = details.transactions ?? []
-          for (let ci = 0; ci < innerChecks.length; ci++) {
-            const chk = innerChecks[ci]
+        const innerChecks = details.transactions ?? []
+        for (let ci = 0; ci < innerChecks.length; ci++) {
+          const chk = innerChecks[ci]
+          try {
             const img = await adapter.downloadImage(
               mask,
               chk.sequenceNumber,
@@ -197,31 +212,32 @@ export class BankDownloadService {
               postDate: chk.postDate ?? dep.date,
               amount: chk.amount,
             })
-            if (ci < innerChecks.length - 1) await this.pace()
+          } catch (err) {
+            this.logger.warn(
+              `deposits: imagen ${chk.sequenceNumber} (mask ${mask}) falló, se salta: ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            )
           }
-
-          deposits.push(result)
-          await this.report(onProgress, 'deposits', mask, mi, masks.length, di + 1, deps.length)
-          if (di < deps.length - 1) await this.pace()
+          if (ci < innerChecks.length - 1) await this.pace()
         }
 
-        const imageCount = deposits.reduce(
-          (n, d) => n + (d.depositSlipImage ? 1 : 0) + d.checksImages.length,
-          0,
-        )
-        accounts.push({
-          account_mask: mask,
-          deposit_count: deposits.length,
-          image_count: imageCount,
-          deposits,
-        })
-        totalImages += imageCount
-      } catch (err) {
-        this.logger.warn(
-          `deposits: mask ${mask} falló, se salta: ${err instanceof Error ? err.message : String(err)}`,
-        )
-        accounts.push({ account_mask: mask, deposit_count: 0, image_count: 0, deposits: [] })
+        deposits.push(result)
+        await this.report(onProgress, 'deposits', mask, mi, masks.length, di + 1, deps.length)
+        if (di < deps.length - 1) await this.pace()
       }
+
+      const imageCount = deposits.reduce(
+        (n, d) => n + (d.depositSlipImage ? 1 : 0) + d.checksImages.length,
+        0,
+      )
+      accounts.push({
+        account_mask: mask,
+        deposit_count: deposits.length,
+        image_count: imageCount,
+        deposits,
+      })
+      totalImages += imageCount
     }
 
     let savedDir: string | null = null
